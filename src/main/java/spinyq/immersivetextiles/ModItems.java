@@ -5,7 +5,7 @@ import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import spinyq.immersivetextiles.items.ItemThread;
+import spinyq.immersivetextiles.items.ThreadItem;
 
 /**
  * Handles managing and registering all the items of the mod.
@@ -16,7 +16,8 @@ public class ModItems {
 	
 	public static final DeferredRegister<Item> ITEMS = new DeferredRegister<>(ForgeRegistries.ITEMS, TextileMod.MODID);
 	
-	public static final RegistryObject<ItemThread> ITEM_THREAD = ITEMS.register("thread", ItemThread::new);
+	public static final RegistryObject<ThreadItem> ITEM_THREAD = ITEMS.register("thread",
+			() -> new ThreadItem(new Item.Properties().group(ItemGroupTextiles.instance)));
 	
 	// TODO Model registry
 
