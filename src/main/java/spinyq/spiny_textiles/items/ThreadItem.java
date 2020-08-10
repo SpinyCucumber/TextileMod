@@ -1,11 +1,13 @@
 package spinyq.spiny_textiles.items;
 
-import net.minecraft.client.renderer.color.IItemColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
+import net.minecraftforge.client.event.ColorHandlerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spiny_textiles.util.Color;
 import spinyq.spiny_textiles.util.ColorWord;
 
@@ -13,6 +15,19 @@ public class ThreadItem extends Item {
 	
 	public ThreadItem(Properties properties) {
 		super(properties);
+		// Register ourselves to receive events so we can register the color handler.
+		FMLJavaModLoadingContext.get().getModEventBus().register(this);
+	}
+	
+	@SubscribeEvent
+	public void onItemColorHandler(ColorHandlerEvent.Item event) {
+		event.getItemColors().register((stack, tintIndex) -> {
+			// For the overlay layer, return the color of the thread
+			Color color = getStorageHandler().getColor(stack);
+			if (tintIndex == 1 && color != null) return color.toInt();
+			// For all other layers, return -1 (white)
+			return -1;
+		}, this);
 	}
 
 	/**
@@ -56,19 +71,6 @@ public class ThreadItem extends Item {
 	}
 	
 	private StorageHandler storageHandler = new StorageHandler();
-	
-	private IItemColor colorHandler = new IItemColor() {
-
-		@Override
-		public int getColor(ItemStack stack, int tintIndex) {
-			// For the overlay layer, return the color of the thread
-			Color color = getStorageHandler().getColor(stack);
-			if (tintIndex == 1 && color != null) return color.toInt();
-			// For all other layers, return -1 (white)
-			return -1;
-		}
-		
-	};
 	
 	/**
 	 * Class that handles reading/writing color data from stacks.

@@ -14,6 +14,7 @@ public class TextileMod
     public static final Logger LOGGER = LogManager.getLogger(MODID);
     
     public TextileMod() {
+		TextileMod.LOGGER.info("TextileMod Constructor...");
     	ModBlocks.init();
     	ModTiles.init();
     	ModItems.init();
