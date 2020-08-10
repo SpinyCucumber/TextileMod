@@ -1,0 +1,7 @@
+{
+	"parent": "builtin/generated",
+	"textures": {
+		"layer0": "immersivetextiles:item/thread",
+		"layer1": "immersivetextiles:item/thread_overlay"
+    }
+}

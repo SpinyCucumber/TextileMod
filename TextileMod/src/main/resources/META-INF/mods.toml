@@ -1,0 +1,20 @@
+ # The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
+modLoader="javafml"
+# A version range to match for said mod loader - for regular FML @Mod it will be the forge version
+# Forge for 1.15.2 is version 31
+loaderVersion="[31,)"
+# A URL to refer people to when problems occur with this mod
+issueTrackerURL="TODO"
+# If the mods defined in this file should show as seperate resource packs
+showAsResourcePack=false
+
+[[mods]]
+  modId="spiny_textiles"
+  version="${file.jarVersion}"
+  displayName="Spiny's Textiles"
+  logoFile="assets/examplemod/textures/logo.png"
+  credits="TODO"
+  authors="SpinyCucumber"
+  description='''
+  Adds textiles and clothes to Minecraft.
+  '''
