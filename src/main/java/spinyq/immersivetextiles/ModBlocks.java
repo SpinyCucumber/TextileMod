@@ -1,6 +1,8 @@
 package spinyq.immersivetextiles;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.material.MaterialColor;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraftforge.event.RegistryEvent;
@@ -10,7 +12,8 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import spinyq.immersivetextiles.blocks.BlockBasin;
+import spinyq.immersivetextiles.blocks.BasinBlock;
+import spinyq.immersivetextiles.event.ConstructModEvent;
 
 /**
  * Handles managing and registering all the blocks of the mod.
@@ -22,7 +25,8 @@ public class ModBlocks {
 
 	public static final DeferredRegister<Block> BLOCKS = new DeferredRegister<>(ForgeRegistries.BLOCKS, TextileMod.MODID);
 	
-	public static final RegistryObject<BlockBasin> BLOCK_BASIN = BLOCKS.register("basin", BlockBasin::new);
+	public static final RegistryObject<BasinBlock> BASIN_BLOCK = BLOCKS.register("basin",
+			() -> new BasinBlock(Block.Properties.create(Material.IRON, MaterialColor.IRON)));
 	
 	// Registers block items corresponding to each block.
 	@SubscribeEvent
@@ -33,7 +37,8 @@ public class ModBlocks {
 		});
 	}
 
-	public static void init() {
+	@SubscribeEvent
+	public static void onConstructMod(ConstructModEvent event) {
 		BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
 	}
 	
