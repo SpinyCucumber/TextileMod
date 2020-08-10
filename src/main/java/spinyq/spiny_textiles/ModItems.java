@@ -1,11 +1,11 @@
-package spinyq.immersivetextiles;
+package spinyq.spiny_textiles;
 
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import spinyq.immersivetextiles.items.ThreadItem;
+import spinyq.spiny_textiles.items.ThreadItem;
 
 /**
  * Handles managing and registering all the items of the mod.

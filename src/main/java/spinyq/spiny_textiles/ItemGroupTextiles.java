@@ -1,4 +1,4 @@
-package spinyq.immersivetextiles;
+package spinyq.spiny_textiles;
 
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;

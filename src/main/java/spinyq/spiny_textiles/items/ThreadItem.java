@@ -1,4 +1,4 @@
-package spinyq.immersivetextiles.items;
+package spinyq.spiny_textiles.items;
 
 import net.minecraft.client.renderer.color.IItemColor;
 import net.minecraft.item.Item;
@@ -6,8 +6,8 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
-import spinyq.immersivetextiles.util.Color;
-import spinyq.immersivetextiles.util.ColorWord;
+import spinyq.spiny_textiles.util.Color;
+import spinyq.spiny_textiles.util.ColorWord;
 
 public class ThreadItem extends Item {
 	

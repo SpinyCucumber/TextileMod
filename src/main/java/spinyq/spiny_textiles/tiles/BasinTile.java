@@ -1,9 +1,9 @@
-package spinyq.immersivetextiles.tiles;
+package spinyq.spiny_textiles.tiles;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
-import spinyq.immersivetextiles.ModTiles;
-import spinyq.immersivetextiles.util.Color;
+import spinyq.spiny_textiles.ModTiles;
+import spinyq.spiny_textiles.util.Color;
 
 public class BasinTile extends TileEntity {
 

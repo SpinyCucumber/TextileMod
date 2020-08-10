@@ -1,4 +1,4 @@
-package spinyq.immersivetextiles.util;
+package spinyq.spiny_textiles.util;
 
 /**
  * Utility class to help with converting between different color formats and using colors.

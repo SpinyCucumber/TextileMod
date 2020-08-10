@@ -1,4 +1,4 @@
-package spinyq.immersivetextiles.util;
+package spinyq.spiny_textiles.util;
 
 import java.util.Arrays;
 import java.util.Comparator;

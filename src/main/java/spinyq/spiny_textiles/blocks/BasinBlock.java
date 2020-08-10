@@ -1,10 +1,10 @@
-package spinyq.immersivetextiles.blocks;
+package spinyq.spiny_textiles.blocks;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.IBlockReader;
-import spinyq.immersivetextiles.tiles.BasinTile;
+import spinyq.spiny_textiles.tiles.BasinTile;
 
 public class BasinBlock extends Block {
 

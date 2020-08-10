@@ -1,4 +1,4 @@
-package spinyq.immersivetextiles;
+package spinyq.spiny_textiles;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import spinyq.immersivetextiles.blocks.BasinBlock;
+import spinyq.spiny_textiles.blocks.BasinBlock;
 
 /**
  * Handles managing and registering all the blocks of the mod.
