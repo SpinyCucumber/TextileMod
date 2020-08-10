@@ -13,7 +13,6 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import spinyq.immersivetextiles.blocks.BasinBlock;
-import spinyq.immersivetextiles.event.ConstructModEvent;
 
 /**
  * Handles managing and registering all the blocks of the mod.
@@ -33,12 +32,13 @@ public class ModBlocks {
 	public static void registerItems(RegistryEvent.Register<Item> event) {
 		BLOCKS.getEntries().forEach((block) -> {
 			BlockItem item = new BlockItem(block.get(), new Item.Properties().group(ItemGroupTextiles.instance));
+			// Copy resource ID
+			item.setRegistryName(block.getId());
 			event.getRegistry().register(item);
 		});
 	}
 
-	@SubscribeEvent
-	public static void onConstructMod(ConstructModEvent event) {
+	public static void init() {
 		BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
 	}
 	

@@ -4,6 +4,7 @@ import net.minecraft.client.renderer.color.IItemColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 import spinyq.immersivetextiles.util.Color;
 import spinyq.immersivetextiles.util.ColorWord;
@@ -85,7 +86,7 @@ public class ThreadItem extends Item {
 		 */
 		public ItemStack withColor(ItemStack stack, Color color) {
 			// Create tag if it does not exist
-			// if (stack.hasTag()) stack.setTag(new CompoundNBT());
+			if (!stack.hasTag()) stack.setTag(new CompoundNBT());
 			// Set color
 			stack.getTag().putInt(KEY_COLOR, color.toInt());
 			return stack;
@@ -96,6 +97,8 @@ public class ThreadItem extends Item {
 		 * @return The color of the thread itemstack, or null if no color is attached. (This should not happen.)
 		 */
 		public Color getColor(ItemStack stack) {
+			if (!stack.hasTag()) return null;
+			if (!stack.getTag().contains(KEY_COLOR)) return null;
 			return Color.fromInt(stack.getTag().getInt(KEY_COLOR));
 		}
 		

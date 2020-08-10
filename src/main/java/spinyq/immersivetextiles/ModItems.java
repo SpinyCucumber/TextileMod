@@ -1,13 +1,10 @@
 package spinyq.immersivetextiles;
 
 import net.minecraft.item.Item;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.RegistryObject;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import spinyq.immersivetextiles.event.ConstructModEvent;
 import spinyq.immersivetextiles.items.ThreadItem;
 
 /**
@@ -15,7 +12,6 @@ import spinyq.immersivetextiles.items.ThreadItem;
  * @author SpinyQ
  *
  */
-@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class ModItems {
 	
 	public static final DeferredRegister<Item> ITEMS = new DeferredRegister<>(ForgeRegistries.ITEMS, TextileMod.MODID);
@@ -26,8 +22,7 @@ public class ModItems {
 	// TODO Model registry
 
 	// TODO Might move "Mod..." classes to a single "Registration" class to simplify things. Or not.
-	@SubscribeEvent
-	public static void onConstructMod(ConstructModEvent event) {
+	public static void init() {
 		ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
 	}
 	

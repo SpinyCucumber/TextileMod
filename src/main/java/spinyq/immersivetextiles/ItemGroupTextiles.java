@@ -13,8 +13,7 @@ public class ItemGroupTextiles extends ItemGroup {
 
 	@Override
 	public ItemStack createIcon() {
-		// TODO Auto-generated method stub
-		return null;
+		return ModItems.THREAD_ITEM.get().getDefaultInstance();
 	}
 
 }
