@@ -1,5 +1,7 @@
 {
 	"variants": {
-		"normal": { "model": "immersivetextiles:basin" }
+		"": {
+			"model": "spiny_textiles:block/basin"
+		}
 	}
 }
