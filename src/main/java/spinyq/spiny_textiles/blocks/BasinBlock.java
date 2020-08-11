@@ -10,8 +10,13 @@ import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
+import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import spinyq.spiny_textiles.tiles.BasinTile;
 
+@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class BasinBlock extends Block {
 
 	// Ala Cauldron
@@ -21,6 +26,12 @@ public class BasinBlock extends Block {
 					makeCuboidShape(4.0D, 0.0D, 0.0D, 12.0D, 3.0D, 16.0D),
 					makeCuboidShape(2.0D, 0.0D, 2.0D, 14.0D, 3.0D, 14.0D), INSIDE),
 			IBooleanFunction.ONLY_FIRST);
+	
+	@SubscribeEvent
+	public static void registerModels(ModelRegistryEvent event) {
+		// TODO Setup model
+		ModelLoaderRegistry.registerLoader(null, null);
+	}
 
 	@Override
 	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
