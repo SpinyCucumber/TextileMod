@@ -8,7 +8,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import spinyq.spiny_textiles.util.Color;
+import spinyq.spiny_textiles.util.Color3f;
 import spinyq.spiny_textiles.util.ColorWord;
 
 public class ThreadItem extends Item {
@@ -23,7 +23,7 @@ public class ThreadItem extends Item {
 	public void onItemColorHandler(ColorHandlerEvent.Item event) {
 		event.getItemColors().register((stack, tintIndex) -> {
 			// For the overlay layer, return the color of the thread
-			Color color = getStorageHandler().getColor(stack);
+			Color3f color = getStorageHandler().getColor(stack);
 			if (tintIndex == 1 && color != null) return color.toInt();
 			// For all other layers, return -1 (white)
 			return -1;
@@ -42,7 +42,7 @@ public class ThreadItem extends Item {
 	public String getTranslationKey(ItemStack stack) {
 		// If the stack has a color (it should), get the closest "word" color and use that
 		String colorWord = "null";
-		Color color = storageHandler.getColor(stack);
+		Color3f color = storageHandler.getColor(stack);
 		if (color != null)
 			colorWord = ColorWord.getClosest(color).getName();
 		return "item.thread." + colorWord;
@@ -86,7 +86,7 @@ public class ThreadItem extends Item {
 		 * @param stack
 		 * @return
 		 */
-		public ItemStack withColor(ItemStack stack, Color color) {
+		public ItemStack withColor(ItemStack stack, Color3f color) {
 			// Create tag if it does not exist
 			if (!stack.hasTag()) stack.setTag(new CompoundNBT());
 			// Set color
@@ -98,10 +98,10 @@ public class ThreadItem extends Item {
 		 * @param stack
 		 * @return The color of the thread itemstack, or null if no color is attached. (This should not happen.)
 		 */
-		public Color getColor(ItemStack stack) {
+		public Color3f getColor(ItemStack stack) {
 			if (!stack.hasTag()) return null;
 			if (!stack.getTag().contains(KEY_COLOR)) return null;
-			return Color.fromInt(stack.getTag().getInt(KEY_COLOR));
+			return Color3f.fromInt(stack.getTag().getInt(KEY_COLOR));
 		}
 		
 	}

@@ -1,11 +1,13 @@
 package spinyq.spiny_textiles.util;
 
+import java.util.Random;
+
 /**
  * Utility class to help with converting between different color formats and using colors.
  * @author SpinyQ
  *
  */
-public class Color {
+public class Color3f {
 
 	public static class HSV
 	{
@@ -24,18 +26,18 @@ public class Color {
 		
 	}
 	
-	private float r, g, b;
+	protected float r, g, b;
 
-	public Color() { }
+	public Color3f() { }
 	
-	public Color(float r, float g, float b) {
+	public Color3f(float r, float g, float b) {
 		super();
 		this.r = r;
 		this.g = g;
 		this.b = b;
 	}
 	
-	public Color(Color other) {
+	public Color3f(Color3f other) {
 		this(other.r, other.g, other.b);
 	}
 
@@ -99,17 +101,30 @@ public class Color {
 
 	}
 	
+	public Color3f lerp(Color3f other, float s) {
+		return new Color3f(((other.r - r) * s) + r, ((other.g - g) * s) + g, ((other.b - b) * s) + b);
+	}
+	
 	/**
-	 * Constructs a new color from an integer. Sets alpha to 1.0
+	 * Constructs a new color from an integer.
 	 * @param hex An integer in hex rgb format, i.e. 0xRRGGBB
 	 * @return
 	 */
-	public static Color fromInt(int hex)
+	public static Color3f fromInt(int hex)
 	{
 		float r = (float) (hex >> 16 & 255) / 255.0F;
         float g = (float) (hex >> 8 & 255) / 255.0F;
         float b = (float) (hex & 255) / 255.0F;
-        return new Color(r, g, b);
+        return new Color3f(r, g, b);
+	}
+	
+	/**
+	 * Returns a new color with RGB values uniformly distributed between 0 and 1.
+	 * @param random
+	 * @return
+	 */
+	public static Color3f random(Random random) {
+		return new Color3f(random.nextFloat(), random.nextFloat(), random.nextFloat());
 	}
 	
 	/**
@@ -117,7 +132,7 @@ public class Color {
 	 * @param hex
 	 * @return
 	 */
-	public static Color fromIntString(String hex)
+	public static Color3f fromIntString(String hex)
 	{
 		return fromInt(Integer.decode(hex));
 	}
@@ -129,9 +144,9 @@ public class Color {
 	 * @param b
 	 * @return
 	 */
-	public static Color fromIntRGB(int r, int g, int b)
+	public static Color3f fromIntRGB(int r, int g, int b)
 	{
-		return new Color(r / 255.0f, g / 255.0f, b / 255.0f);
+		return new Color3f(r / 255.0f, g / 255.0f, b / 255.0f);
 	}
 	
 	/**
@@ -172,7 +187,7 @@ public class Color {
 		
 	}
 	
-	public double distanceTo(Color other) {
+	public double distanceTo(Color3f other) {
 		return Math.sqrt(Math.pow(r - other.r, 2.0f) + Math.pow(g - other.g, 2.0f) + Math.pow(b - other.b, 2.0f));
 	}
 
