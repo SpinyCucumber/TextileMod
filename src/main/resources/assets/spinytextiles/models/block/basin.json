@@ -1,11 +1,11 @@
 {
     "ambientocclusion": false,
     "textures": {
-        "particle": "spiny_textiles:block/basin_side",
-        "top": "spiny_textiles:block/basin_top",
-        "bottom": "spiny_textiles:block/basin_bottom",
-        "side": "spiny_textiles:block/basin_side",
-        "inside": "spiny_textiles:block/basin_inner"
+        "particle": "spinytextiles:block/basin_side",
+        "top": "spinytextiles:block/basin_top",
+        "bottom": "spinytextiles:block/basin_bottom",
+        "side": "spinytextiles:block/basin_side",
+        "inside": "spinytextiles:block/basin_inner"
     },
     "elements": [
         {

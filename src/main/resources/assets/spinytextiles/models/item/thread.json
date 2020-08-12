@@ -1,7 +1,7 @@
 {
 	"parent": "builtin/generated",
 	"textures": {
-		"layer0": "spiny_textiles:item/thread",
-		"layer1": "spiny_textiles:item/thread_overlay"
+		"layer0": "spinytextiles:item/thread",
+		"layer1": "spinytextiles:item/thread_overlay"
     }
 }
