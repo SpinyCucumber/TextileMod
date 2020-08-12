@@ -16,12 +16,10 @@ import spinyq.spiny_textiles.client.render.RenderHelper.CuboidModel;
 import spinyq.spiny_textiles.tiles.BasinTile;
 import spinyq.spiny_textiles.util.Color3f;
 import spinyq.spiny_textiles.util.Color4f;
-import spinyq.spiny_textiles.util.Range2f;
 
 public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 	private static final Color3f WATER_COLOR = Color3f.fromIntString("0x3F76E4");
-	private static final Range2f ALPHA_RANGE = new Range2f(0.4f, 1.0f);
 	
 	private static final int STAGES = 200;
 	
@@ -55,7 +53,6 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 		FMLJavaModLoadingContext.get().getModEventBus().register(this);
 	}
 	
-	// TODO Move this so it happens while baking other models.
 	@SuppressWarnings("deprecation")
 	@SubscribeEvent
 	public void onModelBake(ModelBakeEvent event) {
@@ -72,8 +69,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 		// Calculate color using dye concentration
 		float conc = basin.getDyeConcentration();
 		Color3f rgb = WATER_COLOR.lerp(basin.getColor(), conc);
-		float alpha = ALPHA_RANGE.lerp(conc);
-		Color4f color = new Color4f(rgb, alpha);
+		Color4f color = new Color4f(rgb, 1.0f);
 		// Allocate buffer
 		IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 		// Render model

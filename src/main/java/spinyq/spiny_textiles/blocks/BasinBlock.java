@@ -3,6 +3,7 @@ package spinyq.spiny_textiles.blocks;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.DyeItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -23,6 +24,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import spinyq.spiny_textiles.TextileMod;
 import spinyq.spiny_textiles.tiles.BasinTile;
+import spinyq.spiny_textiles.util.Color3f;
 
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class BasinBlock extends Block {
@@ -52,6 +54,7 @@ public class BasinBlock extends Block {
 				return ActionResultType.PASS;
 			} else {
 				// Adapted from cauldron code
+				// Interacting on a basin with a water bucket fills the basin
 				Item item = itemstack.getItem();
 				if (item == Items.WATER_BUCKET && basin.isEmpty()) {
 					TextileMod.LOGGER.info("BasinBlock Water Bucket...");
@@ -66,6 +69,26 @@ public class BasinBlock extends Block {
 					}
 					
 					return ActionResultType.SUCCESS;
+					
+				}
+				// Interacting on a basin with dye consumes the dye and changes the color of the basin
+				else if (item instanceof DyeItem && !basin.isSaturated() && basin.isFull()) {
+					if (!world.isRemote) {
+						// Consume one item if player is not in creative
+						if (!player.abilities.isCreativeMode) {
+							itemstack.shrink(1);
+						}
+						// Retrieve the color of the dye
+						DyeItem dye = (DyeItem) item;
+						Color3f dyeColor = Color3f.fromDye(dye.getDyeColor());
+						// Mix the color into the basin
+						basin.mixDye(dyeColor);
+						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
+								SoundCategory.BLOCKS, 1.0F, 1.0F);
+					}
+					
+					return ActionResultType.SUCCESS;
+					
 				}
 			}
 		}

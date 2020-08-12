@@ -2,6 +2,8 @@ package spinyq.spiny_textiles.util;
 
 import java.util.Random;
 
+import net.minecraft.item.DyeColor;
+
 /**
  * Utility class to help with converting between different color formats and using colors.
  * @author SpinyQ
@@ -125,6 +127,15 @@ public class Color3f {
 	 */
 	public static Color3f random(Random random) {
 		return new Color3f(random.nextFloat(), random.nextFloat(), random.nextFloat());
+	}
+	
+	/**
+	 * Constructs a color using a Minecraft dye color.
+	 * @param dye
+	 * @return
+	 */
+	public static Color3f fromDye(DyeColor dye) {
+		return fromInt(dye.getColorValue());
 	}
 	
 	/**
