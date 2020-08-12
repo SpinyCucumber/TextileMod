@@ -1,6 +1,6 @@
 {
 	"parent": "item/generated",
 	"textures": {
-		"layer0": "spinytextiles:item/fiber"
+		"layer0": "spinytextiles:item/wool_fiber"
     }
 }

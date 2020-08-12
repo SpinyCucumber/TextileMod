@@ -1,6 +1,7 @@
 package spinyq.spinytextiles;
 
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.DyeColor;
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -8,6 +9,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import spinyq.spinytextiles.items.FiberItem;
 import spinyq.spinytextiles.items.ThreadItem;
+import spinyq.spinytextiles.utility.Color3f;
 
 /**
  * Handles managing and registering all the items of the mod.
@@ -24,8 +26,8 @@ public class ModItems {
 	public static final RegistryObject<BlockItem> BASIN_ITEM = ITEMS.register("basin",
 			() -> new BlockItem(ModBlocks.BASIN_BLOCK.get(), new Item.Properties().group(ItemGroupTextiles.instance)));
 	
-	public static final RegistryObject<FiberItem> FIBER_ITEM = ITEMS.register("fiber",
-			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1));
+	public static final RegistryObject<FiberItem> WOOL_FIBER_ITEM = ITEMS.register("wool_fiber",
+			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1, Color3f.fromDye(DyeColor.WHITE)));
 	
 	public static final RegistryObject<Item> BRUSH_ITEM = ITEMS.register("brush",
 			() -> new Item(new Item.Properties().group(ItemGroupTextiles.instance).maxDamage(256)));
