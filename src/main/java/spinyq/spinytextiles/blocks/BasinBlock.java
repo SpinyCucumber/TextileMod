@@ -22,10 +22,9 @@ import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.utility.Color3f;
-import spinyq.spinytextiles.utility.Dyeable.DyeableItem;
+import spinyq.spinytextiles.utility.IDyeable.IDyeableItem;
 
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class BasinBlock extends Block {
@@ -45,7 +44,6 @@ public class BasinBlock extends Block {
 	public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
 			Hand handIn, BlockRayTraceResult hit) {
 		// Check that the player is indeed interacting with the tile entity
-		TextileMod.LOGGER.info("BasinBlock Activated...");
 		TileEntity tile = world.getTileEntity(pos);
 		
 		if (tile instanceof BasinTile) {
@@ -60,7 +58,6 @@ public class BasinBlock extends Block {
 				// Interacting on a basin with a water bucket fills the basin
 				Item item = itemstack.getItem();
 				if (item == Items.WATER_BUCKET && basin.isEmpty()) {
-					TextileMod.LOGGER.info("BasinBlock Water Bucket...");
 					
 					if (!world.isRemote) {
 						if (!player.abilities.isCreativeMode) {
@@ -96,8 +93,8 @@ public class BasinBlock extends Block {
 				}
 				// Interacting on a basin with a dyeable item dyes the item and consumes some water
 				// The basin must also be heated
-				else if (item instanceof DyeableItem && basin.canDye((DyeableItem) item) && !basin.isEmpty() && basin.isHeated()) {
-					DyeableItem dyeable = (DyeableItem) item;
+				else if (item instanceof IDyeableItem && basin.canDye((IDyeableItem) item) && !basin.isEmpty() && basin.isHeated()) {
+					IDyeableItem dyeable = (IDyeableItem) item;
 					if (!world.isRemote) {
 						// Dye the item
 						basin.dye(itemstack, player.inventory, dyeable);

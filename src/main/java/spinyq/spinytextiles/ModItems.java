@@ -6,6 +6,7 @@ import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import spinyq.spinytextiles.items.FiberItem;
 import spinyq.spinytextiles.items.ThreadItem;
 
 /**
@@ -22,6 +23,12 @@ public class ModItems {
 	
 	public static final RegistryObject<BlockItem> BASIN_ITEM = ITEMS.register("basin",
 			() -> new BlockItem(ModBlocks.BASIN_BLOCK.get(), new Item.Properties().group(ItemGroupTextiles.instance)));
+	
+	public static final RegistryObject<FiberItem> FIBER_ITEM = ITEMS.register("fiber",
+			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1));
+	
+	public static final RegistryObject<Item> BRUSH_ITEM = ITEMS.register("brush",
+			() -> new Item(new Item.Properties().group(ItemGroupTextiles.instance).maxDamage(256)));
 
 	// TODO Might move "Mod..." classes to a single "Registration" class to simplify things. Or not.
 	public static void init() {

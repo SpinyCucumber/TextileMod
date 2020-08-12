@@ -13,9 +13,9 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.utility.Color3f;
 import spinyq.spinytextiles.utility.ColorWord;
-import spinyq.spinytextiles.utility.Dyeable.DyeableItem;
+import spinyq.spinytextiles.utility.IDyeable.IDyeableItem;
 
-public class ThreadItem extends Item implements DyeableItem {
+public class ThreadItem extends Item implements IDyeableItem {
 	
 	public ThreadItem(Properties properties) {
 		super(properties);
@@ -27,7 +27,7 @@ public class ThreadItem extends Item implements DyeableItem {
 	public void onItemColorHandler(ColorHandlerEvent.Item event) {
 		event.getItemColors().register((stack, tintIndex) -> {
 			// For the overlay layer, return the color of the thread
-			Color3f color = getStorageHandler().getColor(stack);
+			Color3f color = storageHandler.getColor(stack);
 			if (tintIndex == 1 && color != null) return color.toInt();
 			// For all other layers, return -1 (white)
 			return -1;
@@ -39,7 +39,7 @@ public class ThreadItem extends Item implements DyeableItem {
 	 */
 	@Override
 	public ItemStack getDefaultInstance() {
-		return getStorageHandler().withColor(super.getDefaultInstance(), ColorWord.WHITE.getColor());
+		return storageHandler.withColor(super.getDefaultInstance(), ColorWord.WHITE.getColor());
 	}
 	
 	@Override
@@ -57,14 +57,10 @@ public class ThreadItem extends Item implements DyeableItem {
 		if (this.isInGroup(group)) {
 			for (ColorWord colorWord : ColorWord.values()) {
 				// Create itemstack and add it
-				ItemStack stack = getStorageHandler().withColor(new ItemStack(this), colorWord.getColor());
+				ItemStack stack = storageHandler.withColor(new ItemStack(this), colorWord.getColor());
 				items.add(stack);
 			}
 		}
-	}
-
-	public StorageHandler getStorageHandler() {
-		return storageHandler;
 	}
 	
 	private StorageHandler storageHandler = new StorageHandler();
@@ -76,7 +72,7 @@ public class ThreadItem extends Item implements DyeableItem {
 	 */
 	public static class StorageHandler {
 		
-		private static final String KEY_COLOR = "color";
+		private static final String KEY_COLOR = "Color";
 		
 		/**
 		 * Writes a color to an itemstack and returns the stack for chaining
@@ -112,7 +108,7 @@ public class ThreadItem extends Item implements DyeableItem {
 	public void setColor(ItemStack stack, IInventory inventory, Color3f color) {
 		// Only dye one item at a time
 		ItemStack dyedStack = stack.split(1);
-		getStorageHandler().withColor(dyedStack, color);
+		storageHandler.withColor(dyedStack, color);
 		if (inventory instanceof PlayerInventory) {
 			((PlayerInventory) inventory).addItemStackToInventory(dyedStack);
 		}
@@ -123,7 +119,7 @@ public class ThreadItem extends Item implements DyeableItem {
 
 	@Override
 	public Color3f getColor(ItemStack stack) {
-		return getStorageHandler().getColor(stack);
+		return storageHandler.getColor(stack);
 	}
 
 }

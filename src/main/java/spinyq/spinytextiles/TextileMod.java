@@ -18,6 +18,7 @@ public class TextileMod
     	ModBlocks.init();
     	ModTiles.init();
     	ModItems.init();
+    	ModRecipes.init();
     }
     
 }

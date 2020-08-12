@@ -2,4 +2,7 @@
 - [ ] Spinning Wheel Block
 - [x] Color Word Localization
 - [ ] Better Mixing Algorithm
-- [ ] Add Feature to boost Basin color saturation. Player can add one glowstone dust which boosts the basin's color saturation.
+- [x] Add Feature to boost Basin color saturation. Player can add one glowstone dust which boosts the basin's color saturation.
+- [ ] Drafting Table
+- [x] Fiber Item
+- [ ] Brush Item

@@ -11,7 +11,7 @@ import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.utility.Color3f;
 import spinyq.spinytextiles.utility.Color3f.HSV;
 import spinyq.spinytextiles.utility.ColorHelper;
-import spinyq.spinytextiles.utility.Dyeable;
+import spinyq.spinytextiles.utility.IDyeable;
 
 public class BasinTile extends TileEntity {
 
@@ -116,7 +116,7 @@ public class BasinTile extends TileEntity {
 	 * @param stack
 	 * @param dyeable
 	 */
-	public <T,C> void dye(T object, C context, Dyeable<T,C> dyeable) {
+	public <T,C> void dye(T object, C context, IDyeable<T,C> dyeable) {
 		// Calculate the new color by mixing the current color of the object and the basin's color
 		// Interpolate between them using the dye concentration
 		Color3f newColor = ColorHelper.mixRealistic(dyeable.getColor(object), color, getDyeConcentration());
@@ -177,7 +177,7 @@ public class BasinTile extends TileEntity {
 		return hsv.sat < 1.0f;
 	}
 	
-	public boolean canDye(Dyeable<?,?> dyeable) {
+	public boolean canDye(IDyeable<?,?> dyeable) {
 		return (waterLevel >= dyeable.getDyeCost());
 	}
 	
