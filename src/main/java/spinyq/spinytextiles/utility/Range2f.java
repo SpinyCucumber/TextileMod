@@ -1,4 +1,4 @@
-package spinyq.spiny_textiles.utility;
+package spinyq.spinytextiles.utility;
 
 public class Range2f {
 

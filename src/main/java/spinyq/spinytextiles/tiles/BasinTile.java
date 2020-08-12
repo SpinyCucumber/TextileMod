@@ -1,4 +1,4 @@
-package spinyq.spiny_textiles.tiles;
+package spinyq.spinytextiles.tiles;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CampfireBlock;
@@ -7,10 +7,10 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.Constants;
-import spinyq.spiny_textiles.ModTiles;
-import spinyq.spiny_textiles.utility.Color3f;
-import spinyq.spiny_textiles.utility.ColorHelper;
-import spinyq.spiny_textiles.utility.Dyeable;
+import spinyq.spinytextiles.ModTiles;
+import spinyq.spinytextiles.utility.Color3f;
+import spinyq.spinytextiles.utility.ColorHelper;
+import spinyq.spinytextiles.utility.Dyeable;
 
 public class BasinTile extends TileEntity {
 

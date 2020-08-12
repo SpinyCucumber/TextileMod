@@ -1,4 +1,4 @@
-package spinyq.spiny_textiles.items;
+package spinyq.spinytextiles.items;
 
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
@@ -11,9 +11,9 @@ import net.minecraft.util.NonNullList;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import spinyq.spiny_textiles.utility.Color3f;
-import spinyq.spiny_textiles.utility.ColorWord;
-import spinyq.spiny_textiles.utility.Dyeable.DyeableItem;
+import spinyq.spinytextiles.utility.Color3f;
+import spinyq.spinytextiles.utility.ColorWord;
+import spinyq.spinytextiles.utility.Dyeable.DyeableItem;
 
 public class ThreadItem extends Item implements DyeableItem {
 	

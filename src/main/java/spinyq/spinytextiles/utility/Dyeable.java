@@ -1,4 +1,4 @@
-package spinyq.spiny_textiles.utility;
+package spinyq.spinytextiles.utility;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;

@@ -1,4 +1,4 @@
-package spinyq.spiny_textiles;
+package spinyq.spinytextiles;
 
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.api.distmarker.Dist;
@@ -11,8 +11,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import spinyq.spiny_textiles.client.render.BasinRenderer;
-import spinyq.spiny_textiles.tiles.BasinTile;
+import spinyq.spinytextiles.client.render.BasinRenderer;
+import spinyq.spinytextiles.tiles.BasinTile;
 
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class ModTiles {

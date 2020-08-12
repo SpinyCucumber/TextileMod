@@ -1,4 +1,4 @@
-package spinyq.spiny_textiles.client.render;
+package spinyq.spinytextiles.client.render;
 
 import org.lwjgl.opengl.GL11;
 

@@ -1,4 +1,4 @@
-package spinyq.spiny_textiles;
+package spinyq.spinytextiles;
 
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
@@ -6,7 +6,7 @@ import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import spinyq.spiny_textiles.items.ThreadItem;
+import spinyq.spinytextiles.items.ThreadItem;
 
 /**
  * Handles managing and registering all the items of the mod.

@@ -1,4 +1,4 @@
-package spinyq.spiny_textiles.client.render;
+package spinyq.spinytextiles.client.render;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
@@ -11,11 +11,11 @@ import net.minecraft.fluid.Fluids;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import spinyq.spiny_textiles.TextileMod;
-import spinyq.spiny_textiles.client.render.RenderHelper.CuboidModel;
-import spinyq.spiny_textiles.tiles.BasinTile;
-import spinyq.spiny_textiles.utility.Color3f;
-import spinyq.spiny_textiles.utility.Color4f;
+import spinyq.spinytextiles.TextileMod;
+import spinyq.spinytextiles.client.render.RenderHelper.CuboidModel;
+import spinyq.spinytextiles.tiles.BasinTile;
+import spinyq.spinytextiles.utility.Color3f;
+import spinyq.spinytextiles.utility.Color4f;
 
 public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 

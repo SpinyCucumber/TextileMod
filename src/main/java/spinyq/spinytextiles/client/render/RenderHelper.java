@@ -1,4 +1,4 @@
-package spinyq.spiny_textiles.client.render;
+package spinyq.spinytextiles.client.render;
 import java.util.Arrays;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -15,7 +15,7 @@ import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.Direction.AxisDirection;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
-import spinyq.spiny_textiles.utility.Color4f;
+import spinyq.spinytextiles.utility.Color4f;
 
 /**
  * Adapted from Mekanism (and Buildcraft)

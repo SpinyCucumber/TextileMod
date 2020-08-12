@@ -1,4 +1,4 @@
-package spinyq.spiny_textiles.utility;
+package spinyq.spinytextiles.utility;
 
 public class Color4f extends Color3f {
 

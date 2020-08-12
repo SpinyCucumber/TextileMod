@@ -1,4 +1,4 @@
-package spinyq.spiny_textiles.blocks;
+package spinyq.spinytextiles.blocks;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -22,10 +22,10 @@ import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import spinyq.spiny_textiles.TextileMod;
-import spinyq.spiny_textiles.tiles.BasinTile;
-import spinyq.spiny_textiles.utility.Color3f;
-import spinyq.spiny_textiles.utility.Dyeable.DyeableItem;
+import spinyq.spinytextiles.TextileMod;
+import spinyq.spinytextiles.tiles.BasinTile;
+import spinyq.spinytextiles.utility.Color3f;
+import spinyq.spinytextiles.utility.Dyeable.DyeableItem;
 
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class BasinBlock extends Block {
