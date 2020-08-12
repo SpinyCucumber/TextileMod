@@ -1,4 +1,5 @@
 {
+    
     "itemGroup.spinytextiles": "Spiny's Textiles",
 
     "block.spinytextiles.basin": "Basin",
@@ -6,6 +7,40 @@
     "item.spinytextiles.thread.white": "White Thread",
     "item.spinytextiles.thread.black": "Black Thread",
     "item.spinytextiles.thread.red": "Red Thread",
-    "item.spinytextiles.thread.lime": "Lime Thread"
-    
+    "item.spinytextiles.thread.lime": "Lime Thread",
+    "item.spinytextiles.thread.blue": "Blue Thread",
+    "item.spinytextiles.thread.darkred": "Dark Red Thread",
+    "item.spinytextiles.thread.crimson": "Crimson Thread",
+    "item.spinytextiles.thread.pink": "Pink Thread",
+    "item.spinytextiles.thread.hotpink": "Hot Pink Thread",
+    "item.spinytextiles.thread.orange": "Orange Thread",
+    "item.spinytextiles.thread.orangered": "Red Orange Thread",
+    "item.spinytextiles.thread.gold": "Gold Thread",
+    "item.spinytextiles.thread.yellow": "Yellow Thread",
+    "item.spinytextiles.thread.lightyellow": "Light Yellow Thread",
+    "item.spinytextiles.thread.lavender": "Lavender Thread",
+    "item.spinytextiles.thread.violet": "Violet Thread",
+    "item.spinytextiles.thread.fuchsia": "Fuchsia Thread",
+    "item.spinytextiles.thread.pruple": "Purple Thread",
+    "item.spinytextiles.thread.indigo": "Indigo Thread",
+    "item.spinytextiles.thread.slateblue": "Slate Blue Thread",
+    "item.spinytextiles.thread.seagreen": "Sea Green Thread",
+    "item.spinytextiles.thread.green": "Green Thread",
+    "item.spinytextiles.thread.darkgreen": "Dark Green Thread",
+    "item.spinytextiles.thread.teal": "Teal Thread",
+    "item.spinytextiles.thread.cyan": "Cyan Thread",
+    "item.spinytextiles.thread.aquamarine": "Aquamarine Thread",
+    "item.spinytextiles.thread.turqoise": "Turqoise Thread",
+    "item.spinytextiles.thread.lightblue": "Light Blue Thread",
+    "item.spinytextiles.thread.skyblue": "Sky Blue Thread",
+    "item.spinytextiles.thread.cornflowerblue": "Cornflower Blue Thread",
+    "item.spinytextiles.thread.royalblue": "Royal Blue Thread",
+    "item.spinytextiles.thread.navy": "Navy Thread",
+    "item.spinytextiles.thread.tan": "Tan Thread",
+    "item.spinytextiles.thread.sienna": "Sienna Thread",
+    "item.spinytextiles.thread.maroon": "Maroon Thread",
+    "item.spinytextiles.thread.lightgray": "Light Gray Thread",
+    "item.spinytextiles.thread.silver": "Silver Thread",
+    "item.spinytextiles.thread.gray": "Gray Thread"
+
 }
