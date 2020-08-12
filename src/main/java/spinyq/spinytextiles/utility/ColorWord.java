@@ -31,7 +31,7 @@ public enum ColorWord {
 	DARKGREEN(Color3f.fromIntString("0x006400")),
 	TEAL(Color3f.fromIntString("0x008080")),
 	CYAN(Color3f.fromIntString("0x00ffff")),
-	AQUAMARINE(Color3f.fromIntString("0x7fffd4")),
+	AQUAMARINE(Color3f.fromIntString("0x7fffd4")), 
 	TURQUOISE(Color3f.fromIntString("0x40e0d0")),
 	LIGHTBLUE(Color3f.fromIntString("0xadd8e6")),
 	SKYBLUE(Color3f.fromIntString("0x87ceeb")),

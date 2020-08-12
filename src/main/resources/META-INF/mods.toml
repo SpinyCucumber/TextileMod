@@ -7,7 +7,7 @@ loaderVersion="[31,)"
 showAsResourcePack=false
 
 [[mods]]
-  modId="spiny_textiles"
+  modId="spinytextiles"
   version="${file.jarVersion}"
   displayName="Spiny's Textiles"
   logoFile="logo.png"

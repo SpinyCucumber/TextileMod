@@ -9,7 +9,7 @@ import net.minecraftforge.fml.common.Mod;
 public class TextileMod
 {
 	
-	public static final String MODID = "spiny_textiles";
+	public static final String MODID = "spinytextiles";
     
     public static final Logger LOGGER = LogManager.getLogger(MODID);
     

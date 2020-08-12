@@ -45,11 +45,11 @@ public class ThreadItem extends Item implements DyeableItem {
 	@Override
 	public String getTranslationKey(ItemStack stack) {
 		// If the stack has a color (it should), get the closest "word" color and use that
-		String colorWord = "null";
+		String colorName = "null";
 		Color3f color = storageHandler.getColor(stack);
 		if (color != null)
-			colorWord = ColorWord.getClosest(color).getName();
-		return "item.thread." + colorWord;
+			colorName = ColorWord.getClosest(color).getName();
+		return super.getTranslationKey() + '.' + colorName;
 	}
 
 	@Override
