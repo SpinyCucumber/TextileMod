@@ -1,4 +1,4 @@
-package spinyq.spiny_textiles.util;
+package spinyq.spiny_textiles.utility;
 
 import java.util.Arrays;
 import java.util.Comparator;

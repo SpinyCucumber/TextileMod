@@ -1,5 +1,8 @@
 package spinyq.spiny_textiles.items;
 
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -8,10 +11,11 @@ import net.minecraft.util.NonNullList;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import spinyq.spiny_textiles.util.Color3f;
-import spinyq.spiny_textiles.util.ColorWord;
+import spinyq.spiny_textiles.utility.Color3f;
+import spinyq.spiny_textiles.utility.ColorWord;
+import spinyq.spiny_textiles.utility.Dyeable.DyeableItem;
 
-public class ThreadItem extends Item {
+public class ThreadItem extends Item implements DyeableItem {
 	
 	public ThreadItem(Properties properties) {
 		super(properties);
@@ -59,13 +63,6 @@ public class ThreadItem extends Item {
 		}
 	}
 
-	@Override
-	public Item getItem() {
-		return this;
-	}
-
-	// TODO Register Model, Color Handler
-	
 	public StorageHandler getStorageHandler() {
 		return storageHandler;
 	}
@@ -104,6 +101,29 @@ public class ThreadItem extends Item {
 			return Color3f.fromInt(stack.getTag().getInt(KEY_COLOR));
 		}
 		
+	}
+
+	@Override
+	public int getDyeCost() {
+		return 1;
+	}
+
+	@Override
+	public void setColor(ItemStack stack, IInventory inventory, Color3f color) {
+		// Only dye one item at a time
+		ItemStack dyedStack = stack.split(1);
+		getStorageHandler().withColor(dyedStack, color);
+		if (inventory instanceof PlayerInventory) {
+			((PlayerInventory) inventory).addItemStackToInventory(dyedStack);
+		}
+		else if (inventory instanceof Inventory) {
+			((Inventory) inventory).addItem(dyedStack);
+		}
+	}
+
+	@Override
+	public Color3f getColor(ItemStack stack) {
+		return getStorageHandler().getColor(stack);
 	}
 
 }

@@ -14,8 +14,8 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spiny_textiles.TextileMod;
 import spinyq.spiny_textiles.client.render.RenderHelper.CuboidModel;
 import spinyq.spiny_textiles.tiles.BasinTile;
-import spinyq.spiny_textiles.util.Color3f;
-import spinyq.spiny_textiles.util.Color4f;
+import spinyq.spiny_textiles.utility.Color3f;
+import spinyq.spiny_textiles.utility.Color4f;
 
 public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
@@ -35,7 +35,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
         model.minZ = 0.125 + .01;
 
         model.maxX = 0.875 - .01;
-        model.maxY = 0.0625 + ((float) stage / (float) STAGES) * 0.875 - .01;
+        model.maxY = 0.2 + ((float) stage / (float) STAGES) * 0.875 - .01;
         model.maxZ = 0.875 - .01;
         // Done
         return model;
@@ -63,17 +63,20 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	@Override
 	public void render(BasinTile basin, float partialTicks, MatrixStack matrixStackIn,
 			IRenderTypeBuffer renderer, int combinedLightIn, int combinedOverlayIn) {
-		// Calculate stage
-		int stage = (int) Math.floor((float) STAGES * (float) basin.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
-		CuboidModel model = fluidModels[stage];
-		// Calculate color using dye concentration
-		float conc = basin.getDyeConcentration();
-		Color3f rgb = WATER_COLOR.lerp(basin.getColor(), conc);
-		Color4f color = new Color4f(rgb, 1.0f);
-		// Allocate buffer
-		IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
-		// Render model
-		RenderHelper.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn);
+		// Don't render anything if basin is empty
+		if (!basin.isEmpty()) {
+			// Calculate stage
+			int stage = (int) Math.floor((float) STAGES * (float) basin.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
+			CuboidModel model = fluidModels[stage];
+			// Calculate color using dye concentration
+			float conc = basin.getDyeConcentration();
+			Color3f rgb = WATER_COLOR.lerp(basin.getColor(), conc);
+			Color4f color = new Color4f(rgb, 1.0f);
+			// Allocate buffer
+			IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
+			// Render model
+			RenderHelper.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn);
+		}
 	}
 
 }

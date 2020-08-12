@@ -24,7 +24,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import spinyq.spiny_textiles.TextileMod;
 import spinyq.spiny_textiles.tiles.BasinTile;
-import spinyq.spiny_textiles.util.Color3f;
+import spinyq.spiny_textiles.utility.Color3f;
+import spinyq.spiny_textiles.utility.Dyeable.DyeableItem;
 
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class BasinBlock extends Block {
@@ -72,7 +73,8 @@ public class BasinBlock extends Block {
 					
 				}
 				// Interacting on a basin with dye consumes the dye and changes the color of the basin
-				else if (item instanceof DyeItem && !basin.isSaturated() && basin.isFull()) {
+				// The basin must be full and heated
+				else if (item instanceof DyeItem && !basin.isSaturated() && basin.isFull() && basin.isHeated()) {
 					if (!world.isRemote) {
 						// Consume one item if player is not in creative
 						if (!player.abilities.isCreativeMode) {
@@ -83,6 +85,20 @@ public class BasinBlock extends Block {
 						Color3f dyeColor = Color3f.fromDye(dye.getDyeColor());
 						// Mix the color into the basin
 						basin.mixDye(dyeColor);
+						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
+								SoundCategory.BLOCKS, 1.0F, 1.0F);
+					}
+					
+					return ActionResultType.SUCCESS;
+					
+				}
+				// Interacting on a basin with a dyeable item dyes the item and consumes some water
+				// The basin must also be heated
+				else if (item instanceof DyeableItem && basin.canDye((DyeableItem) item) && !basin.isEmpty() && basin.isHeated()) {
+					DyeableItem dyeable = (DyeableItem) item;
+					if (!world.isRemote) {
+						// Dye the item
+						basin.dye(itemstack, player.inventory, dyeable);
 						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
 								SoundCategory.BLOCKS, 1.0F, 1.0F);
 					}

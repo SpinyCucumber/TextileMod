@@ -15,7 +15,7 @@ import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.Direction.AxisDirection;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
-import spinyq.spiny_textiles.util.Color4f;
+import spinyq.spiny_textiles.utility.Color4f;
 
 /**
  * Adapted from Mekanism (and Buildcraft)

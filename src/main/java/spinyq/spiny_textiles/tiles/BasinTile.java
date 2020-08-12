@@ -1,13 +1,16 @@
 package spinyq.spiny_textiles.tiles;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.block.CampfireBlock;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.Constants;
 import spinyq.spiny_textiles.ModTiles;
-import spinyq.spiny_textiles.util.Color3f;
+import spinyq.spiny_textiles.utility.Color3f;
+import spinyq.spiny_textiles.utility.ColorHelper;
+import spinyq.spiny_textiles.utility.Dyeable;
 
 public class BasinTile extends TileEntity {
 
@@ -95,43 +98,68 @@ public class BasinTile extends TileEntity {
 	}
 
 	/**
-	 * Sets the water level. Sends data to clients.
-	 * 
-	 * @param waterLevel
-	 */
-	public void setWaterLevel(int waterLevel) {
-		this.waterLevel = waterLevel;
-		update();
-	}
-
-	/**
-	 * Sets the dye level. Sends data to clients.
-	 * 
-	 * @param dyeLevel
-	 */
-	public void setDyeLevel(int dyeLevel) {
-		this.dyeLevel = dyeLevel;
-		update();
-	}
-
-	/**
 	 * Mixes a new dye into the basin. This increases the dye concentration and
 	 * changes the color.
 	 * 
 	 * @param dyeColor
 	 */
 	public void mixDye(Color3f dyeColor) {
-		// TODO Add mixing algorithm
-		this.color = dyeColor;
+		// Mix the existing color with the new
+		color = ColorHelper.mixRealistic(color, dyeColor, 1.0f / (float) (dyeLevel + 1));
 		this.dyeLevel++;
 		update();
+	}
+	
+	/**
+	 * Dyes an item, also consuming some water.
+	 * @param stack
+	 * @param dyeable
+	 */
+	public <T,C> void dye(T object, C context, Dyeable<T,C> dyeable) {
+		// Calculate the new color by mixing the current color of the object and the basin's color
+		// Interpolate between them using the dye concentration
+		Color3f newColor = ColorHelper.mixRealistic(dyeable.getColor(object), color, getDyeConcentration());
+		dyeable.setColor(object, context, newColor);
+		int cost = dyeable.getDyeCost();
+		if (waterLevel >= cost) drain(cost);
+		else throw new RuntimeException("Attempted to dye an item without enough dye.");
 	}
 
 	/**
 	 * Sets the water level to the max.
 	 */
 	public void fill() {
-		setWaterLevel(MAX_WATER_LEVEL - 1);
+		waterLevel = MAX_WATER_LEVEL - 1;
+		update();
+	}
+	
+	/**
+	 * Drains the specified amount of water from the basin.
+	 * If the basin is emptied, its color and dye level is reset.
+	 * @param amt
+	 */
+	public void drain(int amt) {
+		if (waterLevel >= amt) {
+			waterLevel -= amt;
+			if (waterLevel == 0) {
+				dyeLevel = 0;
+				color = new Color3f();
+			}
+			update();
+		}
+		else throw new RuntimeException("Attempted to drain non-existent water.");
+	}
+	
+	public boolean canDye(Dyeable<?,?> dyeable) {
+		return (waterLevel >= dyeable.getDyeCost());
+	}
+	
+	/**
+	 * Whether the basin is heated. Heat is required to dye objects.
+	 * @return
+	 */
+	public boolean isHeated() {
+		return CampfireBlock.isLitCampfireInRange(world, pos, 2);
 	}
 
 	/**
@@ -163,7 +191,7 @@ public class BasinTile extends TileEntity {
 	}
 
 	public float getDyeConcentration() {
-		return (float) dyeLevel / (float) MAX_DYE_LEVEL;
+		return (float) dyeLevel / (float) (MAX_DYE_LEVEL - 1);
 	}
 
 	public Color3f getColor() {
