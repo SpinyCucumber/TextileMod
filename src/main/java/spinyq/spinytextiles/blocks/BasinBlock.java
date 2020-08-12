@@ -38,6 +38,8 @@ public class BasinBlock extends Block {
 					makeCuboidShape(2.0D, 0.0D, 2.0D, 14.0D, 3.0D, 14.0D), INSIDE),
 			IBooleanFunction.ONLY_FIRST);
 
+	private static final float GLOWSTONE_SAT_AMT = 0.2f;
+	
 	@SuppressWarnings("deprecation")
 	@Override
 	public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
@@ -105,6 +107,23 @@ public class BasinBlock extends Block {
 					
 					return ActionResultType.SUCCESS;
 					
+				}
+				// Interacting on a basin with glowstone dust boosts the saturation of the color
+				// Basin must be full and heated
+				else if (item == Items.GLOWSTONE_DUST && basin.canBoostSaturation(GLOWSTONE_SAT_AMT)
+						&& basin.isFull() && basin.isHeated()) {
+					if (!world.isRemote) {
+						// Consume one item if player is not in creative
+						if (!player.abilities.isCreativeMode) {
+							itemstack.shrink(1);
+						}
+						// Boost saturation
+						basin.boostColorSaturation(GLOWSTONE_SAT_AMT);
+						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
+								SoundCategory.BLOCKS, 1.0F, 1.0F);
+					}
+					
+					return ActionResultType.SUCCESS;
 				}
 			}
 		}

@@ -1,2 +1,5 @@
-- [ ] Basin Rendering... See BlockModelShapes, ModelLoaderRegistry. Going to use Multipart models and Data Generators, E.g. split model into basin part (which will be static) and water part (which is generated). Create properties in Basin Block to expose water level, etc. Custom IStateMapper?
-	
+- [x] Basin Rendering... See BlockModelShapes, ModelLoaderRegistry. Going to use Multipart models and Data Generators, E.g. split model into basin part (which will be static) and water part (which is generated). Create properties in Basin Block to expose water level, etc. Custom IStateMapper?
+- [ ] Spinning Wheel Block
+- [x] Color Word Localization
+- [ ] Better Mixing Algorithm
+- [ ] Add Feature to boost Basin color saturation. Player can add one glowstone dust which boosts the basin's color saturation.

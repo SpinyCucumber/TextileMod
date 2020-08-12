@@ -9,6 +9,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.Constants;
 import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.utility.Color3f;
+import spinyq.spinytextiles.utility.Color3f.HSV;
 import spinyq.spinytextiles.utility.ColorHelper;
 import spinyq.spinytextiles.utility.Dyeable;
 
@@ -148,6 +149,32 @@ public class BasinTile extends TileEntity {
 			update();
 		}
 		else throw new RuntimeException("Attempted to drain non-existent water.");
+	}
+	
+	/**
+	 * Boosts the saturation of the Basin's color.
+	 * The current color is converted to HSV space,
+	 * where 'amt' is added to the saturation, then converted back.
+	 * The saturation won't exceed 1.0.
+	 * @param amt
+	 */
+	public void boostColorSaturation(float amt) {
+		HSV hsv = new HSV();
+		color.toHSV(hsv);
+		hsv.sat = Math.min(hsv.sat + amt, 1.0f);
+		// Convert back to rgb
+		color.fromHSV(hsv);
+		update();
+	}
+	
+	/**
+	 * Whether the color saturation can be boosted further.
+	 * Any saturation below 1.0 can be boosted.
+	 */
+	public boolean canBoostSaturation(float amt) {
+		HSV hsv = new HSV();
+		color.toHSV(hsv);
+		return hsv.sat < 1.0f;
 	}
 	
 	public boolean canDye(Dyeable<?,?> dyeable) {
