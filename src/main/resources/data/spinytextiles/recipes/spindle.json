@@ -1,0 +1,20 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+      "X",
+      "I",
+      "X"
+    ],
+    "key": {
+      "X": {
+        "tag": "minecraft:planks"
+      },
+      "I": {
+        "tag": "forge:rods/wooden"
+      }
+    },
+    "result": {
+      "item": "spinytextiles:spindle",
+      "count": 4
+    }
+  }

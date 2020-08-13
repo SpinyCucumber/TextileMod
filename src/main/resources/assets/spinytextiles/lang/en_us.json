@@ -44,7 +44,9 @@
     "item.spinytextiles.thread.gray": "Gray Thread",
 
     "item.spinytextiles.wool_fiber": "Wool Fiber",
+    "item.spinytextiles.silk_fiber": "Silk Fiber",
 
-    "item.spinytextiles.brush": "Brush"
+    "item.spinytextiles.brush": "Brush",
+    "item.spinytextiles.spindle": "Spindle"
 
 }

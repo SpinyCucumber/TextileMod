@@ -2,12 +2,12 @@
     "type": "spinytextiles:crafting_brush",
     "ingredients": [
         {
-            "tag": "minecraft:wool"
+            "tag": "forge:string"
         }
     ],
     "result":
     {
-        "item": "spinytextiles:wool_fiber",
-        "count": 4
+        "item": "spinytextiles:silk_fiber",
+        "count": 1
     }
 }

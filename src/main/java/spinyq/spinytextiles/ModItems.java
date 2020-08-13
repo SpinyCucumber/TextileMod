@@ -27,10 +27,14 @@ public class ModItems {
 			() -> new BlockItem(ModBlocks.BASIN_BLOCK.get(), new Item.Properties().group(ItemGroupTextiles.instance)));
 	
 	public static final RegistryObject<FiberItem> WOOL_FIBER_ITEM = ITEMS.register("wool_fiber",
-			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1, Color3f.fromDye(DyeColor.WHITE)));
+			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1, Color3f.fromDye(DyeColor.WHITE))),
+			SILK_FIBER_ITEM = ITEMS.register("silk_fiber",
+					() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1, Color3f.fromDye(DyeColor.WHITE)));
 	
 	public static final RegistryObject<Item> BRUSH_ITEM = ITEMS.register("brush",
-			() -> new Item((new Item.Properties()).maxDamage(256).group(ItemGroupTextiles.instance)));
+			() -> new Item(new Item.Properties().maxDamage(256).group(ItemGroupTextiles.instance))),
+			SPINDLE_ITEM = ITEMS.register("spindle",
+			() -> new Item(new Item.Properties().group(ItemGroupTextiles.instance)));
 
 	// TODO Might move "Mod..." classes to a single "Registration" class to simplify things. Or not.
 	public static void init() {
