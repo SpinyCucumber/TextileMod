@@ -26,15 +26,14 @@ import spinyq.spinytextiles.ModTags;
 import spinyq.spinytextiles.TextileMod;
 
 /**
- * Decent amount of code adapted from shapeless recipe.
- * Specifies a shapeless recipe which uses a brush.
- * Damages the brush upon use.
+ * Decent amount of code adapted from shapeless recipe. Specifies a shapeless
+ * recipe which uses a brush. Damages the brush upon use.
  * 
  * @author Elijah Hilty
  *
  */
 public class BrushRecipe implements ICraftingRecipe {
-	
+
 	private ResourceLocation id;
 	// Used when displaying recipes to the user
 	private String group;
@@ -43,8 +42,7 @@ public class BrushRecipe implements ICraftingRecipe {
 	// Needed for damaging the brush item
 	private Random random = new Random();
 
-	public BrushRecipe(ResourceLocation id, String group, ItemStack recipeOutput,
-			NonNullList<Ingredient> recipeItems) {
+	public BrushRecipe(ResourceLocation id, String group, ItemStack recipeOutput, NonNullList<Ingredient> recipeItems) {
 		super();
 		this.id = id;
 		this.group = group;
@@ -52,8 +50,14 @@ public class BrushRecipe implements ICraftingRecipe {
 		this.recipeItems = recipeItems;
 	}
 
+	@Override
 	public ItemStack getRecipeOutput() {
 		return this.recipeOutput;
+	}
+
+	@Override
+	public boolean isDynamic() {
+		return true;
 	}
 
 	/**
@@ -63,15 +67,13 @@ public class BrushRecipe implements ICraftingRecipe {
 		return this.group;
 	}
 
-	public NonNullList<Ingredient> getRecipeItems() {
-		return recipeItems;
-	}
-
 	@Override
 	public boolean matches(CraftingInventory inv, World worldIn) {
 
 		// First, check if there is a brush
 		int brushPos = findBrush(inv);
+
+		TextileMod.LOGGER.trace("matches... brushPos: {}", brushPos);
 
 		if (brushPos == -1)
 			return false;
@@ -84,13 +86,13 @@ public class BrushRecipe implements ICraftingRecipe {
 				if (brushPos == j)
 					continue;
 				ItemStack itemstack = inv.getStackInSlot(j);
-				if (!itemstack.isEmpty())
-					inputs.add(itemstack);
+				if (!itemstack.isEmpty()) inputs.add(itemstack);
 			}
 
-			// Return true if the remaining inputs match the inputs specified in the recipe
-			return (inputs.size() == this.recipeItems.size())
-					&& (RecipeMatcher.findMatches(inputs, this.recipeItems) != null);
+			boolean matches = (inputs.size() == this.recipeItems.size() && RecipeMatcher.findMatches(inputs, this.recipeItems) != null);
+
+			TextileMod.LOGGER.trace("inputs: {} recipeItems: {} matches: {}", inputs, recipeItems, matches);
+			return matches;
 		}
 
 	}
@@ -104,8 +106,14 @@ public class BrushRecipe implements ICraftingRecipe {
 	private int findBrush(CraftingInventory inv) {
 		for (int j = 0; j < inv.getSizeInventory(); ++j) {
 			ItemStack itemstack = inv.getStackInSlot(j);
+			if (itemstack.isEmpty())
+				continue;
+			// Detect brush tag
+			TextileMod.LOGGER.trace("findBrush... stack: {} item: {} tags: {}", itemstack, itemstack.getItem(),
+					itemstack.getItem().getTags());
 			if (itemstack.getItem().getTags().contains(ModTags.BRUSH_TAG))
-				return j;
+				TextileMod.LOGGER.trace("Found brush!");
+			return j;
 		}
 		return -1;
 	}
@@ -117,30 +125,36 @@ public class BrushRecipe implements ICraftingRecipe {
 		// Look for brush
 		int brushPos = findBrush(inv);
 		// If there is a brush present, decrement the damage by one
-		TextileMod.LOGGER.info("BrushRecipe getRemainingItems... brushPos: {}", brushPos);
+		TextileMod.LOGGER.trace("BrushRecipe getRemainingItems... brushPos: {}", brushPos);
 		if (brushPos != -1) {
 			ItemStack stack = inv.getStackInSlot(brushPos);
-			boolean broken = false;
+			// Damage it here
+			boolean broken = stack.attemptDamageItem(1, random, null);
 			// If the stack isn't broken, add it as a remaining item.
-			TextileMod.LOGGER.info("stack: {} broken: {}", stack, broken);
-			if (!broken)
-				result.set(brushPos, stack);
+			TextileMod.LOGGER.trace("stack: {} broken: {} empty: {}", stack, broken, stack.isEmpty());
+			if (!broken) {
+				ItemStack newStack = stack.copy();
+				newStack.setCount(1);
+				result.set(brushPos, newStack);
+			}
 		}
-		TextileMod.LOGGER.info("result: {}", result);
+		TextileMod.LOGGER.trace("result: {}", result);
 		// Return list
 		return result;
 	}
 
 	@Override
 	public ItemStack getCraftingResult(CraftingInventory inv) {
-		return recipeOutput;
+		TextileMod.LOGGER.trace("BrushRecipe getCraftingResult....");
+		return recipeOutput.copy();
 	}
 
 	/**
 	 * Used to determine if this recipe can fit in a grid of the given width/height
 	 */
 	public boolean canFit(int width, int height) {
-		return width * height >= this.recipeItems.size();
+		TextileMod.LOGGER.trace("BrushRecipe canFit....");
+		return width * height >= (this.recipeItems.size() + 1);
 	}
 
 	@Override
@@ -152,58 +166,60 @@ public class BrushRecipe implements ICraftingRecipe {
 	public ResourceLocation getId() {
 		return id;
 	}
-	
-	public static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<BrushRecipe> {
 
-	    public BrushRecipe read(ResourceLocation recipeId, JsonObject json) {
-	       String s = JSONUtils.getString(json, "group", "");
-	       NonNullList<Ingredient> nonnulllist = readIngredients(JSONUtils.getJsonArray(json, "ingredients"));
-	       if (nonnulllist.isEmpty()) {
-	          throw new JsonParseException("No ingredients for shapeless recipe");
-	       // There used to be a check here to make sure there weren't too many ingredients, but it used fields that weren't visible.
-	       // Tried to use access transformers but they were a pain in the ass w/ Eclipse.
-	       } else {
-	          ItemStack itemstack = ShapedRecipe.deserializeItem(JSONUtils.getJsonObject(json, "result"));
-	          return new BrushRecipe(recipeId, s, itemstack, nonnulllist);
-	       }
-	    }
+	public static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>>
+			implements IRecipeSerializer<BrushRecipe> {
 
-	    private static NonNullList<Ingredient> readIngredients(JsonArray p_199568_0_) {
-	       NonNullList<Ingredient> nonnulllist = NonNullList.create();
+		public BrushRecipe read(ResourceLocation recipeId, JsonObject json) {
+			String s = JSONUtils.getString(json, "group", "");
+			NonNullList<Ingredient> nonnulllist = readIngredients(JSONUtils.getJsonArray(json, "ingredients"));
+			if (nonnulllist.isEmpty()) {
+				throw new JsonParseException("No ingredients for shapeless recipe");
+				// There used to be a check here to make sure there weren't too many
+				// ingredients, but it used fields that weren't visible.
+				// Tried to use access transformers but they were a pain in the ass w/ Eclipse.
+			} else {
+				ItemStack itemstack = ShapedRecipe.deserializeItem(JSONUtils.getJsonObject(json, "result"));
+				return new BrushRecipe(recipeId, s, itemstack, nonnulllist);
+			}
+		}
 
-	       for(int i = 0; i < p_199568_0_.size(); ++i) {
-	          Ingredient ingredient = Ingredient.deserialize(p_199568_0_.get(i));
-	          if (!ingredient.hasNoMatchingItems()) {
-	             nonnulllist.add(ingredient);
-	          }
-	       }
+		private static NonNullList<Ingredient> readIngredients(JsonArray p_199568_0_) {
+			NonNullList<Ingredient> nonnulllist = NonNullList.create();
 
-	       return nonnulllist;
-	    }
+			for (int i = 0; i < p_199568_0_.size(); ++i) {
+				Ingredient ingredient = Ingredient.deserialize(p_199568_0_.get(i));
+				if (!ingredient.hasNoMatchingItems()) {
+					nonnulllist.add(ingredient);
+				}
+			}
 
-	    public BrushRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-	       String s = buffer.readString(32767);
-	       int i = buffer.readVarInt();
-	       NonNullList<Ingredient> nonnulllist = NonNullList.withSize(i, Ingredient.EMPTY);
+			return nonnulllist;
+		}
 
-	       for(int j = 0; j < nonnulllist.size(); ++j) {
-	          nonnulllist.set(j, Ingredient.read(buffer));
-	       }
+		public BrushRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+			String s = buffer.readString(32767);
+			int i = buffer.readVarInt();
+			NonNullList<Ingredient> nonnulllist = NonNullList.withSize(i, Ingredient.EMPTY);
 
-	       ItemStack itemstack = buffer.readItemStack();
-	       return new BrushRecipe(recipeId, s, itemstack, nonnulllist);
-	    }
+			for (int j = 0; j < nonnulllist.size(); ++j) {
+				nonnulllist.set(j, Ingredient.read(buffer));
+			}
 
-	    public void write(PacketBuffer buffer, BrushRecipe recipe) {
-	       buffer.writeString(recipe.group);
-	       buffer.writeVarInt(recipe.recipeItems.size());
+			ItemStack itemstack = buffer.readItemStack();
+			return new BrushRecipe(recipeId, s, itemstack, nonnulllist);
+		}
 
-	       for(Ingredient ingredient : recipe.recipeItems) {
-	          ingredient.write(buffer);
-	       }
+		public void write(PacketBuffer buffer, BrushRecipe recipe) {
+			buffer.writeString(recipe.group);
+			buffer.writeVarInt(recipe.recipeItems.size());
 
-	       buffer.writeItemStack(recipe.recipeOutput);
-	    }
+			for (Ingredient ingredient : recipe.recipeItems) {
+				ingredient.write(buffer);
+			}
+
+			buffer.writeItemStack(recipe.recipeOutput);
+		}
 
 	}
 

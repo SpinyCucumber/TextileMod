@@ -30,7 +30,7 @@ public class ModItems {
 			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1, Color3f.fromDye(DyeColor.WHITE)));
 	
 	public static final RegistryObject<Item> BRUSH_ITEM = ITEMS.register("brush",
-			() -> new Item(new Item.Properties().group(ItemGroupTextiles.instance).maxDamage(256)));
+			() -> new Item((new Item.Properties()).maxDamage(256).group(ItemGroupTextiles.instance)));
 
 	// TODO Might move "Mod..." classes to a single "Registration" class to simplify things. Or not.
 	public static void init() {
