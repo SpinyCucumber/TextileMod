@@ -13,33 +13,40 @@ import spinyq.spinytextiles.utility.Color3f;
 
 /**
  * Handles managing and registering all the items of the mod.
+ * 
  * @author SpinyQ
  *
  */
 public class ModItems {
-	
+
 	public static final DeferredRegister<Item> ITEMS = new DeferredRegister<>(ForgeRegistries.ITEMS, TextileMod.MODID);
-	
+
 	public static final RegistryObject<ThreadItem> THREAD_ITEM = ITEMS.register("thread",
 			() -> new ThreadItem(new Item.Properties().group(ItemGroupTextiles.instance)));
-	
-	public static final RegistryObject<BlockItem> BASIN_ITEM = ITEMS.register("basin",
-			() -> new BlockItem(ModBlocks.BASIN_BLOCK.get(), new Item.Properties().group(ItemGroupTextiles.instance)));
-	
-	public static final RegistryObject<FiberItem> WOOL_FIBER_ITEM = ITEMS.register("wool_fiber",
-			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1, Color3f.fromDye(DyeColor.WHITE))),
-			SILK_FIBER_ITEM = ITEMS.register("silk_fiber",
-					() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1, Color3f.fromDye(DyeColor.WHITE)));
-	
-	public static final RegistryObject<Item> BRUSH_ITEM = ITEMS.register("brush",
-			() -> new Item(new Item.Properties().maxDamage(256).group(ItemGroupTextiles.instance))),
-			SPINDLE_ITEM = ITEMS.register("spindle",
-			() -> new Item(new Item.Properties().group(ItemGroupTextiles.instance)));
 
-	// TODO Might move "Mod..." classes to a single "Registration" class to simplify things. Or not.
+	public static final RegistryObject<BlockItem> BASIN_ITEM = ITEMS.register("basin",
+			() -> new BlockItem(ModBlocks.BASIN_BLOCK.get(), new Item.Properties().group(ItemGroupTextiles.instance))),
+			SPINNING_WHEEL_ITEM = ITEMS.register("spinning_wheel",
+					() -> new BlockItem(ModBlocks.SPINNING_WHEEL_BLOCK.get(),
+							new Item.Properties().group(ItemGroupTextiles.instance)));
+
+	public static final RegistryObject<FiberItem> WOOL_FIBER_ITEM = ITEMS.register("wool_fiber",
+			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1,
+					Color3f.fromDye(DyeColor.WHITE))),
+			SILK_FIBER_ITEM = ITEMS.register("silk_fiber",
+					() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1,
+							Color3f.fromDye(DyeColor.WHITE)));
+
+	public static final RegistryObject<Item> BRUSH_ITEM = ITEMS.register("brush",
+			() -> new Item(new Item.Properties().maxDamage(128).group(ItemGroupTextiles.instance))),
+			SPINDLE_ITEM = ITEMS.register("spindle",
+					() -> new Item(new Item.Properties().group(ItemGroupTextiles.instance)));
+
+	// TODO Might move "Mod..." classes to a single "Registration" class to simplify
+	// things. Or not.
 	public static void init() {
 		TextileMod.LOGGER.info("ModItems init...");
 		ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
 	}
-	
+
 }

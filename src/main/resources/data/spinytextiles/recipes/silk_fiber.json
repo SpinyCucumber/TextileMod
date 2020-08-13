@@ -3,6 +3,15 @@
     "ingredients": [
         {
             "tag": "forge:string"
+        },
+        {
+            "tag": "forge:string"
+        },
+        {
+            "tag": "forge:string"
+        },
+        {
+            "tag": "forge:string"
         }
     ],
     "result":
