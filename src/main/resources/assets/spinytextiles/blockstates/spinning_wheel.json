@@ -1,7 +1,8 @@
 {
 	"variants": {
-		"": {
-			"model": "spinytextiles:block/spinning_wheel"
-		}
+		"facing=north": { "model": "spinytextiles:block/spinning_wheel" },
+        "facing=south": { "model": "spinytextiles:block/spinning_wheel", "y": 180 },
+        "facing=west":  { "model": "spinytextiles:block/spinning_wheel", "y": 270 },
+        "facing=east":  { "model": "spinytextiles:block/spinning_wheel", "y": 90 }
 	}
 }
