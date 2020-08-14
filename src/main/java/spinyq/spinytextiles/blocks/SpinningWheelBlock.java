@@ -1,5 +1,10 @@
 package spinyq.spinytextiles.blocks;
 
+import java.util.EnumMap;
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HorizontalBlock;
@@ -10,31 +15,46 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ILightReader;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
-import net.minecraftforge.client.event.ColorHandlerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import spinyq.spinytextiles.utility.Color4f;
-import spinyq.spinytextiles.utility.ColorWord;
 
 public class SpinningWheelBlock extends Block {
+
+	public static final VoxelShape SHAPE_NORTH_SOUTH = VoxelShapes.or(Block.makeCuboidShape(3.5, 0, 6, 5.5, 12, 10),
+			Block.makeCuboidShape(10.5, 0, 6, 12.5, 12, 10), Block.makeCuboidShape(6.5, 2, 1, 9.5, 16, 15),
+			Block.makeCuboidShape(5.5, 8, 7, 10.5, 10, 9)),
+
+			SHAPE_EAST_WEST = VoxelShapes.or(Block.makeCuboidShape(6, 0, 3.5, 10, 12, 5.5),
+					Block.makeCuboidShape(6, 0, 10.5, 10, 12, 12.5), Block.makeCuboidShape(1, 2, 6.5, 15, 16, 9.5),
+					Block.makeCuboidShape(7, 8, 5.5, 9, 10, 10.5));
+
+	public static final Map<Direction, VoxelShape> SHAPE_MAP = new EnumMap<>(
+			ImmutableMap.of(Direction.NORTH, SHAPE_NORTH_SOUTH, Direction.SOUTH, SHAPE_NORTH_SOUTH, Direction.EAST,
+					SHAPE_EAST_WEST, Direction.WEST, SHAPE_EAST_WEST));
 
 	public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
 
 	public SpinningWheelBlock(Properties properties) {
 		super(properties);
 		this.setDefaultState(this.stateContainer.getBaseState().with(FACING, Direction.NORTH));
-		// Register ourselves to receive events so we can register the color handler.
-		FMLJavaModLoadingContext.get().getModEventBus().register(this);
+	}
+
+	protected VoxelShape getShapeFromState(BlockState state) {
+		return SHAPE_MAP.get(state.get(FACING));
 	}
 	
-	@SubscribeEvent
-	public void onBlockColorHandler(ColorHandlerEvent.Block event) {
-		event.getBlockColors().register((BlockState blockState, ILightReader lightReader, BlockPos blockPos, int tintIndex) -> {
-			
-			return new Color4f(ColorWord.RED.getColor(), 0.4f).toIntARGB();
-		}, this);
+	@Override
+	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+		return getShapeFromState(state);
+	}
+
+	@Override
+	public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos,
+			ISelectionContext context) {
+		return getShapeFromState(state);
 	}
 
 	public BlockState getStateForPlacement(BlockItemUseContext context) {

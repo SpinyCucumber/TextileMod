@@ -1,10 +1,10 @@
 {
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
-	"ambientocclusion": false,
 	"texture_size": [64, 64],
 	"textures": {
-		"0": "spinytextiles:block/spinning_wheel"
+		"0": "spinytextiles:block/spinning_wheel",
+		"particle": "minecraft:block/oak_planks"
 	},
 	"elements": [
 		{
@@ -81,14 +81,11 @@
 			"name": "spokes",
 			"from": [8, 4.5, 3.5],
 			"to": [8, 13.5, 12.5],
+			"shade": false,
 			"rotation": {"angle": 0, "axis": "y", "origin": [16, 22, 11]},
 			"faces": {
-				"north": {"uv": [0, 0, 0, 2.5], "texture": "#0"},
 				"east": {"uv": [9, 0, 11.25, 2.25], "texture": "#0"},
-				"south": {"uv": [0, 0, 0, 2.5], "texture": "#0"},
-				"west": {"uv": [9, 0, 11.25, 2.25], "texture": "#0"},
-				"up": {"uv": [0, 0, 0, 2.25], "texture": "#0"},
-				"down": {"uv": [0, 0, 0, 2.25], "texture": "#0"}
+				"west": {"uv": [9, 0, 11.25, 2.25], "texture": "#0"}
 			}
 		},
 		{
@@ -118,18 +115,6 @@
 				"up": {"uv": [7.75, 3.5, 7.25, 2.5], "texture": "#0"},
 				"down": {"uv": [7.75, 3.5, 7.25, 4.5], "texture": "#0"}
 			}
-		},
-		{
-			"name": "overlay",
-			"from": [7.5, 1.9, 0.9],
-			"to": [8.5, 16.1, 15.1],
-			"rotation": {"angle": 0, "axis": "y", "origin": [15, 10, 9]},
-			"faces": {
-				"north": {"uv": [8.25, 0, 8.5, 3.55], "texture": "#0", "tintindex": 0},
-				"south": {"uv": [8.5, 0, 8.75, 3.55], "texture": "#0", "tintindex": 0},
-				"up": {"uv": [8, 0, 8.25, 3.55], "texture": "#0", "tintindex": 0},
-				"down": {"uv": [8.75, 0, 9, 3.55], "texture": "#0", "tintindex": 0}
-			}
 		}
 	],
 	"display": {
@@ -143,5 +128,5 @@
 			"name": "wheel",
 			"origin": [16, 16, 23],
 			"children": [0, 1, 2, 3, 4, 5]
-		}, 6, 7, 8]
+		}, 6, 7]
 }
