@@ -22,9 +22,9 @@ import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import spinyq.spinytextiles.items.IDyeableItem;
 import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.utility.Color3f;
-import spinyq.spinytextiles.utility.IDyeable.IDyeableItem;
 
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class BasinBlock extends Block {

@@ -13,7 +13,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.utility.Color3f;
 import spinyq.spinytextiles.utility.ColorWord;
-import spinyq.spinytextiles.utility.IDyeable.IDyeableItem;
 
 public class ThreadItem extends Item implements IDyeableItem {
 	
