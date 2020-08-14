@@ -19,7 +19,7 @@ import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 
 /**
  * Handles managing and registering all the blocks of the mod.
- * Subscribe to mod event bus to register block item.
+ * Subscribes to mod event bus to register block items.
  * @author SpinyQ
  *
  */

@@ -24,7 +24,7 @@ import spinyq.spinytextiles.client.render.RenderTypeHelper;
 import spinyq.spinytextiles.client.render.RenderTypeHelper.BlockRenderMode;
 
 public class SpinningWheelBlock extends Block {
-
+	
 	public static final VoxelShape SHAPE_NORTH_SOUTH = VoxelShapes.or(Block.makeCuboidShape(3.5, 0, 6, 5.5, 12, 10),
 			Block.makeCuboidShape(10.5, 0, 6, 12.5, 12, 10), Block.makeCuboidShape(6.5, 2, 1, 9.5, 16, 15),
 			Block.makeCuboidShape(5.5, 8, 7, 10.5, 10, 9)),
