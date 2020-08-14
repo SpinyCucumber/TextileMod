@@ -42,19 +42,13 @@ public class SpinningWheelBlock extends Block {
 		this.setDefaultState(this.stateContainer.getBaseState().with(FACING, Direction.NORTH));
 	}
 
-	protected VoxelShape getShapeFromState(BlockState state) {
-		return SHAPE_MAP.get(state.get(FACING));
-	}
-	
-	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-		return getShapeFromState(state);
+	public boolean isNormalCube(BlockState state, IBlockReader worldIn, BlockPos pos) {
+		return false;
 	}
 
 	@Override
-	public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos,
-			ISelectionContext context) {
-		return getShapeFromState(state);
+	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+		return SHAPE_MAP.get(state.get(FACING));
 	}
 
 	public BlockState getStateForPlacement(BlockItemUseContext context) {
