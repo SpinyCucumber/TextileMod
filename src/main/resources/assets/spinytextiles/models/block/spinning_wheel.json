@@ -1,10 +1,11 @@
 {
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
+    "ambientocclusion": false,
 	"texture_size": [64, 64],
 	"textures": {
 		"0": "spinytextiles:block/spinning_wheel",
-		"particle": "minecraft:block/oak_planks"
+		"particle": "block/oak_planks"
 	},
 	"elements": [
 		{
@@ -120,7 +121,7 @@
 	"display": {
 		"thirdperson_righthand": {
 			"rotation": [67, 0, 0],
-			"translation": [10.5, -1.75, 0]
+			"translation": [10.5, -1.75, -6]
 		}
 	},
 	"groups": [

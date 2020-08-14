@@ -1,6 +1,5 @@
 package spinyq.spinytextiles;
 
-import net.minecraft.item.BlockItem;
 import net.minecraft.item.DyeColor;
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.RegistryObject;
@@ -23,12 +22,6 @@ public class ModItems {
 
 	public static final RegistryObject<ThreadItem> THREAD_ITEM = ITEMS.register("thread",
 			() -> new ThreadItem(new Item.Properties().group(ItemGroupTextiles.instance)));
-
-	public static final RegistryObject<BlockItem> BASIN_ITEM = ITEMS.register("basin",
-			() -> new BlockItem(ModBlocks.BASIN_BLOCK.get(), new Item.Properties().group(ItemGroupTextiles.instance))),
-			SPINNING_WHEEL_ITEM = ITEMS.register("spinning_wheel",
-					() -> new BlockItem(ModBlocks.SPINNING_WHEEL_BLOCK.get(),
-							new Item.Properties().group(ItemGroupTextiles.instance)));
 
 	public static final RegistryObject<FiberItem> WOOL_FIBER_ITEM = ITEMS.register("wool_fiber",
 			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1,
