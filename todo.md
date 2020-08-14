@@ -6,3 +6,4 @@
 - [ ] Drafting Table
 - [x] Fiber Items
 - [x] Brush Item
+- [ ] Item Color Helper

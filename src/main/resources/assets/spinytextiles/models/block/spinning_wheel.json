@@ -1,5 +1,7 @@
 {
+	"parent": "block/block",
 	"credit": "Made with Blockbench",
+    "ambientocclusion": false,
 	"textures": {
 		"0": "spinytextiles:block/spinning_wheel",
 		"particle": "block/oak_planks"

@@ -15,12 +15,15 @@ import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.Direction.AxisDirection;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import spinyq.spinytextiles.utility.Color4f;
 
 /**
  * Adapted from Mekanism (and Buildcraft)
  */
-public class RenderHelper {
+@OnlyIn(Dist.CLIENT)
+public class CuboidRenderer {
 
 	public static class CuboidModel {
 
@@ -65,7 +68,7 @@ public class RenderHelper {
         }
     }
 	
-    public static final RenderHelper INSTANCE = new RenderHelper();
+    public static final CuboidRenderer INSTANCE = new CuboidRenderer();
     private static final Vector3f VEC_ZERO = new Vector3f(0, 0, 0);
     private static final int U_MIN = 0;
     private static final int U_MAX = 1;

@@ -20,6 +20,8 @@ import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
+import spinyq.spinytextiles.client.render.RenderTypeHelper;
+import spinyq.spinytextiles.client.render.RenderTypeHelper.BlockRenderMode;
 
 public class SpinningWheelBlock extends Block {
 
@@ -40,6 +42,8 @@ public class SpinningWheelBlock extends Block {
 	public SpinningWheelBlock(Properties properties) {
 		super(properties);
 		this.setDefaultState(this.stateContainer.getBaseState().with(FACING, Direction.NORTH));
+		// Use a cutout render type
+		RenderTypeHelper.setRenderMode(this, BlockRenderMode.CUTOUT);
 	}
 
 	public boolean isNormalCube(BlockState state, IBlockReader worldIn, BlockPos pos) {

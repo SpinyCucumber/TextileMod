@@ -8,15 +8,18 @@ import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.fluid.Fluids;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.TextileMod;
-import spinyq.spinytextiles.client.render.RenderHelper.CuboidModel;
+import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.utility.Color3f;
 import spinyq.spinytextiles.utility.Color4f;
 
+@OnlyIn(Dist.CLIENT)
 public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 	private static final Color3f WATER_COLOR = Color3f.fromIntString("0x3F76E4");
@@ -75,7 +78,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 			// Allocate buffer
 			IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 			// Render model
-			RenderHelper.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn);
+			CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn);
 		}
 	}
 
