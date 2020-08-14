@@ -10,7 +10,13 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.ILightReader;
 import net.minecraft.world.IWorldReader;
+import net.minecraftforge.client.event.ColorHandlerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import spinyq.spinytextiles.utility.Color4f;
+import spinyq.spinytextiles.utility.ColorWord;
 
 public class SpinningWheelBlock extends Block {
 
@@ -19,6 +25,16 @@ public class SpinningWheelBlock extends Block {
 	public SpinningWheelBlock(Properties properties) {
 		super(properties);
 		this.setDefaultState(this.stateContainer.getBaseState().with(FACING, Direction.NORTH));
+		// Register ourselves to receive events so we can register the color handler.
+		FMLJavaModLoadingContext.get().getModEventBus().register(this);
+	}
+	
+	@SubscribeEvent
+	public void onBlockColorHandler(ColorHandlerEvent.Block event) {
+		event.getBlockColors().register((BlockState blockState, ILightReader lightReader, BlockPos blockPos, int tintIndex) -> {
+			
+			return new Color4f(ColorWord.RED.getColor(), 0.4f).toIntARGB();
+		}, this);
 	}
 
 	public BlockState getStateForPlacement(BlockItemUseContext context) {
