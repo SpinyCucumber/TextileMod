@@ -2,29 +2,38 @@ package spinyq.spinytextiles.blocks;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 
 import com.google.common.collect.ImmutableMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HorizontalBlock;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.pathfinding.PathType;
 import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.StateContainer;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
+import net.minecraft.world.World;
 import spinyq.spinytextiles.client.render.RenderTypeHelper;
 import spinyq.spinytextiles.client.render.RenderTypeHelper.BlockRenderMode;
+import spinyq.spinytextiles.tiles.SpinningWheelTile;
 
 public class SpinningWheelBlock extends Block {
-	
+
 	public static final VoxelShape SHAPE_NORTH_SOUTH = VoxelShapes.or(Block.makeCuboidShape(3.5, 0, 6, 5.5, 12, 10),
 			Block.makeCuboidShape(10.5, 0, 6, 12.5, 12, 10), Block.makeCuboidShape(6.5, 2, 1, 9.5, 16, 15),
 			Block.makeCuboidShape(5.5, 8, 7, 10.5, 10, 9)),
@@ -94,6 +103,33 @@ public class SpinningWheelBlock extends Block {
 		builder.add(FACING);
 	}
 
-	// TODO Collision shape
+	@Override
+	public boolean hasTileEntity(BlockState state) {
+		return true;
+	}
+
+	@Override
+	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+		return new SpinningWheelTile();
+	}
+	
+	@Override
+	public boolean allowsMovement(BlockState state, IBlockReader worldIn, BlockPos pos, PathType type) {
+		return false;
+	}
+
+	@SuppressWarnings("deprecation")
+	@Override
+	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player,
+			Hand handIn, BlockRayTraceResult hit) {
+		// Check that the player is indeed interacting with the tile entity
+		TileEntity tile = worldIn.getTileEntity(pos);
+		// Pass logic over to tile entity
+		if (tile instanceof SpinningWheelTile) {
+			Optional<ActionResultType> result = ((SpinningWheelTile) tile).onBlockActivated(state, worldIn, pos, player, handIn, hit);
+			if (result.isPresent()) return result.get();
+		}
+		return super.onBlockActivated(state, worldIn, pos, player, handIn, hit);
+	}
 
 }

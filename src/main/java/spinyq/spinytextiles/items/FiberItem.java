@@ -2,27 +2,20 @@ package spinyq.spinytextiles.items;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import spinyq.spinytextiles.utility.Color3f;
+import spinyq.spinytextiles.FiberInfo;
 
 public class FiberItem extends Item implements IFiberItem {
 
-	private int fiberValue;
-	private Color3f color;
+	private FiberInfo info;
 	
-	public FiberItem(Properties properties, int fiberValue, Color3f color) {
+	public FiberItem(Properties properties, FiberInfo info) {
 		super(properties);
-		this.fiberValue = fiberValue;
-		this.color = color;
+		this.info = info;
 	}
 
 	@Override
-	public int getFiberValue(ItemStack stack) {
-		return fiberValue;
-	}
-
-	@Override
-	public Color3f getColor(ItemStack stack) {
-		return color;
+	public FiberInfo getInfo(ItemStack stack) {
+		return info;
 	}
 	
 }

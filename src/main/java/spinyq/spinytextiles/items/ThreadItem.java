@@ -36,7 +36,9 @@ public class ThreadItem extends Item implements IDyeableItem {
 	 */
 	@Override
 	public ItemStack getDefaultInstance() {
-		return storageHandler.withColor(super.getDefaultInstance(), ColorWord.WHITE.getColor());
+		ItemStack result = super.getDefaultInstance();
+		setColor(result, ColorWord.WHITE.getColor());
+		return result;
 	}
 
 	@Override
@@ -108,11 +110,15 @@ public class ThreadItem extends Item implements IDyeableItem {
 		return 1;
 	}
 
+	public void setColor(ItemStack stack, Color3f color) {
+		storageHandler.withColor(stack, color);
+	}
+	
 	@Override
-	public void setColor(ItemStack stack, IInventory inventory, Color3f color) {
+	public void dye(ItemStack stack, IInventory inventory, Color3f color) {
 		// Only dye one item at a time
 		ItemStack dyedStack = stack.split(1);
-		storageHandler.withColor(dyedStack, color);
+		setColor(dyedStack, color);
 		if (inventory instanceof PlayerInventory) {
 			((PlayerInventory) inventory).addItemStackToInventory(dyedStack);
 		} else if (inventory instanceof Inventory) {

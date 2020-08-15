@@ -13,6 +13,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import spinyq.spinytextiles.client.render.BasinRenderer;
 import spinyq.spinytextiles.tiles.BasinTile;
+import spinyq.spinytextiles.tiles.SpinningWheelTile;
 
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class ModTiles {
@@ -22,8 +23,12 @@ public class ModTiles {
 	public static final RegistryObject<TileEntityType<BasinTile>> BASIN_TILE = TILES.register("basin",
 			() -> TileEntityType.Builder.create(BasinTile::new, ModBlocks.BASIN_BLOCK.get()).build(null));
 	
+	public static final RegistryObject<TileEntityType<SpinningWheelTile>> SPINNING_WHEEL_TILE = TILES.register("spinning_wheel",
+			() -> TileEntityType.Builder.create(SpinningWheelTile::new, ModBlocks.SPINNING_WHEEL_BLOCK.get()).build(null));
+	
 	/**
 	 * Handles registering Tile Entity Renderers and such.
+	 * TODO Add manager
 	 * @param event
 	 */
 	@SubscribeEvent

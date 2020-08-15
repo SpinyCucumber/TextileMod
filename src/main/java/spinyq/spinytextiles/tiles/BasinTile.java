@@ -16,6 +16,7 @@ import spinyq.spinytextiles.utility.IDyeable;
 public class BasinTile extends TileEntity {
 
 	public static final int MAX_WATER_LEVEL = 9, MAX_DYE_LEVEL = 9;
+	private static final String KEY_WATER_LEVEL = "WaterLevel", KEY_DYE_LEVEL = "DyeLevel", KEY_COLOR = "Color";
 
 	public BasinTile() {
 		super(ModTiles.BASIN_TILE.get());
@@ -23,8 +24,6 @@ public class BasinTile extends TileEntity {
 		color = new Color3f();
 		dyeLevel = 0;
 	}
-
-	private static final String KEY_WATER_LEVEL = "WaterLevel", KEY_DYE_LEVEL = "DyeLevel", KEY_COLOR = "Color";
 
 	private int waterLevel, dyeLevel;
 	private Color3f color;
@@ -120,7 +119,7 @@ public class BasinTile extends TileEntity {
 		// Calculate the new color by mixing the current color of the object and the basin's color
 		// Interpolate between them using the dye concentration
 		Color3f newColor = ColorHelper.mixRealistic(dyeable.getColor(object), color, getDyeConcentration());
-		dyeable.setColor(object, context, newColor);
+		dyeable.dye(object, context, newColor);
 		int cost = dyeable.getDyeCost();
 		if (waterLevel >= cost) drain(cost);
 		else throw new RuntimeException("Attempted to dye an item without enough dye.");

@@ -24,11 +24,11 @@ public class ModItems {
 			() -> new ThreadItem(new Item.Properties().group(ItemGroupTextiles.instance)));
 
 	public static final RegistryObject<FiberItem> WOOL_FIBER_ITEM = ITEMS.register("wool_fiber",
-			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1,
-					Color3f.fromDye(DyeColor.WHITE))),
+			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance),
+					new FiberInfo(Color3f.fromDye(DyeColor.WHITE), 1))),
 			SILK_FIBER_ITEM = ITEMS.register("silk_fiber",
-					() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance), 1,
-							Color3f.fromDye(DyeColor.WHITE)));
+					() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance),
+							new FiberInfo(Color3f.fromDye(DyeColor.WHITE), 1)));
 
 	public static final RegistryObject<Item> BRUSH_ITEM = ITEMS.register("brush",
 			() -> new Item(new Item.Properties().maxDamage(128).group(ItemGroupTextiles.instance))),
