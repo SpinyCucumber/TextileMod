@@ -1,7 +1,4 @@
-package spinyq.spinytextiles;
-
-import spinyq.spinytextiles.utility.Color3f;
-import spinyq.spinytextiles.utility.ColorHelper;
+package spinyq.spinytextiles.utility;
 
 /**
  * Used to track info about the thread a player is spinning,

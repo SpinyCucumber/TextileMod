@@ -1,7 +1,7 @@
 package spinyq.spinytextiles.items;
 
 import net.minecraft.item.ItemStack;
-import spinyq.spinytextiles.FiberInfo;
+import spinyq.spinytextiles.utility.FiberInfo;
 
 public interface IFiberItem {
 

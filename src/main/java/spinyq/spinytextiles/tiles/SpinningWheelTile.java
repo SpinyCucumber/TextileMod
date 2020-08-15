@@ -7,6 +7,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
@@ -16,12 +17,12 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
-import spinyq.spinytextiles.FiberInfo;
 import spinyq.spinytextiles.ModItems;
 import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.IFiberItem;
 import spinyq.spinytextiles.utility.EvictingStack;
+import spinyq.spinytextiles.utility.FiberInfo;
 
 public class SpinningWheelTile extends TileEntity implements ITickableTileEntity {
 
@@ -39,6 +40,19 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		super(ModTiles.SPINNING_WHEEL_TILE.get());
 	}
 	
+	@Override
+	public void read(CompoundNBT compound) {
+		super.read(compound);
+		// TODO
+	}
+
+	@Override
+	public CompoundNBT write(CompoundNBT compound) {
+		CompoundNBT result = super.write(compound);
+		// TODO
+		return result;
+	}
+
 	private void setState(boolean spinning) {
 		// Reset timer if transitioning to spinning state
 		if (spinning) {
