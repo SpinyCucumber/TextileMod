@@ -1,5 +1,5 @@
 {
-    "parent": "spinytextiles:block/template_spinning_wheel",
+    "parent": "spinytextiles:block/spinning_wheel",
     "textures": {
         "all": "spinytextiles:block/spinning_wheel_spinning"
     }

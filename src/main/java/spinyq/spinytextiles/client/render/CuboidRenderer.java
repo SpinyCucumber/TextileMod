@@ -8,12 +8,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Matrix4f;
 import net.minecraft.client.renderer.Vector3f;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.Direction.AxisDirection;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -25,6 +23,8 @@ import spinyq.spinytextiles.utility.Color4f;
 @OnlyIn(Dist.CLIENT)
 public class CuboidRenderer {
 
+	public static final int FULL_LIGHT = 0xF000F0;
+	
 	public static class CuboidModel {
 
         public double minX, minY, minZ;
@@ -97,11 +97,6 @@ public class CuboidRenderer {
             return vector.z;
         }
         throw new RuntimeException("Was given a null axis! That was probably not intentional, consider this a bug! (Vector = " + vector + ")");
-    }
-    
-    @SuppressWarnings("deprecation")
-	public static TextureAtlasSprite getSprite(ResourceLocation spriteLocation) {
-        return Minecraft.getInstance().getAtlasSpriteGetter(AtlasTexture.LOCATION_BLOCKS_TEXTURE).apply(spriteLocation);
     }
 
     public void renderCube(CuboidModel cube, MatrixStack matrix, IVertexBuilder buffer, Color4f color, int light) {

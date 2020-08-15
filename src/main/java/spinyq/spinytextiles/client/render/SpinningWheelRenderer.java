@@ -37,13 +37,13 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 		threadModel.setTexture(texture.getSprite(new ResourceLocation("minecraft:block/white_wool")));
 		// Set the model dimensions
 		// Make sure the model is centered so it rotates correctly
-		threadModel.minX = 7.5/16.0 - 0.5;
-		threadModel.minY = 2.0/16.0 - 0.01 - 0.5;
-		threadModel.minZ = 1.0/16.0 - 0.01 - 0.5;
+		threadModel.minX = 7.5 / 16.0 - 0.5;
+		threadModel.minY = 2.0 / 16.0 - 0.01 - 0.5;
+		threadModel.minZ = 1.0 / 16.0 - 0.01 - 0.5;
 
-		threadModel.maxX = 8.5/16.0 - 0.5;
-		threadModel.maxY = 16.0/16.0 + 0.01 - 0.5;
-		threadModel.maxZ = 15.0/16.0 + 0.01 - 0.5;
+		threadModel.maxX = 8.5 / 16.0 - 0.5;
+		threadModel.maxY = 16.0 / 16.0 + 0.01 - 0.5;
+		threadModel.maxZ = 15.0 / 16.0 + 0.01 - 0.5;
 		// Disable side faces
 		threadModel.setSideRender(Direction.EAST, false);
 		threadModel.setSideRender(Direction.WEST, false);
@@ -72,15 +72,17 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 			Stack<FiberInfo> threadInfo = tileEntityIn.getThreadInfo();
 			FiberInfo prev = threadInfo.elementAt(threadInfo.size() - 2), curr = threadInfo.peek();
 			// Construct the info used to render the thread
-			Color3f threadColor; float threadAmount;
-			// If the wheel is spinning, interpolate between previous and current thread infos to get a smooth animation.
+			Color3f threadColor;
+			float threadAmount;
+			// If the wheel is spinning, interpolate between previous and current thread
+			// infos to get a smooth animation.
 			// Otherwise, simply use the most current thread info.
 			if (tileEntityIn.isSpinning()) {
-				float s = Math.min((float) tileEntityIn.getSpinningTimer() / (float) SpinningWheelTile.SPINNING_TIME, 1.0f);
+				float s = Math.min((float) tileEntityIn.getSpinningTimer() / (float) SpinningWheelTile.SPINNING_TIME,
+						1.0f);
 				threadColor = prev.color.lerp(curr.color, s);
 				threadAmount = MathHelper.lerp(s, (float) prev.amount, (float) curr.amount);
-			}
-			else {
+			} else {
 				threadColor = curr.color;
 				threadAmount = curr.amount;
 			}
