@@ -19,6 +19,7 @@ public class TextileMod
     	ModTiles.init();
     	ModItems.init();
     	ModRecipes.init();
+    	ModSounds.init();
     }
     
 }

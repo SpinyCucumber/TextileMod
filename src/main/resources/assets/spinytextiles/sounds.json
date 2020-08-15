@@ -1,0 +1,7 @@
+{
+    "block.spinning_wheel.spin": {
+      "category": "block",
+      "subtitle": "spinytextiles.subtitle.spinSpinningWheel",
+      "sounds": [ "spinytextiles:block/spinning_wheel/spin" ]
+    }
+  }

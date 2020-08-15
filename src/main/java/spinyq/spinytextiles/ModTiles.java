@@ -12,6 +12,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import spinyq.spinytextiles.client.render.BasinRenderer;
+import spinyq.spinytextiles.client.render.SpinningWheelRenderer;
 import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.tiles.SpinningWheelTile;
 
@@ -35,6 +36,7 @@ public class ModTiles {
 	@OnlyIn(Dist.CLIENT)
 	public static void onClientSetup(FMLClientSetupEvent event) {
 		ClientRegistry.bindTileEntityRenderer(BASIN_TILE.get(), BasinRenderer::new);
+		ClientRegistry.bindTileEntityRenderer(SPINNING_WHEEL_TILE.get(), SpinningWheelRenderer::new);
 	}
 	
 	public static void init() {

@@ -17,7 +17,7 @@ public class EvictingStack<E> extends Stack<E> {
 	public int getMaximumSize() {
 		return maximumSize;
 	}
-
+	
 	@Override
 	public E push(E item) {
 		E result = super.push(item);

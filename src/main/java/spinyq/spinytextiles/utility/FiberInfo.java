@@ -43,7 +43,7 @@ public class FiberInfo implements INBTSerializable<CompoundNBT> {
 	public FiberInfo combine(FiberInfo other) {
 		int totalAmount = amount + other.amount;
 		// Mix color
-		Color3f newColor = ColorHelper.mixRealistic(color, other.color, (float) other.amount / (float) amount);
+		Color3f newColor = ColorHelper.mixRealistic(color, other.color, (float) other.amount / (float) totalAmount);
 		return new FiberInfo(newColor, totalAmount);
 	}
 

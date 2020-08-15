@@ -8,6 +8,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
@@ -17,10 +19,13 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 import spinyq.spinytextiles.ModItems;
+import spinyq.spinytextiles.ModSounds;
 import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.IFiberItem;
+import spinyq.spinytextiles.utility.Color3f;
 import spinyq.spinytextiles.utility.EvictingStack;
 import spinyq.spinytextiles.utility.FiberInfo;
 import spinyq.spinytextiles.utility.NBTHelper;
@@ -29,7 +34,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 
 	private static final String TAG_THREAD_INFO = "ThreadInfo", TAG_FIBER_INFO = "FiberInfo", TAG_SPINNING = "Spinning";
 	
-	private static final int SPINNING_TIME = 20, REQUIRED_THREAD = 8;
+	public static final int SPINNING_TIME = 60, REQUIRED_THREAD = 4;
 	
 	// A queue containing info about the thread being spun.
 	// Need to keep multiple references so that we can animate.
@@ -37,10 +42,11 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	private Optional<FiberInfo> fiberInfo = Optional.empty();
 	// Used for the spinning state
 	private boolean spinning;
-	private int timer;
+	private int spinningTimer;
 	
 	public SpinningWheelTile() {
 		super(ModTiles.SPINNING_WHEEL_TILE.get());
+		resetThread();
 	}
 	
 	@Override
@@ -48,7 +54,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		super.read(compound);
 		threadInfo = NBTHelper.getCollection(new EvictingStack<FiberInfo>(2), FiberInfo::new, compound, TAG_THREAD_INFO);
 		fiberInfo = NBTHelper.getOptional(FiberInfo::new, compound, TAG_FIBER_INFO);
-		spinning = compound.getBoolean(TAG_SPINNING);
+		setState(compound.getBoolean(TAG_SPINNING));
 	}
 
 	@Override
@@ -59,13 +65,73 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		result.putBoolean(TAG_SPINNING, spinning);
 		return result;
 	}
+	
+	@Override
+	public SUpdateTileEntityPacket getUpdatePacket() {
+		CompoundNBT nbtTag = new CompoundNBT();
+		// Write your data into the nbtTag
+		write(nbtTag);
+		return new SUpdateTileEntityPacket(getPos(), -1, nbtTag);
+	}
+
+	@Override
+	public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
+		CompoundNBT tag = pkt.getNbtCompound();
+		// Handle your Data
+		read(tag);
+		TextileMod.LOGGER.info("SpinningWheelTile onDataPacket... tag: {}", tag);
+	}
+
+	/*
+	 * Creates a tag containing all of the TileEntity information, used by vanilla
+	 * to transmit from server to client
+	 */
+	@Override
+	public CompoundNBT getUpdateTag() {
+		CompoundNBT nbtTagCompound = new CompoundNBT();
+		write(nbtTagCompound);
+		return nbtTagCompound;
+	}
+
+	/*
+	 * Populates this TileEntity with information from the tag, used by vanilla to
+	 * transmit from server to client
+	 */
+	@Override
+	public void handleUpdateTag(CompoundNBT tag) {
+		read(tag);
+	}
+
+	/**
+	 * Syncs data with clients and marks this tile to be saved.
+	 */
+	private void update() {
+		BlockState state = world.getBlockState(pos);
+		world.notifyBlockUpdate(pos, state, state, Constants.BlockFlags.BLOCK_UPDATE);
+		markDirty();
+	}
 
 	private void setState(boolean spinning) {
 		// Reset timer if transitioning to spinning state
 		if (spinning) {
-			timer = 0;
+			spinningTimer = 0;
 		}
 		this.spinning = spinning;
+	}
+	
+	private void resetThread() {
+		// Clear stack
+		threadInfo.clear();
+		// Add a dummy initial thread info
+		threadInfo.add(new FiberInfo(new Color3f(), 0));
+	}
+	
+	public Stack<FiberInfo> getThreadInfo() {
+		return threadInfo;
+	}
+
+	public boolean hasThread() {
+		return threadInfo.peek().amount > 0;
 	}
 	
 	/**
@@ -73,10 +139,17 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	 * @return
 	 */
 	public boolean isFinished() {
-		if (threadInfo.isEmpty()) return false;
 		return threadInfo.peek().amount >= REQUIRED_THREAD;
 	}
 	
+	public boolean isSpinning() {
+		return spinning;
+	}
+
+	public int getSpinningTimer() {
+		return spinningTimer;
+	}
+
 	public Optional<ActionResultType> onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player,
 			Hand handIn, BlockRayTraceResult hit) {
 		ItemStack itemstack = player.getHeldItem(handIn);
@@ -95,8 +168,8 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 						if (!player.inventory.addItemStackToInventory(threadItem)) {
 							player.dropItem(threadItem, false);
 						}
-						// Clear thread info
-						threadInfo.clear();
+						resetThread();
+						update();
 					}
 					// Play a fun pop sound
 					world.playSound((PlayerEntity) null, pos, SoundEvents.ENTITY_ITEM_PICKUP,
@@ -110,18 +183,16 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 					if (!worldIn.isRemote) {
 						// If we already have some thread present, combine the new fiber into the thread.
 						// Otherwise, simply set the thread to the new fiber
-						if (threadInfo.isEmpty()) threadInfo.push(fiberInfo.get());
-						else threadInfo.push(threadInfo.peek().combine(fiberInfo.get()));
+						threadInfo.push(threadInfo.peek().combine(fiberInfo.get()));
 						TextileMod.LOGGER.info("SpinningWheelTile onBlockActivated... threadInfo: {} fiberInfo: {}", threadInfo, fiberInfo);
 						// Consume the fiber
 						fiberInfo = Optional.empty();
 						// Enter spinning state
 						setState(true);
+						update();
 					}
 					// Play a fun spinning sound
-					// TODO Add spinning sound and change
-					// TODO Also add animation
-					world.playSound((PlayerEntity) null, pos, SoundEvents.BLOCK_NOTE_BLOCK_DIDGERIDOO,
+					world.playSound((PlayerEntity) null, pos, ModSounds.BLOCK_SPINNING_WHEEL_SPIN.get(),
 							SoundCategory.BLOCKS, 1.0F, 1.0F);
 					return Optional.of(ActionResultType.SUCCESS);
 				}
@@ -131,6 +202,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 						ItemStack fiberItem = itemstack.split(1);
 						// Get new fiber info
 						fiberInfo = Optional.of(new FiberInfo(((IFiberItem) item).getInfo(fiberItem)));
+						update();
 					}
 					// Play fun wool sound
 					world.playSound((PlayerEntity) null, pos, SoundEvents.BLOCK_WOOL_PLACE,
@@ -147,9 +219,12 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	public void tick() {
 		if (spinning) {
 			// If we are spinning increment timer
-			timer++;
+			spinningTimer++;
 			// If we've reached the end of the timer, stop spinning.
-			if (timer == SPINNING_TIME) setState(false);
+			if (spinningTimer == SPINNING_TIME) {
+				setState(false);
+				update();
+			}
 		}
 	}
 
