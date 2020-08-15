@@ -40,5 +40,10 @@ public class FiberInfo {
 		Color3f newColor = ColorHelper.mixRealistic(color, other.color, (float) other.amount / (float) amount);
 		return new FiberInfo(newColor, totalAmount);
 	}
+
+	@Override
+	public String toString() {
+		return "FiberInfo [color=" + color + ", amount=" + amount + "]";
+	}
 	
 }

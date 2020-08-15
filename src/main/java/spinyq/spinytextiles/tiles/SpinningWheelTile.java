@@ -1,9 +1,7 @@
 package spinyq.spinytextiles.tiles;
 
 import java.util.Optional;
-import java.util.Queue;
-
-import com.google.common.collect.EvictingQueue;
+import java.util.Stack;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -21,7 +19,9 @@ import net.minecraft.world.World;
 import spinyq.spinytextiles.FiberInfo;
 import spinyq.spinytextiles.ModItems;
 import spinyq.spinytextiles.ModTiles;
+import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.IFiberItem;
+import spinyq.spinytextiles.utility.EvictingStack;
 
 public class SpinningWheelTile extends TileEntity implements ITickableTileEntity {
 
@@ -29,7 +29,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	
 	// A queue containing info about the thread being spun.
 	// Need to keep multiple references so that we can animate.
-	private Queue<FiberInfo> threadInfo = EvictingQueue.create(2);
+	private Stack<FiberInfo> threadInfo = new EvictingStack<>(2);
 	private Optional<FiberInfo> fiberInfo = Optional.empty();
 	// Used for the spinning state
 	private boolean spinning;
@@ -64,17 +64,19 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			if(isFinished()) {
 				// If we are finished spinning thread, allow the player to put the thread on a spindle item.
 				if (item == ModItems.SPINDLE_ITEM.get()) {
-					// Consume one spindle
-					itemstack.shrink(1);
-					// Create new thread item and set color
-					ItemStack threadItem = new ItemStack(ModItems.THREAD_ITEM.get());
-					ModItems.THREAD_ITEM.get().setColor(threadItem, threadInfo.peek().color);
-					// Add to player's inventory, drop if we can't
-					if (!player.inventory.addItemStackToInventory(threadItem)) {
-						player.dropItem(threadItem, false);
+					if (!worldIn.isRemote) {
+						// Consume one spindle
+						itemstack.shrink(1);
+						// Create new thread item and set color
+						ItemStack threadItem = new ItemStack(ModItems.THREAD_ITEM.get());
+						ModItems.THREAD_ITEM.get().setColor(threadItem, threadInfo.peek().color);
+						// Add to player's inventory, drop if we can't
+						if (!player.inventory.addItemStackToInventory(threadItem)) {
+							player.dropItem(threadItem, false);
+						}
+						// Clear thread info
+						threadInfo.clear();
 					}
-					// Clear thread info
-					threadInfo.clear();
 					// Play a fun pop sound
 					world.playSound((PlayerEntity) null, pos, SoundEvents.ENTITY_ITEM_PICKUP,
 							SoundCategory.BLOCKS, 1.0F, 1.0F);
@@ -84,14 +86,17 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			else {
 				// If there is some fiber present, spin it. Otherwise, try to add some more fiber.
 				if (fiberInfo.isPresent()) {
-					// If we already have some thread present, combine the new fiber into the thread.
-					// Otherwise, simply set the thread to the new fiber
-					if (threadInfo.isEmpty()) threadInfo.add(fiberInfo.get());
-					else threadInfo.add(threadInfo.peek().combine(fiberInfo.get()));
-					// Consume the fiber
-					fiberInfo = Optional.empty();
-					// Enter spinning state
-					setState(true);
+					if (!worldIn.isRemote) {
+						// If we already have some thread present, combine the new fiber into the thread.
+						// Otherwise, simply set the thread to the new fiber
+						if (threadInfo.isEmpty()) threadInfo.push(fiberInfo.get());
+						else threadInfo.push(threadInfo.peek().combine(fiberInfo.get()));
+						TextileMod.LOGGER.info("SpinningWheelTile onBlockActivated... threadInfo: {} fiberInfo: {}", threadInfo, fiberInfo);
+						// Consume the fiber
+						fiberInfo = Optional.empty();
+						// Enter spinning state
+						setState(true);
+					}
 					// Play a fun spinning sound
 					// TODO Add spinning sound and change
 					// TODO Also add animation
@@ -100,10 +105,12 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 					return Optional.of(ActionResultType.SUCCESS);
 				}
 				else if (item instanceof IFiberItem) {
-					// Get new fiber info
-					fiberInfo = Optional.of(new FiberInfo(((IFiberItem) item).getInfo(itemstack)));
-					// Consume item
-					itemstack.shrink(1);
+					if (!worldIn.isRemote) {
+						// Split off one item
+						ItemStack fiberItem = itemstack.split(1);
+						// Get new fiber info
+						fiberInfo = Optional.of(new FiberInfo(((IFiberItem) item).getInfo(fiberItem)));
+					}
 					// Play fun wool sound
 					world.playSound((PlayerEntity) null, pos, SoundEvents.BLOCK_WOOL_PLACE,
 							SoundCategory.BLOCKS, 1.0F, 1.0F);
