@@ -24,6 +24,7 @@ import spinyq.spinytextiles.ModItems;
 import spinyq.spinytextiles.ModSounds;
 import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.TextileMod;
+import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.items.IFiberItem;
 import spinyq.spinytextiles.utility.Color3f;
 import spinyq.spinytextiles.utility.EvictingStack;
@@ -79,7 +80,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		CompoundNBT tag = pkt.getNbtCompound();
 		// Handle your Data
 		read(tag);
-		TextileMod.LOGGER.info("SpinningWheelTile onDataPacket... tag: {}", tag);
+		TextileMod.LOGGER.trace("SpinningWheelTile onDataPacket... tag: {}", tag);
 	}
 
 	/*
@@ -116,6 +117,9 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		if (spinning) {
 			spinningTimer = 0;
 		}
+		// Also set blockstate so we can select models and such
+		TextileMod.LOGGER.trace("SpinningWheelTile setState... spinning: {}", spinning);
+		this.world.setBlockState(getPos(), this.getBlockState().with(SpinningWheelBlock.SPINNING, Boolean.valueOf(spinning)));
 		this.spinning = spinning;
 	}
 	
@@ -184,7 +188,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 						// If we already have some thread present, combine the new fiber into the thread.
 						// Otherwise, simply set the thread to the new fiber
 						threadInfo.push(threadInfo.peek().combine(fiberInfo.get()));
-						TextileMod.LOGGER.info("SpinningWheelTile onBlockActivated... threadInfo: {} fiberInfo: {}", threadInfo, fiberInfo);
+						TextileMod.LOGGER.trace("SpinningWheelTile onBlockActivated... threadInfo: {} fiberInfo: {}", threadInfo, fiberInfo);
 						// Consume the fiber
 						fiberInfo = Optional.empty();
 						// Enter spinning state

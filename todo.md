@@ -7,4 +7,4 @@
 - [x] Fiber Items
 - [x] Brush Item
 - [x] Item Color Helper
-- [ ] More Rendering Research
+- [ ] Revamp Model System... Use vanilla Model class and Material class. Ex. EnchantmentTableTileEntityRenderer

@@ -1,8 +1,12 @@
 {
 	"variants": {
-		"facing=north": { "model": "spinytextiles:block/spinning_wheel" },
-        "facing=south": { "model": "spinytextiles:block/spinning_wheel", "y": 180 },
-        "facing=west":  { "model": "spinytextiles:block/spinning_wheel", "y": 270 },
-        "facing=east":  { "model": "spinytextiles:block/spinning_wheel", "y": 90 }
+		"facing=north,spinning=false": { "model": "spinytextiles:block/spinning_wheel" },
+        "facing=south,spinning=false": { "model": "spinytextiles:block/spinning_wheel", "y": 180 },
+        "facing=west,spinning=false":  { "model": "spinytextiles:block/spinning_wheel", "y": 270 },
+        "facing=east,spinning=false":  { "model": "spinytextiles:block/spinning_wheel", "y": 90 },
+        "facing=north,spinning=true": { "model": "spinytextiles:block/spinning_wheel_spinning" },
+        "facing=south,spinning=true": { "model": "spinytextiles:block/spinning_wheel_spinning", "y": 180 },
+        "facing=west,spinning=true":  { "model": "spinytextiles:block/spinning_wheel_spinning", "y": 270 },
+        "facing=east,spinning=true":  { "model": "spinytextiles:block/spinning_wheel_spinning", "y": 90 }
 	}
 }

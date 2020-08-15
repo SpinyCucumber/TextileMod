@@ -1,0 +1,6 @@
+{
+    "parent": "spinytextiles:block/template_spinning_wheel",
+    "textures": {
+        "all": "spinytextiles:block/spinning_wheel_spinning"
+    }
+}

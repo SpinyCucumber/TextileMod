@@ -12,6 +12,7 @@ import net.minecraft.block.HorizontalBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.pathfinding.PathType;
+import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
@@ -47,10 +48,11 @@ public class SpinningWheelBlock extends Block {
 					SHAPE_EAST_WEST, Direction.WEST, SHAPE_EAST_WEST));
 
 	public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
+	public static final BooleanProperty SPINNING = BooleanProperty.create("spinning");
 
 	public SpinningWheelBlock(Properties properties) {
 		super(properties);
-		this.setDefaultState(this.stateContainer.getBaseState().with(FACING, Direction.NORTH));
+		this.setDefaultState(this.stateContainer.getBaseState().with(FACING, Direction.NORTH).with(SPINNING, Boolean.valueOf(false)));
 		// Use a cutout render type
 		RenderTypeHelper.setRenderMode(this, BlockRenderMode.CUTOUT);
 	}
@@ -99,8 +101,9 @@ public class SpinningWheelBlock extends Block {
 		return state.rotate(mirrorIn.toRotation(state.get(FACING)));
 	}
 
+	@Override
 	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-		builder.add(FACING);
+		builder.add(FACING, SPINNING);
 	}
 
 	@Override
