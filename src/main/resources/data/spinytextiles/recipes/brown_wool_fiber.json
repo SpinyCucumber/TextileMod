@@ -1,0 +1,13 @@
+{
+    "type": "spinytextiles:crafting_brush",
+    "ingredients": [
+        {
+            "item": "minecraft:brown_wool"
+        }
+    ],
+    "result":
+    {
+        "item": "spinytextiles:brown_wool_fiber",
+        "count": 4
+    }
+}
