@@ -23,9 +23,12 @@ import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.IFiberItem;
 import spinyq.spinytextiles.utility.EvictingStack;
 import spinyq.spinytextiles.utility.FiberInfo;
+import spinyq.spinytextiles.utility.NBTHelper;
 
 public class SpinningWheelTile extends TileEntity implements ITickableTileEntity {
 
+	private static final String TAG_THREAD_INFO = "ThreadInfo", TAG_FIBER_INFO = "FiberInfo", TAG_SPINNING = "Spinning";
+	
 	private static final int SPINNING_TIME = 20, REQUIRED_THREAD = 8;
 	
 	// A queue containing info about the thread being spun.
@@ -43,13 +46,17 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	@Override
 	public void read(CompoundNBT compound) {
 		super.read(compound);
-		// TODO
+		threadInfo = NBTHelper.getCollection(new EvictingStack<FiberInfo>(2), FiberInfo::new, compound, TAG_THREAD_INFO);
+		fiberInfo = NBTHelper.getOptional(FiberInfo::new, compound, TAG_FIBER_INFO);
+		spinning = compound.getBoolean(TAG_SPINNING);
 	}
 
 	@Override
 	public CompoundNBT write(CompoundNBT compound) {
 		CompoundNBT result = super.write(compound);
-		// TODO
+		NBTHelper.putCollection(result, TAG_THREAD_INFO, threadInfo);
+		NBTHelper.putOptional(result, TAG_FIBER_INFO, fiberInfo);
+		result.putBoolean(TAG_SPINNING, spinning);
 		return result;
 	}
 

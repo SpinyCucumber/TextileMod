@@ -16,7 +16,7 @@ import spinyq.spinytextiles.utility.IDyeable;
 public class BasinTile extends TileEntity {
 
 	public static final int MAX_WATER_LEVEL = 9, MAX_DYE_LEVEL = 9;
-	private static final String KEY_WATER_LEVEL = "WaterLevel", KEY_DYE_LEVEL = "DyeLevel", KEY_COLOR = "Color";
+	private static final String TAG_WATER_LEVEL = "WaterLevel", TAG_DYE_LEVEL = "DyeLevel", TAG_COLOR = "Color";
 
 	public BasinTile() {
 		super(ModTiles.BASIN_TILE.get());
@@ -31,17 +31,17 @@ public class BasinTile extends TileEntity {
 	@Override
 	public void read(CompoundNBT compound) {
 		super.read(compound);
-		waterLevel = compound.getInt(KEY_WATER_LEVEL);
-		dyeLevel = compound.getInt(KEY_DYE_LEVEL);
-		color = Color3f.fromInt(compound.getInt(KEY_COLOR));
+		waterLevel = compound.getInt(TAG_WATER_LEVEL);
+		dyeLevel = compound.getInt(TAG_DYE_LEVEL);
+		color = Color3f.fromInt(compound.getInt(TAG_COLOR));
 	}
 
 	@Override
 	public CompoundNBT write(CompoundNBT tag) {
 		CompoundNBT result = super.write(tag);
-		result.putInt(KEY_WATER_LEVEL, waterLevel);
-		result.putInt(KEY_DYE_LEVEL, dyeLevel);
-		result.putInt(KEY_COLOR, color.toInt());
+		result.putInt(TAG_WATER_LEVEL, waterLevel);
+		result.putInt(TAG_DYE_LEVEL, dyeLevel);
+		result.putInt(TAG_COLOR, color.toInt());
 		return result;
 	}
 
