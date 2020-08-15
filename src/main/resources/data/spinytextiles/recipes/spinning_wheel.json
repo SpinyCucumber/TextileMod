@@ -1,0 +1,22 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+      " I ",
+      "I#I",
+      "XIX"
+    ],
+    "key": {
+      "#": {
+        "tag": "minecraft:logs"
+      },
+      "I": {
+        "tag": "forge:rods/wooden"
+      },
+      "X": {
+        "tag": "minecraft:wooden_slabs"
+      }
+    },
+    "result": {
+      "item": "spinytextiles:spinning_wheel"
+    }
+  }
