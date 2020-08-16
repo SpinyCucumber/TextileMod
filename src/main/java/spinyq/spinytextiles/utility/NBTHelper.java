@@ -39,11 +39,12 @@ public class NBTHelper {
 	 * @param key
 	 */
 	@SuppressWarnings("unchecked")
-	public static <C extends Collection<T>, T extends INBTSerializable<K>, K extends INBT> C getCollection(C collection, Supplier<T> factory, CompoundNBT nbt, String key) {
+	public static <C extends Collection<T>, T extends INBTSerializable<K>, K extends INBT> C getCollection(Supplier<C> factoryC, Supplier<T> factoryT, CompoundNBT nbt, String key) {
 		// Get a ListNBT and send its values to the collection
+		C collection = factoryC.get();
 		ListNBT list = (ListNBT) nbt.get(key);
 		list.forEach((listItem) -> {
-			T newObject = factory.get();
+			T newObject = factoryT.get();
 			newObject.deserializeNBT((K) listItem);
 			collection.add(newObject);
 		});

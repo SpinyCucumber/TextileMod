@@ -2,6 +2,7 @@ package spinyq.spinytextiles.tiles;
 
 import java.util.Optional;
 import java.util.Stack;
+import java.util.function.Supplier;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -39,7 +40,8 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	
 	// A queue containing info about the thread being spun.
 	// Need to keep multiple references so that we can animate.
-	private Stack<FiberInfo> threadInfo = new EvictingStack<>(2);
+	private Stack<FiberInfo> threadInfo;
+	private Supplier<Stack<FiberInfo>> threadInfoFactory = () -> new EvictingStack<>(2);
 	private Optional<FiberInfo> fiberInfo = Optional.empty();
 	// Used for the spinning state
 	private boolean spinning;
@@ -53,7 +55,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	@Override
 	public void read(CompoundNBT compound) {
 		super.read(compound);
-		threadInfo = NBTHelper.getCollection(new EvictingStack<FiberInfo>(2), FiberInfo::new, compound, TAG_THREAD_INFO);
+		threadInfo = NBTHelper.getCollection(threadInfoFactory, FiberInfo::new, compound, TAG_THREAD_INFO);
 		fiberInfo = NBTHelper.getOptional(FiberInfo::new, compound, TAG_FIBER_INFO);
 		setState(compound.getBoolean(TAG_SPINNING));
 	}
@@ -124,8 +126,8 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	}
 	
 	private void resetThread() {
-		// Clear stack
-		threadInfo.clear();
+		// Create new stack
+		threadInfo = threadInfoFactory.get();
 		// Add a dummy initial thread info
 		threadInfo.add(new FiberInfo(new Color3f(), 0));
 	}
