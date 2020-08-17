@@ -100,7 +100,7 @@ public class CuboidRenderer {
     }
 
     public void renderCube(CuboidModel cube, MatrixStack matrix, IVertexBuilder buffer, Color4f color, int light) {
-        float red = color.getR(), green = color.getG(), blue = color.getB(), alpha = color.getA();
+        float red = color.r, green = color.g, blue = color.b, alpha = color.a;
         Vec3d size = new Vec3d(cube.sizeX(), cube.sizeY(), cube.sizeZ());
         matrix.push();
         matrix.translate(cube.minX, cube.minY, cube.minZ);

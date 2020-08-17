@@ -28,7 +28,7 @@ public class Color3f {
 		
 	}
 	
-	protected float r, g, b;
+	public float r, g, b;
 
 	public Color3f() { }
 	
@@ -41,30 +41,6 @@ public class Color3f {
 	
 	public Color3f(Color3f other) {
 		this(other.r, other.g, other.b);
-	}
-
-	public float getR() {
-		return r;
-	}
-
-	public void setR(float r) {
-		this.r = r;
-	}
-
-	public float getG() {
-		return g;
-	}
-
-	public void setG(float g) {
-		this.g = g;
-	}
-
-	public float getB() {
-		return b;
-	}
-
-	public void setB(float b) {
-		this.b = b;
 	}
 	
 	/**

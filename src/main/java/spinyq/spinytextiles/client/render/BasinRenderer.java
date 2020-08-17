@@ -4,17 +4,13 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.fluid.Fluids;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import spinyq.spinytextiles.TextileMod;
-import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.utility.Color3f;
 import spinyq.spinytextiles.utility.Color4f;
@@ -23,44 +19,28 @@ import spinyq.spinytextiles.utility.Color4f;
 public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 	private static final Color3f WATER_COLOR = Color3f.fromIntString("0x3F76E4");
-
+	private static final ResourceLocation WATER_TEXTURE = new ResourceLocation("textures/block/water_still.png");
+	private static final RenderType WATER_RENDER_TYPE = RenderType.getEntityTranslucent(WATER_TEXTURE);
 	private static final int STAGES = 200;
 
-	private final CuboidModel[] fluidModels = new CuboidModel[STAGES];
+	private final ModelRenderer[] fluidModels = new ModelRenderer[STAGES];
 
-	private CuboidModel getFluidModel(int stage, AtlasTexture texture) {
-		CuboidModel model = new CuboidModel();
-		// Set the model's texture
-		model.setTexture(texture.getSprite(Fluids.WATER.getAttributes().getStillTexture()));
-		// Set the model dimensions
-		model.minX = 0.125 + .01;
-		model.minY = 0.2 + .01;
-		model.minZ = 0.125 + .01;
-
-		model.maxX = 0.875 - .01;
-		model.maxY = 0.2 + ((float) stage / (float) STAGES) * 0.875 - .01;
-		model.maxZ = 0.875 - .01;
-		// Done
+	private ModelRenderer getFluidModel(int stage) {
+		ModelRenderer model = new ModelRenderer(16, 512, 0, 0);
+		model.addBox(2.0f + 0.01f, 3.0f + .01f, 2.0f + 0.01f, 12.0f - 0.01f,
+				((float) stage / (float) STAGES) * 12.0f - 0.01f, 12.0f - 0.01f);
 		return model;
 	}
 
-	private void generateFluidModels(AtlasTexture texture) {
+	private void generateFluidModels() {
 		for (int stage = 0; stage < STAGES; stage++) {
-			fluidModels[stage] = getFluidModel(stage, texture);
+			fluidModels[stage] = getFluidModel(stage);
 		}
 	}
 
 	public BasinRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
 		super(rendererDispatcherIn);
-		// Register ourselves to receive events.
-		FMLJavaModLoadingContext.get().getModEventBus().register(this);
-	}
-
-	@SuppressWarnings("deprecation")
-	@SubscribeEvent
-	public void onModelBake(ModelBakeEvent event) {
-		TextileMod.LOGGER.info("Generating Fluid Models...");
-		generateFluidModels(event.getModelManager().getAtlasTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE));
+		generateFluidModels();
 	}
 
 	@Override
@@ -71,15 +51,15 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 			// Calculate stage
 			int stage = (int) Math
 					.floor((float) STAGES * (float) basin.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
-			CuboidModel model = fluidModels[stage];
+			ModelRenderer model = fluidModels[stage];
 			// Calculate color using dye concentration
 			float conc = basin.getDyeConcentration();
 			Color3f rgb = WATER_COLOR.lerp(basin.getColor(), conc);
 			Color4f color = new Color4f(rgb, 1.0f);
 			// Allocate buffer
-			IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
+			IVertexBuilder buffer = renderer.getBuffer(WATER_RENDER_TYPE);
 			// Render model
-			CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn);
+			model.render(matrixStackIn, buffer, combinedLightIn, combinedOverlayIn, color.r, color.g, color.b, color.a);
 		}
 	}
 

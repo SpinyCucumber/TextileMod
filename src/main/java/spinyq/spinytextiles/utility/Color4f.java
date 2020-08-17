@@ -2,7 +2,7 @@ package spinyq.spinytextiles.utility;
 
 public class Color4f extends Color3f {
 
-	protected float a;
+	public float a;
 
 	public Color4f() {
 		super();
@@ -15,14 +15,6 @@ public class Color4f extends Color3f {
 	
 	public Color4f(Color3f rgb, float a) {
 		super(rgb);
-		this.a = a;
-	}
-
-	public float getA() {
-		return a;
-	}
-
-	public void setA(float a) {
 		this.a = a;
 	}
 	
