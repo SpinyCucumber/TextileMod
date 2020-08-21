@@ -26,14 +26,16 @@ public class CuboidRenderType extends RenderType {
               .texture(new RenderState.TextureState(resourceLocation, false, false))//Texture state
               .cull(CULL_ENABLED)//enableCull
               .transparency(TRANSLUCENT_TRANSPARENCY)//enableBlend/blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA)
-              .shadeModel(SHADE_ENABLED);//shadeModel(GL11.GL_SMOOTH)
+              // .diffuseLighting(DIFFUSE_LIGHTING_ENABLED)
+              .lightmap(LIGHTMAP_ENABLED)
+              .overlay(OVERLAY_ENABLED);
     }
 
     @SuppressWarnings("deprecation")
     public static RenderType resizableCuboid() {
 		CuboidRenderType.State.Builder stateBuilder = preset(AtlasTexture.LOCATION_BLOCKS_TEXTURE)
               .alpha(CUBOID_ALPHA);//enableAlphaTest/alphaFunc(GL11.GL_GREATER, 0.1F)
-        return makeType("resizable_cuboid", DefaultVertexFormats.POSITION_COLOR_TEX_LIGHTMAP, GL11.GL_QUADS, 256, true, false,
+        return makeType("resizable_cuboid", DefaultVertexFormats.ENTITY, GL11.GL_QUADS, 256, true, false,
               stateBuilder.build(true));
     }
 	
