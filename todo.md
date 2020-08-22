@@ -7,4 +7,4 @@
 - [x] Fiber Items
 - [x] Brush Item
 - [x] Item Color Helper
-- [ ] Revamp Model System... Use vanilla Model class and Material class. Ex. EnchantmentTableTileEntityRenderer. Also current system has issues with lighting.
+- [ ] Fabric Item: Looks like ItemOverrideList can be used to override an Item's model dynamically. Will probably have to create a custom Model and ModelLoader class. Consult DynamicBucketModel. Might create a new Atlas for patterns and such. Color different layers using Item Color.
