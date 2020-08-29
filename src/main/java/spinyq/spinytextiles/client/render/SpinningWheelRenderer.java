@@ -22,9 +22,9 @@ import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.SpinningWheelTile;
-import spinyq.spinytextiles.utility.Color3f;
-import spinyq.spinytextiles.utility.Color4f;
 import spinyq.spinytextiles.utility.FiberInfo;
+import spinyq.spinytextiles.utility.color.RGBAColor;
+import spinyq.spinytextiles.utility.color.RGBColor;
 
 @OnlyIn(Dist.CLIENT)
 public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile> {
@@ -72,7 +72,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 			Stack<FiberInfo> threadInfo = tileEntityIn.getThreadInfo();
 			FiberInfo prev = threadInfo.elementAt(threadInfo.size() - 2), curr = threadInfo.peek();
 			// Construct the info used to render the thread
-			Color3f threadColor;
+			RGBColor threadColor;
 			float threadAmount;
 			// If the wheel is spinning, interpolate between previous and current thread
 			// infos to get a smooth animation.
@@ -80,14 +80,14 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 			if (tileEntityIn.isSpinning()) {
 				float s = Math.min((float) tileEntityIn.getSpinningTimer() / (float) SpinningWheelTile.SPINNING_TIME,
 						1.0f);
-				threadColor = prev.color.lerp(curr.color, s);
+				threadColor = prev.color.interp(curr.color, s);
 				threadAmount = MathHelper.lerp(s, (float) prev.amount, (float) curr.amount);
 			} else {
 				threadColor = curr.color;
 				threadAmount = curr.amount;
 			}
 			// Calculate the final color
-			Color4f color = new Color4f(threadColor, threadAmount / (float) SpinningWheelTile.REQUIRED_THREAD);
+			RGBAColor color = new RGBAColor(threadColor, threadAmount / (float) SpinningWheelTile.REQUIRED_THREAD);
 			// Rotate based on blockstate
 			// Also have to center model
 			matrixStackIn.push();

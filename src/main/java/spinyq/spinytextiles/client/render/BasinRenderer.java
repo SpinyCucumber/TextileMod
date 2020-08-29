@@ -16,13 +16,13 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.BasinTile;
-import spinyq.spinytextiles.utility.Color3f;
-import spinyq.spinytextiles.utility.Color4f;
+import spinyq.spinytextiles.utility.color.RGBAColor;
+import spinyq.spinytextiles.utility.color.RGBColor;
 
 @OnlyIn(Dist.CLIENT)
 public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
-	private static final Color3f WATER_COLOR = Color3f.fromIntString("0x3F76E4");
+	private static final RGBColor WATER_COLOR = new RGBColor().fromIntString("0x3F76E4");
 
 	private static final int STAGES = 200;
 
@@ -74,8 +74,8 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 			CuboidModel model = fluidModels[stage];
 			// Calculate color using dye concentration
 			float conc = basin.getDyeConcentration();
-			Color3f rgb = WATER_COLOR.lerp(basin.getColor(), conc);
-			Color4f color = new Color4f(rgb, 1.0f);
+			RGBColor rgb = WATER_COLOR.interp(basin.getColor(), conc);
+			RGBAColor color = new RGBAColor(rgb, 1.0f);
 			// Allocate buffer
 			IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 			// Render model

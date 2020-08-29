@@ -8,10 +8,10 @@ import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.Constants;
 import spinyq.spinytextiles.ModTiles;
-import spinyq.spinytextiles.utility.Color3f;
-import spinyq.spinytextiles.utility.Color3f.HSV;
-import spinyq.spinytextiles.utility.ColorHelper;
 import spinyq.spinytextiles.utility.IDyeable;
+import spinyq.spinytextiles.utility.color.ColorHelper;
+import spinyq.spinytextiles.utility.color.HSVColor;
+import spinyq.spinytextiles.utility.color.RGBColor;
 
 public class BasinTile extends TileEntity {
 
@@ -21,19 +21,19 @@ public class BasinTile extends TileEntity {
 	public BasinTile() {
 		super(ModTiles.BASIN_TILE.get());
 		waterLevel = 0;
-		color = new Color3f();
+		color = new RGBColor();
 		dyeLevel = 0;
 	}
 
 	private int waterLevel, dyeLevel;
-	private Color3f color;
+	private RGBColor color;
 
 	@Override
 	public void read(CompoundNBT compound) {
 		super.read(compound);
 		waterLevel = compound.getInt(TAG_WATER_LEVEL);
 		dyeLevel = compound.getInt(TAG_DYE_LEVEL);
-		color = Color3f.fromInt(compound.getInt(TAG_COLOR));
+		color = new RGBColor().fromInt(compound.getInt(TAG_COLOR));
 	}
 
 	@Override
@@ -103,7 +103,7 @@ public class BasinTile extends TileEntity {
 	 * 
 	 * @param dyeColor
 	 */
-	public void mixDye(Color3f dyeColor) {
+	public void mixDye(RGBColor dyeColor) {
 		// Mix the existing color with the new
 		color = ColorHelper.mixRealistic(color, dyeColor, 1.0f / (float) (dyeLevel + 1));
 		this.dyeLevel++;
@@ -118,7 +118,7 @@ public class BasinTile extends TileEntity {
 	public <T,C> void dye(T object, C context, IDyeable<T,C> dyeable) {
 		// Calculate the new color by mixing the current color of the object and the basin's color
 		// Interpolate between them using the dye concentration
-		Color3f newColor = ColorHelper.mixRealistic(dyeable.getColor(object), color, getDyeConcentration());
+		RGBColor newColor = ColorHelper.mixRealistic(dyeable.getColor(object), color, getDyeConcentration());
 		dyeable.dye(object, context, newColor);
 		int cost = dyeable.getDyeCost();
 		if (waterLevel >= cost) drain(cost);
@@ -143,7 +143,7 @@ public class BasinTile extends TileEntity {
 			waterLevel -= amt;
 			if (waterLevel == 0) {
 				dyeLevel = 0;
-				color = new Color3f();
+				color = new RGBColor();
 			}
 			update();
 		}
@@ -158,7 +158,7 @@ public class BasinTile extends TileEntity {
 	 * @param amt
 	 */
 	public void boostColorSaturation(float amt) {
-		HSV hsv = new HSV();
+		HSVColor hsv = new HSVColor();
 		color.toHSV(hsv);
 		hsv.sat = Math.min(hsv.sat + amt, 1.0f);
 		// Convert back to rgb
@@ -171,7 +171,7 @@ public class BasinTile extends TileEntity {
 	 * Any saturation below 1.0 can be boosted.
 	 */
 	public boolean canBoostSaturation(float amt) {
-		HSV hsv = new HSV();
+		HSVColor hsv = new HSVColor();
 		color.toHSV(hsv);
 		return hsv.sat < 1.0f;
 	}
@@ -220,7 +220,7 @@ public class BasinTile extends TileEntity {
 		return (float) dyeLevel / (float) (MAX_DYE_LEVEL - 1);
 	}
 
-	public Color3f getColor() {
+	public RGBColor getColor() {
 		return color;
 	}
 

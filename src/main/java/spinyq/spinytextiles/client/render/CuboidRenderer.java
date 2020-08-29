@@ -16,7 +16,7 @@ import net.minecraft.util.Direction.AxisDirection;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import spinyq.spinytextiles.utility.Color4f;
+import spinyq.spinytextiles.utility.color.RGBAColor;
 
 /**
  * Adapted from Mekanism (and Buildcraft)
@@ -105,7 +105,7 @@ public class CuboidRenderer {
 						+ ")");
 	}
 
-	public void renderCube(CuboidModel cube, MatrixStack matrix, IVertexBuilder buffer, Color4f color, int light, int overlay) {
+	public void renderCube(CuboidModel cube, MatrixStack matrix, IVertexBuilder buffer, RGBAColor color, int light, int overlay) {
 		float red = color.r, green = color.g, blue = color.b, alpha = color.a;
 		Vec3d size = new Vec3d(cube.sizeX(), cube.sizeY(), cube.sizeZ());
 		matrix.push();

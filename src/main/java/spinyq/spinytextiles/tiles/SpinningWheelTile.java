@@ -27,10 +27,10 @@ import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.items.IFiberItem;
-import spinyq.spinytextiles.utility.Color3f;
 import spinyq.spinytextiles.utility.EvictingStack;
 import spinyq.spinytextiles.utility.FiberInfo;
 import spinyq.spinytextiles.utility.NBTHelper;
+import spinyq.spinytextiles.utility.color.RGBColor;
 
 public class SpinningWheelTile extends TileEntity implements ITickableTileEntity {
 
@@ -129,7 +129,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		// Create new stack
 		threadInfo = threadInfoFactory.get();
 		// Add a dummy initial thread info
-		threadInfo.add(new FiberInfo(new Color3f(), 0));
+		threadInfo.add(new FiberInfo(new RGBColor(), 0));
 	}
 	
 	public Stack<FiberInfo> getThreadInfo() {
@@ -207,7 +207,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 						// Split off one item
 						ItemStack fiberItem = itemstack.split(1);
 						// Get new fiber info
-						fiberInfo = Optional.of(new FiberInfo(((IFiberItem) item).getInfo(fiberItem)));
+						fiberInfo = Optional.of(((IFiberItem) item).getInfo(fiberItem).copy());
 						update();
 					}
 					// Play fun wool sound

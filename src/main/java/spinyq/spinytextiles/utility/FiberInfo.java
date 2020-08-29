@@ -2,6 +2,8 @@ package spinyq.spinytextiles.utility;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.util.INBTSerializable;
+import spinyq.spinytextiles.utility.color.ColorHelper;
+import spinyq.spinytextiles.utility.color.RGBColor;
 
 /**
  * Used to track info about the thread a player is spinning,
@@ -14,25 +16,24 @@ public class FiberInfo implements INBTSerializable<CompoundNBT> {
 	
 	private static final String TAG_COLOR = "Color", TAG_AMOUNT = "Amount";
 	
-	public Color3f color;
+	public RGBColor color;
 	public int amount; // Non-zero
 	
 	public FiberInfo() {
 		
 	}
 	
-	public FiberInfo(Color3f color, int amount) {
+	public FiberInfo(RGBColor color, int amount) {
 		super();
 		this.color = color;
 		this.amount = amount;
 	}
 	
 	/**
-	 * Copy constructor
+	 * Copy method
 	 */
-	public FiberInfo(FiberInfo source) {
-		this.color = new Color3f(source.color);
-		this.amount = source.amount;
+	public FiberInfo copy() {
+		return new FiberInfo(color.copy(), amount);
 	}
 	
 	/**
@@ -43,7 +44,7 @@ public class FiberInfo implements INBTSerializable<CompoundNBT> {
 	public FiberInfo combine(FiberInfo other) {
 		int totalAmount = amount + other.amount;
 		// Mix color
-		Color3f newColor = ColorHelper.mixRealistic(color, other.color, (float) other.amount / (float) totalAmount);
+		RGBColor newColor = ColorHelper.mixRealistic(color, other.color, (float) other.amount / (float) totalAmount);
 		return new FiberInfo(newColor, totalAmount);
 	}
 
@@ -62,7 +63,7 @@ public class FiberInfo implements INBTSerializable<CompoundNBT> {
 
 	@Override
 	public void deserializeNBT(CompoundNBT nbt) {
-		color = Color3f.fromInt(nbt.getInt(TAG_COLOR));
+		color = new RGBColor().fromInt(nbt.getInt(TAG_COLOR));
 		amount = nbt.getInt(TAG_AMOUNT);
 	}
 	

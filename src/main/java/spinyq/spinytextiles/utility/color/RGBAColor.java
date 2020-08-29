@@ -1,21 +1,20 @@
-package spinyq.spinytextiles.utility;
+package spinyq.spinytextiles.utility.color;
 
-public class Color4f extends Color3f {
+public class RGBAColor extends RGBColor {
 
 	public float a;
 
-	public Color4f() {
+	public RGBAColor() {
 		super();
 	}
 
-	public Color4f(float r, float g, float b, float a) {
+	public RGBAColor(float r, float g, float b, float a) {
 		super(r, g, b);
 		this.a = a;
 	}
 	
-	public Color4f(Color3f rgb, float a) {
-		super(rgb);
-		this.a = a;
+	public RGBAColor(RGBColor rgb, float a) {
+		this(rgb.r, rgb.g, rgb.b, a);
 	}
 	
 	public int toIntARGB() {
@@ -27,7 +26,7 @@ public class Color4f extends Color3f {
 		return n;
 	}
 	
-	public Color4f fromIntARGB(int argb) {
+	public RGBAColor fromIntARGB(int argb) {
 		a = (float) (argb >> 24 & 255) / 255.0F;
 		r = (float) (argb >> 16 & 255) / 255.0F;
         g = (float) (argb >> 8 & 255) / 255.0F;
