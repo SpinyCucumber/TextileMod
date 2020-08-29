@@ -1,11 +1,11 @@
 package spinyq.spinytextiles.utility;
 
-import spinyq.spinytextiles.utility.color.RGBColor;
+import spinyq.spinytextiles.utility.color.RYBColor;
 
 public interface IDyeable<T, C> {
 
-	void dye(T object, C context, RGBColor color);
-	RGBColor getColor(T object);
+	void dye(T object, C context, RYBColor color);
+	RYBColor getColor(T object);
 	
 	int getDyeCost();
 	

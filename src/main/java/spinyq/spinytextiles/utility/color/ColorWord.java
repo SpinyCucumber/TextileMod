@@ -26,10 +26,12 @@ public enum ColorWord {
 	MAROON(new RGBColor().fromIntString("0x800000")), LIGHTGRAY(new RGBColor().fromIntString("0xd3d3d3")),
 	SILVER(new RGBColor().fromIntString("0xc0c0c0")), GRAY(new RGBColor().fromIntString("0x808080"));
 
-	private RGBColor color;
+	public final RGBColor rgb;
+	public final RYBColor ryb;
 
-	private ColorWord(RGBColor color) {
-		this.color = color;
+	private ColorWord(RGBColor rgb) {
+		this.rgb = rgb;
+		ryb = rgb.toRYB(new RYBColor());
 	}
 
 	/**
@@ -41,17 +43,13 @@ public enum ColorWord {
 		return this.toString().toLowerCase();
 	}
 
-	public RGBColor getColor() {
-		return color;
-	}
-
-	public static ColorWord getClosest(RGBColor to) {
+	public static ColorWord getClosest(RYBColor to) {
 		List<ColorWord> list = Arrays.asList(ColorWord.values());
 		Comparator<ColorWord> comparator = new Comparator<ColorWord>() {
 
 			@Override
 			public int compare(ColorWord a, ColorWord b) {
-				return (int) Math.signum(b.getColor().dist(to) - a.getColor().dist(to));
+				return (int) Math.signum(b.ryb.dist(to) - a.ryb.dist(to));
 			}
 
 		};

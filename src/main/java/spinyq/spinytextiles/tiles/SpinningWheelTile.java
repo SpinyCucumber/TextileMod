@@ -30,7 +30,7 @@ import spinyq.spinytextiles.items.IFiberItem;
 import spinyq.spinytextiles.utility.EvictingStack;
 import spinyq.spinytextiles.utility.FiberInfo;
 import spinyq.spinytextiles.utility.NBTHelper;
-import spinyq.spinytextiles.utility.color.RGBColor;
+import spinyq.spinytextiles.utility.color.RYBColor;
 
 public class SpinningWheelTile extends TileEntity implements ITickableTileEntity {
 
@@ -129,7 +129,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		// Create new stack
 		threadInfo = threadInfoFactory.get();
 		// Add a dummy initial thread info
-		threadInfo.add(new FiberInfo(new RGBColor(), 0));
+		threadInfo.add(new FiberInfo(new RYBColor(), 0));
 	}
 	
 	public Stack<FiberInfo> getThreadInfo() {

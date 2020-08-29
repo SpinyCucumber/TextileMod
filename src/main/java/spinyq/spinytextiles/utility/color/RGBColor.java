@@ -31,6 +31,10 @@ public class RGBColor {
 		return new RGBColor(r, g, b);
 	}
 	
+	public RGBColor interp(RGBColor other, float s) {
+		return new RGBColor(((other.r - r) * s) + r, ((other.g - g) * s) + g, ((other.b - b) * s) + b);
+	}
+	
 	/**
 	 * Converts color into an integer of format 0xRRGGBB
 	 * @return
@@ -42,11 +46,7 @@ public class RGBColor {
 		n += ((int) (b * 255));
 		return n;
 	}
-	
-	public RGBColor interp(RGBColor other, float s) {
-		return new RGBColor(((other.r - r) * s) + r, ((other.g - g) * s) + g, ((other.b - b) * s) + b);
-	}
-	
+
 	/**
 	 * Sets this color using an integer
 	 * @param hex An integer in hex rgb format, i.e. 0xRRGGBB
@@ -66,11 +66,7 @@ public class RGBColor {
 	 * @return
 	 */
 	public RGBColor fromDye(DyeColor dye) {
-		float[] components = dye.getColorComponentValues();
-		r = components[0];
-		g = components[1];
-		b = components[2];
-		return this;
+		return this.fromInt(dye.getTextColor());
 	}
 	
 	/**

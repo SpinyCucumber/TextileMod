@@ -1,6 +1,10 @@
 package spinyq.spinytextiles.utility.color;
 
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.function.Function;
+
+import net.minecraft.item.DyeColor;
 
 /**
  * Using Idealized RYB Model defined by following paper
@@ -27,7 +31,7 @@ public class RYBColor {
 	
 	private static final RGBColor[] RGB_POINTS = {
 			new RGBColor(1.0f, 1.0f, 1.0f), // WHITE
-			new RGBColor(0.163f, 0.373f, 0.6f), // BLUE
+			new RGBColor(0.163f, 0.373f, 0.9f), // BLUE
 			new RGBColor(1.0f, 1.0f, 0.0f), // YELLOW
 			new RGBColor(0.0f, 0.66f, 0.2f), // GREEN
 			new RGBColor(1.0f, 0.0f, 0.0f), // RED
@@ -35,6 +39,18 @@ public class RYBColor {
 			new RGBColor(1.0f, 0.5f, 0.0f), // ORANGE
 			new RGBColor(0.2f, 0.094f, 0.0f), // BROWN
 	};
+	
+	// Cache the RYB colors of different dyes to speed things up
+	private static final Map<DyeColor, RYBColor> DYE_MAP = new EnumMap<>(DyeColor.class);
+	
+	// Used to "bias" the interpolation factor towards the corners of the cube
+	private static final Function<Float, Float> BIAS_FUNCTION = (f) -> f*f*(3-2*f);
+	
+	static {
+		for (DyeColor dye : DyeColor.values()) {
+			DYE_MAP.put(dye, new RYBColor().fromRGB(new RGBColor().fromDye(dye)));
+		}
+	}
 	
 	// "How much" red, yellow, and blue this color has. Between 0 and 1 inclusive
 	private float r, y, b;
@@ -58,6 +74,10 @@ public class RYBColor {
 		return this;
 	}
 	
+	public RYBColor copy() {
+		return new RYBColor(r, y, b);
+	}
+
 	// Modifies this color
 	public RYBColor add(RYBColor other) {
 		this.r += other.r;
@@ -85,10 +105,43 @@ public class RYBColor {
 	
 	// Does not modify
 	public RYBColor interp(RYBColor other, float factor) {
-		return new RYBColor(((other.r - r) * factor) + r, ((other.y - y) * y) + factor, ((other.b - b) * factor) + b);
+		return new RYBColor(((other.r - r) * factor) + r, ((other.y - y) * factor) + y, ((other.b - b) * factor) + b);
+	}
+	
+	public double dist(RYBColor other) {
+		return Math.sqrt(Math.pow(r - other.r, 2.0f) + Math.pow(y - other.y, 2.0f) + Math.pow(b - other.b, 2.0f));
+	}
+	
+	/**
+	 * Converts color into an integer of format 0xRRGGBB
+	 * @return
+	 */
+	public int toInt() {
+		int n = 0;
+		n += ((int) (r * 255)) << 16;
+		n += ((int) (y * 255)) << 8;
+		n += ((int) (b * 255));
+		return n;
+	}
+
+	/**
+	 * Sets this color using an integer
+	 * @param hex An integer in hex rgb format, i.e. 0xRRGGBB
+	 * @return
+	 */
+	public RYBColor fromInt(int hex)
+	{
+		r = (float) (hex >> 16 & 255) / 255.0F;
+        y = (float) (hex >> 8 & 255) / 255.0F;
+        b = (float) (hex & 255) / 255.0F;
+        return this;
 	}
 	
 	public RGBColor toRGB(RGBColor color) {
+		// Apply bias function to color values
+		float rb = BIAS_FUNCTION.apply(r),
+				yb = BIAS_FUNCTION.apply(y),
+				bb = BIAS_FUNCTION.apply(b);
 		// Trilinear interpolation
 		RGBColor c000 = getRGBPoint(0,0,0),
 				c001 = getRGBPoint(0,0,1),
@@ -99,15 +152,15 @@ public class RYBColor {
 				c110 = getRGBPoint(1,1,0),
 				c111 = getRGBPoint(1,1,1);
 		// Interpolate along blue axis
-		RGBColor c00 = c000.interp(c001, b),
-				c01 = c010.interp(c011, b),
-				c10 = c100.interp(c101, b),
-				c11 = c110.interp(c111, b);
+		RGBColor c00 = c000.interp(c001, bb),
+				c01 = c010.interp(c011, bb),
+				c10 = c100.interp(c101, bb),
+				c11 = c110.interp(c111, bb);
 		// Inteprolate along yellow axis
-		RGBColor c0 = c00.interp(c01, y),
-				c1 = c10.interp(c11, y);
+		RGBColor c0 = c00.interp(c01, yb),
+				c1 = c10.interp(c11, yb);
 		// Finally, interpolate along red axis
-		color.setAll(c0.interp(c1, r));
+		color.setAll(c0.interp(c1, rb));
 		return color;
 	}
 
@@ -162,6 +215,19 @@ public class RYBColor {
 		n *= 2;
 		index += r * n;
 		return RGB_POINTS[index];
+	}
+
+	public RYBColor fromDye(DyeColor dye) {
+		return DYE_MAP.get(dye);
+	}
+
+	public HSVColor toHSV(HSVColor hsv) {
+		// Hmmmm
+		return this.toRGB(new RGBColor()).toHSV(hsv);
+	}
+	
+	public RYBColor fromHSV(HSVColor hsv) {
+		return this.fromRGB(new RGBColor().fromHSV(hsv));
 	}
 	
 }

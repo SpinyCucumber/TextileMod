@@ -74,7 +74,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 			CuboidModel model = fluidModels[stage];
 			// Calculate color using dye concentration
 			float conc = basin.getDyeConcentration();
-			RGBColor rgb = WATER_COLOR.interp(basin.getColor(), conc);
+			RGBColor rgb = WATER_COLOR.interp(basin.getColor().toRGB(new RGBColor()), conc);
 			RGBAColor color = new RGBAColor(rgb, 1.0f);
 			// Allocate buffer
 			IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
