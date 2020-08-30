@@ -5,10 +5,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import com.google.common.collect.ImmutableMap;
+
 import net.minecraft.item.DyeColor;
 
 /**
- * Using Idealized RYB Model defined by following paper
+ * Using Idealized RYB Model defined by following paper with an additional black channel to allow for pure blacks
  * https://bahamas10.github.io/ryb/assets/ryb.pdf
  * by Dr. Nathan Gossett and Dr. Baoquan Chen of the University of Minnesota at Twin Cities
  * @author Elijah Hilty
@@ -33,11 +35,11 @@ public class RYBKColor {
 	
 	private static final RGBColor[] RGB_POINTS = {
 			new RGBColor(1.0f, 1.0f, 1.0f), // WHITE
-			new RGBColor(0.163f, 0.373f, 0.6f), // BLUE
+			new RGBColor(0.163f, 0.373f, 0.85f), // BLUE
 			new RGBColor(1.0f, 1.0f, 0.0f), // YELLOW
-			new RGBColor(0.0f, 0.66f, 0.2f), // GREEN
+			new RGBColor(0.0f, 0.85f, 0.2f), // GREEN
 			new RGBColor(1.0f, 0.0f, 0.0f), // RED
-			new RGBColor(0.8f, 0.0f, 0.8f), // PURPLE
+			new RGBColor(0.85f, 0.0f, 0.85f), // PURPLE
 			new RGBColor(1.0f, 0.5f, 0.0f), // ORANGE
 			new RGBColor(0.2f, 0.094f, 0.0f), // BROWN
 	};
@@ -45,7 +47,23 @@ public class RYBKColor {
 	private static final RGBColor BLACK = new RGBColor(0.1f, 0.1f, 0.1f);
 	
 	// Cache the RYB colors of different dyes to speed things up
-	private static final Map<DyeColor, RYBKColor> DYE_MAP = new EnumMap<>(DyeColor.class);
+	private static final Map<DyeColor, RYBKColor> DYE_MAP = new EnumMap<>(new ImmutableMap.Builder<DyeColor, RYBKColor>()
+			.put(DyeColor.BLACK, new RYBKColor(0.0f, 0.0f, 0.0f, 1.0f))
+			.put(DyeColor.BLUE, new RYBKColor(0.0f, 0.0f, 1.0f, 0.0f))
+			.put(DyeColor.BROWN, new RYBKColor(1.0f, 1.0f, 1.0f, 0.0f))
+			.put(DyeColor.CYAN, new RYBKColor(0.0f, 0.0f, 0.25f, 0.0f))
+			.put(DyeColor.GRAY, new RYBKColor(0.0f, 0.0f, 0.0f, 0.5f))
+			.put(DyeColor.GREEN, new RYBKColor(0.0f, 1.0f, 1.0f, 0.0f))
+			.put(DyeColor.LIGHT_BLUE, new RYBKColor(0.0f, 0.0f, 0.5f, 0.0f))
+			.put(DyeColor.LIGHT_GRAY, new RYBKColor(0.0f, 0.0f, 0.0f, 0.25f))
+			.put(DyeColor.LIME, new RYBKColor(0.0f, 0.5f, 0.5f, 0.0f))
+			.put(DyeColor.MAGENTA, new RYBKColor(0.5f, 0.0f, 0.5f, 0.0f))
+			.put(DyeColor.ORANGE, new RYBKColor(1.0f, 1.0f, 0.0f, 0.0f))
+			.put(DyeColor.PINK, new RYBKColor(0.5f, 0.0f, 0.0f, 0.0f))
+			.put(DyeColor.PURPLE, new RYBKColor(1.0f, 0.0f, 1.0f, 0.0f))
+			.put(DyeColor.RED, new RYBKColor(1.0f, 0.0f, 0.0f, 0.0f))
+			.put(DyeColor.WHITE, new RYBKColor(1.0f, 1.0f, 1.0f, 0.0f))
+			.put(DyeColor.YELLOW, new RYBKColor(0.0f, 1.0f, 0.0f, 0.0f)).build());
 	
 	// Used to "bias" the interpolation factor towards the corners of the cube
 	private static final Function<Float, Float> BIAS_FUNCTION = (f) -> f*f*(3-2*f);
@@ -61,12 +79,6 @@ public class RYBKColor {
 		n *= 2;
 		index += r * n;
 		return RGB_POINTS[index];
-	}
-
-	static {
-		for (DyeColor dye : DyeColor.values()) {
-			DYE_MAP.put(dye, new RYBKColor().fromRGB(new RGBColor().fromDye(dye), Optional.empty()));
-		}
 	}
 	
 	// "How much" red, yellow, blue, and black this color has. Between 0 and 1 inclusive
@@ -134,6 +146,11 @@ public class RYBKColor {
 		return Math.sqrt(Math.pow(r - other.r, 2.0f) + Math.pow(y - other.y, 2.0f) + Math.pow(b - other.b, 2.0f) + Math.pow(k - other.k, 2.0f));
 	}
 	
+	// Dot product
+	public float project(RYBKColor other) {
+		return (r * other.r) + (y * other.y) + (b * other.b) + (k * other.k);
+	}
+	
 	/**
 	 * Converts color into an integer of format 0xRRGGBB
 	 * @return
@@ -193,13 +210,14 @@ public class RYBKColor {
 		return color;
 	}
 	
+	// This should phased out or revised.
 	public RYBKColor fromRGB(RGBColor rgb, Optional<RGBColor> base) {
 		// Our initial guess, arbitrary
 		RYBKColor guess = new RYBKColor(0.5f, 0.5f, 0.5f, 0.5f);
 		// The function to minimize
 		Function<RYBKColor, Double> errorFunction = (color) -> { return color.toRGB(new RGBColor(), base).distSquared(rgb); };
-		double epsilon = 0.0001, margin = 0.001, error;
-		int maxIters = 50, iters = 0;
+		double epsilon = 0.00001, margin = 0.001, error;
+		int maxIters = 400, iters = 0;
 		// Keep adjusting guess until error is small enough
 		while (true) {
 			iters++;
@@ -219,7 +237,7 @@ public class RYBKColor {
 			// System.out.println(String.format("Guess: %s Error: %f Gradient: %s", guess, error, gradient));
 			// Move guess by opposite of gradient
 			// Break if maximum iterations reached
-			guess.add(gradient.scaledBy(-0.3));
+			guess.add(gradient.scaledBy(-0.1));
 			if (iters == maxIters) break;
 		}
 		// Set ourselves to be the adjusted guess
@@ -233,7 +251,7 @@ public class RYBKColor {
 	}
 
 	public HSVColor toHSV(HSVColor hsv) {
-		// Hmmmm
+		// This has the potential to be finnicky
 		return this.toRGB(new RGBColor(), Optional.empty()).toHSV(hsv);
 	}
 	

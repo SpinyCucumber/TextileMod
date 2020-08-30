@@ -13,27 +13,26 @@ import spinyq.spinytextiles.utility.IDyeable;
 import spinyq.spinytextiles.utility.color.HSVColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 
+// TODO Bleaching mechanics
 public class BasinTile extends TileEntity {
 
-	public static final int MAX_WATER_LEVEL = 9, MAX_DYE_LEVEL = 12;
+	public static final int MAX_WATER_LEVEL = 9;
 	public static final float DYE_MULTIPLIER = 1.0f / 4.0f;
-	private static final String TAG_WATER_LEVEL = "WaterLevel", TAG_DYE_LEVEL = "DyeLevel", TAG_COLOR = "Color";
+	private static final String TAG_WATER_LEVEL = "WaterLevel", TAG_COLOR = "Color";
 
 	public BasinTile() {
 		super(ModTiles.BASIN_TILE.get());
 		waterLevel = 0;
 		color = new RYBKColor();
-		dyeLevel = 0;
 	}
 
-	private int waterLevel, dyeLevel;
+	private int waterLevel;
 	private RYBKColor color;
 
 	@Override
 	public void read(CompoundNBT compound) {
 		super.read(compound);
 		waterLevel = compound.getInt(TAG_WATER_LEVEL);
-		dyeLevel = compound.getInt(TAG_DYE_LEVEL);
 		color = new RYBKColor().fromInt(compound.getInt(TAG_COLOR));
 	}
 
@@ -41,7 +40,6 @@ public class BasinTile extends TileEntity {
 	public CompoundNBT write(CompoundNBT tag) {
 		CompoundNBT result = super.write(tag);
 		result.putInt(TAG_WATER_LEVEL, waterLevel);
-		result.putInt(TAG_DYE_LEVEL, dyeLevel);
 		result.putInt(TAG_COLOR, color.toInt());
 		return result;
 	}
@@ -94,10 +92,6 @@ public class BasinTile extends TileEntity {
 		return waterLevel;
 	}
 
-	public int getDyeLevel() {
-		return dyeLevel;
-	}
-
 	/**
 	 * Mixes a new dye into the basin. This increases the dye concentration and
 	 * changes the color.
@@ -111,7 +105,6 @@ public class BasinTile extends TileEntity {
 		color.clamp();
 		// DEBUG
 		TextileMod.LOGGER.info("BasinTile mixDye... dyeColor: {} new color: {}", dyeColor, color);
-		this.dyeLevel++;
 		update();
 	}
 	
@@ -147,10 +140,7 @@ public class BasinTile extends TileEntity {
 	public void drain(int amt) {
 		if (waterLevel >= amt) {
 			waterLevel -= amt;
-			if (waterLevel == 0) {
-				dyeLevel = 0;
-				color = new RYBKColor();
-			}
+			if (waterLevel == 0) color = new RYBKColor();
 			update();
 		}
 		else throw new RuntimeException("Attempted to drain non-existent water.");
@@ -212,18 +202,13 @@ public class BasinTile extends TileEntity {
 		return waterLevel == 0;
 	}
 
-	/**
-	 * Whether the basin is "fully saturated". A saturated basin can't accept any
-	 * more dyes.
-	 * 
-	 * @return
-	 */
-	public boolean isSaturated() {
-		return dyeLevel == (MAX_DYE_LEVEL - 1);
-	}
-
-	public float getDyeConcentration() {
-		return (float) dyeLevel / (float) (MAX_DYE_LEVEL - 1);
+	public boolean canAcceptDye(RYBKColor dye) {
+		// If the dye contains a component that we're already maxed out in, reject it.
+		// Iterate over components
+		for (RYBKColor.Axis axis : RYBKColor.Axis.values()) {
+			if (dye.project(axis.direction) > 0.0f && color.project(axis.direction) >= 1.0f) return false;
+		}
+		return true;
 	}
 
 	public RYBKColor getColor() {

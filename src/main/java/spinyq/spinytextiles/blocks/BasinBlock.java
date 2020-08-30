@@ -73,22 +73,26 @@ public class BasinBlock extends Block {
 				}
 				// Interacting on a basin with dye consumes the dye and changes the color of the basin
 				// The basin must be full and heated
-				else if (item instanceof DyeItem && !basin.isSaturated() && basin.isFull() && basin.isHeated()) {
-					if (!world.isRemote) {
-						// Consume one item if player is not in creative
-						if (!player.abilities.isCreativeMode) {
-							itemstack.shrink(1);
+				else if (item instanceof DyeItem && basin.isFull() && basin.isHeated()) {
+					// Retrieve the color of the dye
+					DyeItem dye = (DyeItem) item;
+					RYBKColor dyeColor = new RYBKColor().fromDye(dye.getDyeColor());
+					// Ensure that the basin can accept the dye
+					if (basin.canAcceptDye(dyeColor)) {
+						
+						if (!world.isRemote) {
+							// Consume one item if player is not in creative
+							if (!player.abilities.isCreativeMode) {
+								itemstack.shrink(1);
+							}
+							// Mix the color into the basin
+							basin.mixDye(dyeColor);
+							world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
+									SoundCategory.BLOCKS, 1.0F, 1.0F);
 						}
-						// Retrieve the color of the dye
-						DyeItem dye = (DyeItem) item;
-						RYBKColor dyeColor = new RYBKColor().fromDye(dye.getDyeColor());
-						// Mix the color into the basin
-						basin.mixDye(dyeColor);
-						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
-								SoundCategory.BLOCKS, 1.0F, 1.0F);
+						
+						return ActionResultType.SUCCESS;
 					}
-					
-					return ActionResultType.SUCCESS;
 					
 				}
 				// Interacting on a basin with a dyeable item dyes the item and consumes some water
