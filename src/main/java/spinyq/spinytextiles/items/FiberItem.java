@@ -3,14 +3,14 @@ package spinyq.spinytextiles.items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import spinyq.spinytextiles.utility.FiberInfo;
-import spinyq.spinytextiles.utility.color.RYBColor;
+import spinyq.spinytextiles.utility.color.RYBKColor;
 
 public class FiberItem extends Item implements IFiberItem {
 
-	private RYBColor color;
+	private RYBKColor color;
 	private int amountPerItem;
 	
-	public FiberItem(Properties properties, RYBColor color, int amountPerItem) {
+	public FiberItem(Properties properties, RYBKColor color, int amountPerItem) {
 		super(properties);
 		this.color = color;
 		this.amountPerItem = amountPerItem;

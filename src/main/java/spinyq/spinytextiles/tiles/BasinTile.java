@@ -11,29 +11,30 @@ import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.utility.IDyeable;
 import spinyq.spinytextiles.utility.color.HSVColor;
-import spinyq.spinytextiles.utility.color.RYBColor;
+import spinyq.spinytextiles.utility.color.RYBKColor;
 
 public class BasinTile extends TileEntity {
 
-	public static final int MAX_WATER_LEVEL = 9, MAX_DYE_LEVEL = 9;
+	public static final int MAX_WATER_LEVEL = 9, MAX_DYE_LEVEL = 12;
+	public static final float DYE_MULTIPLIER = 1.0f / 4.0f;
 	private static final String TAG_WATER_LEVEL = "WaterLevel", TAG_DYE_LEVEL = "DyeLevel", TAG_COLOR = "Color";
 
 	public BasinTile() {
 		super(ModTiles.BASIN_TILE.get());
 		waterLevel = 0;
-		color = new RYBColor();
+		color = new RYBKColor();
 		dyeLevel = 0;
 	}
 
 	private int waterLevel, dyeLevel;
-	private RYBColor color;
+	private RYBKColor color;
 
 	@Override
 	public void read(CompoundNBT compound) {
 		super.read(compound);
 		waterLevel = compound.getInt(TAG_WATER_LEVEL);
 		dyeLevel = compound.getInt(TAG_DYE_LEVEL);
-		color = new RYBColor().fromInt(compound.getInt(TAG_COLOR));
+		color = new RYBKColor().fromInt(compound.getInt(TAG_COLOR));
 	}
 
 	@Override
@@ -103,9 +104,11 @@ public class BasinTile extends TileEntity {
 	 * 
 	 * @param dyeColor
 	 */
-	public void mixDye(RYBColor dyeColor) {
-		// Mix the existing color with the new
-		color = color.interp(dyeColor, 1.0f / (float) (dyeLevel + 1));
+	public void mixDye(RYBKColor dyeColor) {
+		// Add the new color
+		// Clamp it as well
+		color.add(dyeColor.scaledBy(DYE_MULTIPLIER));
+		color.clamp();
 		// DEBUG
 		TextileMod.LOGGER.info("BasinTile mixDye... dyeColor: {} new color: {}", dyeColor, color);
 		this.dyeLevel++;
@@ -120,7 +123,8 @@ public class BasinTile extends TileEntity {
 	public <T,C> void dye(T object, C context, IDyeable<T,C> dyeable) {
 		// Calculate the new color by mixing the current color of the object and the basin's color
 		// Interpolate between them using the dye concentration
-		RYBColor newColor = dyeable.getColor(object).interp(color, getDyeConcentration());
+		RYBKColor newColor = dyeable.getColor(object).plus(color);
+		newColor.clamp();
 		dyeable.dye(object, context, newColor);
 		int cost = dyeable.getDyeCost();
 		if (waterLevel >= cost) drain(cost);
@@ -145,7 +149,7 @@ public class BasinTile extends TileEntity {
 			waterLevel -= amt;
 			if (waterLevel == 0) {
 				dyeLevel = 0;
-				color = new RYBColor();
+				color = new RYBKColor();
 			}
 			update();
 		}
@@ -222,7 +226,7 @@ public class BasinTile extends TileEntity {
 		return (float) dyeLevel / (float) (MAX_DYE_LEVEL - 1);
 	}
 
-	public RYBColor getColor() {
+	public RYBKColor getColor() {
 		return color;
 	}
 

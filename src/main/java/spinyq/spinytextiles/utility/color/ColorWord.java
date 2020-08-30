@@ -3,6 +3,7 @@ package spinyq.spinytextiles.utility.color;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public enum ColorWord {
 
@@ -27,11 +28,11 @@ public enum ColorWord {
 	SILVER(new RGBColor().fromIntString("0xc0c0c0")), GRAY(new RGBColor().fromIntString("0x808080"));
 
 	public final RGBColor rgb;
-	public final RYBColor ryb;
+	public final RYBKColor ryb;
 
 	private ColorWord(RGBColor rgb) {
 		this.rgb = rgb;
-		ryb = rgb.toRYB(new RYBColor());
+		ryb = rgb.toRYB(new RYBKColor(), Optional.empty());
 	}
 
 	/**
@@ -43,7 +44,7 @@ public enum ColorWord {
 		return this.toString().toLowerCase();
 	}
 
-	public static ColorWord getClosest(RYBColor to) {
+	public static ColorWord getClosest(RYBKColor to) {
 		List<ColorWord> list = Arrays.asList(ColorWord.values());
 		Comparator<ColorWord> comparator = new Comparator<ColorWord>() {
 

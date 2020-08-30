@@ -1,5 +1,6 @@
 package spinyq.spinytextiles.utility.color;
 
+import java.util.Optional;
 import java.util.Random;
 
 import net.minecraft.item.DyeColor;
@@ -33,6 +34,13 @@ public class RGBColor {
 	
 	public RGBColor interp(RGBColor other, float s) {
 		return new RGBColor(((other.r - r) * s) + r, ((other.g - g) * s) + g, ((other.b - b) * s) + b);
+	}
+	
+	public RGBColor scale(float factor) {
+		r *= factor;
+		g *= factor;
+		b *= factor;
+		return this;
 	}
 	
 	/**
@@ -117,13 +125,13 @@ public class RGBColor {
 		return this;
 	}
 	
-	public RYBColor toRYB(RYBColor ryb) {
-		ryb.fromRGB(this);
+	public RYBKColor toRYB(RYBKColor ryb, Optional<RGBColor> base) {
+		ryb.fromRGB(this, base);
 		return ryb;
 	}
 	
-	public RGBColor fromRYB(RYBColor ryb) {
-		ryb.toRGB(this);
+	public RGBColor fromRYB(RYBKColor ryb, Optional<RGBColor> base) {
+		ryb.toRGB(this, base);
 		return this;
 	}
 	

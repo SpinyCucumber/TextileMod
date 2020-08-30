@@ -1,5 +1,6 @@
 package spinyq.spinytextiles.client.render;
 
+import java.util.Optional;
 import java.util.Stack;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -25,7 +26,7 @@ import spinyq.spinytextiles.tiles.SpinningWheelTile;
 import spinyq.spinytextiles.utility.FiberInfo;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RGBColor;
-import spinyq.spinytextiles.utility.color.RYBColor;
+import spinyq.spinytextiles.utility.color.RYBKColor;
 
 @OnlyIn(Dist.CLIENT)
 public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile> {
@@ -73,7 +74,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 			Stack<FiberInfo> threadInfo = tileEntityIn.getThreadInfo();
 			FiberInfo prev = threadInfo.elementAt(threadInfo.size() - 2), curr = threadInfo.peek();
 			// Construct the info used to render the thread
-			RYBColor threadColor;
+			RYBKColor threadColor;
 			float threadAmount;
 			// If the wheel is spinning, interpolate between previous and current thread
 			// infos to get a smooth animation.
@@ -89,7 +90,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 			}
 			// Calculate the final color
 			// TODO Cache this
-			RGBAColor color = new RGBAColor(threadColor.toRGB(new RGBColor()), threadAmount / (float) SpinningWheelTile.REQUIRED_THREAD);
+			RGBAColor color = new RGBAColor(threadColor.toRGB(new RGBColor(), Optional.empty()), threadAmount / (float) SpinningWheelTile.REQUIRED_THREAD);
 			// Rotate based on blockstate
 			// Also have to center model
 			matrixStackIn.push();

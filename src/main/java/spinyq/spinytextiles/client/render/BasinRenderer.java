@@ -1,5 +1,7 @@
 package spinyq.spinytextiles.client.render;
 
+import java.util.Optional;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
@@ -72,9 +74,8 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 			int stage = (int) Math
 					.floor((float) STAGES * (float) basin.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
 			CuboidModel model = fluidModels[stage];
-			// Calculate color using dye concentration
-			float conc = basin.getDyeConcentration();
-			RGBColor rgb = WATER_COLOR.interp(basin.getColor().toRGB(new RGBColor()), conc);
+			// Calculate water color as "base" color
+			RGBColor rgb = basin.getColor().toRGB(new RGBColor(), Optional.of(WATER_COLOR));
 			RGBAColor color = new RGBAColor(rgb, 1.0f);
 			// Allocate buffer
 			IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());

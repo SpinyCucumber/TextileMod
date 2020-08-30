@@ -1,5 +1,7 @@
 package spinyq.spinytextiles.items;
 
+import java.util.Optional;
+
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Inventory;
@@ -13,7 +15,7 @@ import net.minecraftforge.fml.DistExecutor;
 import spinyq.spinytextiles.client.render.ItemColorHelper;
 import spinyq.spinytextiles.utility.color.ColorWord;
 import spinyq.spinytextiles.utility.color.RGBColor;
-import spinyq.spinytextiles.utility.color.RYBColor;
+import spinyq.spinytextiles.utility.color.RYBKColor;
 
 public class ThreadItem extends Item implements IDyeableItem {
 
@@ -23,7 +25,7 @@ public class ThreadItem extends Item implements IDyeableItem {
 		DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
 			ItemColorHelper.setItemColorHandler(this, (stack, tintIndex) -> {
 				// For the overlay layer, return the color of the thread
-				RGBColor rgb = getColor(stack).toRGB(new RGBColor());
+				RGBColor rgb = getColor(stack).toRGB(new RGBColor(), Optional.empty());
 				if (tintIndex == 1)
 					return rgb.toInt();
 				// For all other layers, return -1 (white)
@@ -47,7 +49,7 @@ public class ThreadItem extends Item implements IDyeableItem {
 		// If the stack has a color (it should), get the closest "word" color and use
 		// that
 		String colorName = "null";
-		RYBColor color = getColor(stack);
+		RYBKColor color = getColor(stack);
 		if (color != null)
 			colorName = ColorWord.getClosest(color).getName();
 		return super.getTranslationKey() + '.' + colorName;
@@ -83,7 +85,7 @@ public class ThreadItem extends Item implements IDyeableItem {
 		 * @param stack
 		 * @return
 		 */
-		public ItemStack withColor(ItemStack stack, RYBColor color) {
+		public ItemStack withColor(ItemStack stack, RYBKColor color) {
 			// Create tag if it does not exist
 			if (!stack.hasTag())
 				stack.setTag(new CompoundNBT());
@@ -97,12 +99,12 @@ public class ThreadItem extends Item implements IDyeableItem {
 		 * @return The color of the thread itemstack, or null if no color is attached.
 		 *         (This should not happen.)
 		 */
-		public RYBColor getColor(ItemStack stack) {
+		public RYBKColor getColor(ItemStack stack) {
 			if (!stack.hasTag())
 				return null;
 			if (!stack.getTag().contains(KEY_COLOR))
 				return null;
-			return new RYBColor().fromInt(stack.getTag().getInt(KEY_COLOR));
+			return new RYBKColor().fromInt(stack.getTag().getInt(KEY_COLOR));
 		}
 
 	}
@@ -112,12 +114,12 @@ public class ThreadItem extends Item implements IDyeableItem {
 		return 1;
 	}
 
-	public void setColor(ItemStack stack, RYBColor color) {
+	public void setColor(ItemStack stack, RYBKColor color) {
 		storageHandler.withColor(stack, color);
 	}
 	
 	@Override
-	public void dye(ItemStack stack, IInventory inventory, RYBColor color) {
+	public void dye(ItemStack stack, IInventory inventory, RYBKColor color) {
 		// Only dye one item at a time
 		ItemStack dyedStack = stack.split(1);
 		setColor(dyedStack, color);
@@ -129,7 +131,7 @@ public class ThreadItem extends Item implements IDyeableItem {
 	}
 
 	@Override
-	public RYBColor getColor(ItemStack stack) {
+	public RYBKColor getColor(ItemStack stack) {
 		return storageHandler.getColor(stack);
 	}
 

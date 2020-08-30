@@ -24,7 +24,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import spinyq.spinytextiles.items.IDyeableItem;
 import spinyq.spinytextiles.tiles.BasinTile;
-import spinyq.spinytextiles.utility.color.RYBColor;
+import spinyq.spinytextiles.utility.color.RYBKColor;
 
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class BasinBlock extends Block {
@@ -81,7 +81,7 @@ public class BasinBlock extends Block {
 						}
 						// Retrieve the color of the dye
 						DyeItem dye = (DyeItem) item;
-						RYBColor dyeColor = new RYBColor().fromDye(dye.getDyeColor());
+						RYBKColor dyeColor = new RYBKColor().fromDye(dye.getDyeColor());
 						// Mix the color into the basin
 						basin.mixDye(dyeColor);
 						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,

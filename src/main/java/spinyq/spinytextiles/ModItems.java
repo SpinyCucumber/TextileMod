@@ -8,7 +8,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import spinyq.spinytextiles.items.FiberItem;
 import spinyq.spinytextiles.items.ThreadItem;
-import spinyq.spinytextiles.utility.color.RYBColor;
+import spinyq.spinytextiles.utility.color.RYBKColor;
 
 /**
  * Handles managing and registering all the items of the mod.
@@ -25,13 +25,13 @@ public class ModItems {
 
 	public static final RegistryObject<FiberItem> WHITE_WOOL_FIBER_ITEM = ITEMS.register("white_wool_fiber",
 			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance),
-					new RYBColor().fromDye(DyeColor.WHITE), 1)),
+					new RYBKColor().fromDye(DyeColor.WHITE), 1)),
 			BROWN_WOOL_FIBER_ITEM = ITEMS.register("brown_wool_fiber",
 					() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance),
-							new RYBColor().fromDye(DyeColor.BROWN), 1)),
+							new RYBKColor().fromDye(DyeColor.BROWN), 1)),
 			SILK_FIBER_ITEM = ITEMS.register("silk_fiber",
 					() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance),
-							new RYBColor().fromDye(DyeColor.WHITE), 1));
+							new RYBKColor().fromDye(DyeColor.WHITE), 1));
 
 	public static final RegistryObject<Item> BRUSH_ITEM = ITEMS.register("brush",
 			() -> new Item(new Item.Properties().maxDamage(128).group(ItemGroupTextiles.instance))),
