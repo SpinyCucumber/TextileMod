@@ -1,0 +1,16 @@
+{
+    "type": "minecraft:crafting_shapeless",
+    "ingredients": [
+        {
+            "item": "minecraft:charcoal"
+        },
+        {
+            "item": "minecraft:bone_meal"
+        }
+    ],
+    "result":
+    {
+        "item": "spinytextiles:lye",
+        "count": 2
+    }
+}
