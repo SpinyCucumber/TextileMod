@@ -1,5 +1,7 @@
 package spinyq.spinytextiles.blocks;
 
+import java.util.Random;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -7,6 +9,7 @@ import net.minecraft.item.DyeItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.pathfinding.PathType;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
@@ -22,6 +25,7 @@ import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import spinyq.spinytextiles.ModTags;
 import spinyq.spinytextiles.items.IDyeableItem;
 import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.utility.color.RYBKColor;
@@ -38,16 +42,16 @@ public class BasinBlock extends Block {
 			IBooleanFunction.ONLY_FIRST);
 
 	private static final float GLOWSTONE_SAT_AMT = 0.2f;
-	
+
 	@SuppressWarnings("deprecation")
 	@Override
 	public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
 			Hand handIn, BlockRayTraceResult hit) {
 		// Check that the player is indeed interacting with the tile entity
 		TileEntity tile = world.getTileEntity(pos);
-		
+
 		if (tile instanceof BasinTile) {
-			
+
 			BasinTile basin = (BasinTile) tile;
 			ItemStack itemstack = player.getHeldItem(handIn);
 			// Only care about clicking with items
@@ -58,61 +62,94 @@ public class BasinBlock extends Block {
 				// Interacting on a basin with a water bucket fills the basin
 				Item item = itemstack.getItem();
 				if (item == Items.WATER_BUCKET && basin.isEmpty()) {
-					
+
 					if (!world.isRemote) {
 						if (!player.abilities.isCreativeMode) {
 							player.setHeldItem(handIn, new ItemStack(Items.BUCKET));
 						}
 						basin.fill();
-						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
-								SoundCategory.BLOCKS, 1.0F, 1.0F);
+						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
+								1.0F, 1.0F);
 					}
-					
+
 					return ActionResultType.SUCCESS;
-					
+
 				}
-				// Interacting on a basin with dye consumes the dye and changes the color of the basin
-				// The basin must be full and heated
-				else if (item instanceof DyeItem && basin.isFull() && basin.isHeated()) {
+				// Interacting on a basin with dye consumes the dye and changes the color of the
+				// basin
+				// The basin must be full and heated and not have bleach
+				else if (item instanceof DyeItem && basin.isFull() && basin.isHeated() && !basin.hasBleach()) {
 					// Retrieve the color of the dye
 					DyeItem dye = (DyeItem) item;
 					RYBKColor dyeColor = new RYBKColor().fromDye(dye.getDyeColor());
 					// Ensure that the basin can accept the dye
 					if (basin.canAcceptDye(dyeColor)) {
-						
+
 						if (!world.isRemote) {
 							// Consume one item if player is not in creative
 							if (!player.abilities.isCreativeMode) {
 								itemstack.shrink(1);
 							}
 							// Mix the color into the basin
-							basin.mixDye(dyeColor);
+							basin.addDye(dyeColor);
 							world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
 									SoundCategory.BLOCKS, 1.0F, 1.0F);
 						}
-						
+
 						return ActionResultType.SUCCESS;
 					}
+
+				}
+				// Interacting on a basin with lye adds bleach to the basin
+				else if (item.getTags().contains(ModTags.LYE_TAG) && basin.isFull() && basin.isHeated() && !basin.hasDye()) {
+					float bleachAmount = 1.0f;
 					
+					if (basin.canAcceptBleach(bleachAmount) ) {
+						if (!world.isRemote) {
+							// Consume one item if player is not in creative
+							if (!player.abilities.isCreativeMode) {
+								itemstack.shrink(1);
+							}
+							// Add bleach to the basin
+							basin.addBleach(bleachAmount);
+							world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
+									1.0F, 1.0F);
+						}
+	
+						return ActionResultType.SUCCESS;
+					}
 				}
 				// Interacting on a basin with a dyeable item dyes the item and consumes some water
+				// Can also bleach items
 				// The basin must also be heated
-				else if (item instanceof IDyeableItem && basin.canDye((IDyeableItem) item) && !basin.isEmpty() && basin.isHeated()) {
+				else if (item instanceof IDyeableItem && basin.isHeated()) {
 					IDyeableItem dyeable = (IDyeableItem) item;
-					if (!world.isRemote) {
-						// Dye the item
-						basin.dye(itemstack, player.inventory, dyeable);
-						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
-								SoundCategory.BLOCKS, 1.0F, 1.0F);
+					if (basin.hasDye() && basin.canDye(dyeable)) {
+						if (!world.isRemote) {
+							// Dye the item
+							basin.dye(itemstack, player.inventory, dyeable);
+							world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
+									1.0F, 1.0F);
+						}
+	
+						return ActionResultType.SUCCESS;
 					}
-					
-					return ActionResultType.SUCCESS;
-					
+					else if (basin.hasBleach() && basin.canBleach(itemstack, player.inventory, dyeable)) {
+						if (!world.isRemote) {
+							// Bleach the item
+							basin.bleach(itemstack, player.inventory, dyeable);
+							world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
+									1.0F, 1.0F);
+						}
+	
+						return ActionResultType.SUCCESS;
+					}
+
 				}
 				// Interacting on a basin with glowstone dust boosts the saturation of the color
 				// Basin must be full and heated
-				else if (item == Items.GLOWSTONE_DUST && basin.canBoostSaturation(GLOWSTONE_SAT_AMT)
-						&& basin.isFull() && basin.isHeated()) {
+				else if (item == Items.GLOWSTONE_DUST && basin.canBoostSaturation(GLOWSTONE_SAT_AMT) && basin.isFull()
+						&& basin.isHeated() && basin.hasDye()) {
 					if (!world.isRemote) {
 						// Consume one item if player is not in creative
 						if (!player.abilities.isCreativeMode) {
@@ -120,16 +157,35 @@ public class BasinBlock extends Block {
 						}
 						// Boost saturation
 						basin.boostColorSaturation(GLOWSTONE_SAT_AMT);
-						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
-								SoundCategory.BLOCKS, 1.0F, 1.0F);
+						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
+								1.0F, 1.0F);
 					}
-					
+
 					return ActionResultType.SUCCESS;
 				}
 			}
 		}
-		
+
 		return super.onBlockActivated(state, world, pos, player, handIn, hit);
+	}
+
+	@Override
+	public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+		// Check that we have a valid tile entity
+		TileEntity tile = worldIn.getTileEntity(pos);
+
+		if (tile instanceof BasinTile) {
+
+			BasinTile basin = (BasinTile) tile;
+			// Spawn particles if basin is bleaching some shi
+			double bubbleChance = basin.getBleachLevel();
+			if (rand.nextDouble() < bubbleChance) {
+				double x = (double) pos.getX() + 2.0/16.0 + 12.0/16.0 * rand.nextDouble(),
+						y = (double) pos.getY() + basin.getWaterHeight(),
+						z = (double) pos.getZ() + 2.0/16.0 + 12.0/16.0 * rand.nextDouble();
+				worldIn.addParticle(ParticleTypes.BUBBLE_POP, x, y, z, 0.0D, 0.0D, 0.0D);
+			}
+		}
 	}
 
 	@Override

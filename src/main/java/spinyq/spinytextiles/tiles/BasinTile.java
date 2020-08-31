@@ -13,27 +13,30 @@ import spinyq.spinytextiles.utility.IDyeable;
 import spinyq.spinytextiles.utility.color.HSVColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 
-// TODO Bleaching mechanics
+// TODO Should probably use an FSM
 public class BasinTile extends TileEntity {
 
 	public static final int MAX_WATER_LEVEL = 9;
-	public static final float DYE_MULTIPLIER = 1.0f / 4.0f;
-	private static final String TAG_WATER_LEVEL = "WaterLevel", TAG_COLOR = "Color";
+	public static final float DYE_MULTIPLIER = 0.25f, BLEACH_MULTIPLIER = 0.25f;
+	private static final String TAG_WATER_LEVEL = "WaterLevel", TAG_COLOR = "Color", TAG_BLEACH_LEVEL = "BleachLevel";
 
 	public BasinTile() {
 		super(ModTiles.BASIN_TILE.get());
 		waterLevel = 0;
+		bleachLevel = 0;
 		color = new RYBKColor();
 	}
 
 	private int waterLevel;
 	private RYBKColor color;
+	private float bleachLevel;
 
 	@Override
 	public void read(CompoundNBT compound) {
 		super.read(compound);
 		waterLevel = compound.getInt(TAG_WATER_LEVEL);
 		color = new RYBKColor().fromInt(compound.getInt(TAG_COLOR));
+		bleachLevel = compound.getFloat(TAG_BLEACH_LEVEL);
 	}
 
 	@Override
@@ -41,6 +44,7 @@ public class BasinTile extends TileEntity {
 		CompoundNBT result = super.write(tag);
 		result.putInt(TAG_WATER_LEVEL, waterLevel);
 		result.putInt(TAG_COLOR, color.toInt());
+		result.putFloat(TAG_BLEACH_LEVEL, bleachLevel);
 		return result;
 	}
 
@@ -98,13 +102,18 @@ public class BasinTile extends TileEntity {
 	 * 
 	 * @param dyeColor
 	 */
-	public void mixDye(RYBKColor dyeColor) {
+	public void addDye(RYBKColor dyeColor) {
 		// Add the new color
 		// Clamp it as well
 		color.add(dyeColor.scaledBy(DYE_MULTIPLIER));
 		color.clamp();
 		// DEBUG
 		TextileMod.LOGGER.info("BasinTile mixDye... dyeColor: {} new color: {}", dyeColor, color);
+		update();
+	}
+	
+	public void addBleach(float amount) {
+		bleachLevel = Math.min(1.0f, bleachLevel + BLEACH_MULTIPLIER * amount);
 		update();
 	}
 	
@@ -124,6 +133,15 @@ public class BasinTile extends TileEntity {
 		else throw new RuntimeException("Attempted to dye an item without enough dye.");
 	}
 
+	public <T,C> void bleach(T object, C context, IDyeable<T,C> dyeable) {
+		RYBKColor newColor = dyeable.getColor(object).plus(new RYBKColor(-bleachLevel, -bleachLevel, -bleachLevel, -bleachLevel));
+		newColor.clamp();
+		dyeable.dye(object, context, newColor);
+		// Apply cost
+		int cost = dyeable.getDyeCost();
+		drain(cost);
+	}
+
 	/**
 	 * Sets the water level to the max.
 	 */
@@ -140,7 +158,11 @@ public class BasinTile extends TileEntity {
 	public void drain(int amt) {
 		if (waterLevel >= amt) {
 			waterLevel -= amt;
-			if (waterLevel == 0) color = new RYBKColor();
+			if (waterLevel == 0) {
+				// Reset bleach level, color
+				bleachLevel = 0.0f;
+				color = new RYBKColor();
+			}
 			update();
 		}
 		else throw new RuntimeException("Attempted to drain non-existent water.");
@@ -176,6 +198,17 @@ public class BasinTile extends TileEntity {
 		return (waterLevel >= dyeable.getDyeCost());
 	}
 	
+	public <T, C> boolean canBleach(T object, C context, IDyeable<T,C> dyeable) {
+		if (waterLevel < dyeable.getDyeCost()) return false;
+		// If any of the colors components is above zero, we can still apply bleach
+		// Retrieve color
+		RYBKColor dye = dyeable.getColor(object);
+		for (RYBKColor.Axis axis : RYBKColor.Axis.values()) {
+			if (dye.project(axis.direction) > 0.0f) return true;
+		}
+		return false;
+	}
+	
 	/**
 	 * Whether the basin is heated. Heat is required to dye objects.
 	 * @return
@@ -201,6 +234,14 @@ public class BasinTile extends TileEntity {
 	public boolean isEmpty() {
 		return waterLevel == 0;
 	}
+	
+	public boolean hasDye() {
+		return color.hasValue();
+	}
+	
+	public boolean hasBleach() {
+		return bleachLevel > 0;
+	}
 
 	public boolean canAcceptDye(RYBKColor dye) {
 		// If the dye contains a component that we're already maxed out in, reject it.
@@ -210,9 +251,22 @@ public class BasinTile extends TileEntity {
 		}
 		return true;
 	}
+	
+	public boolean canAcceptBleach(float amount) {
+		// Reject bleach if we already have the max level
+		return (bleachLevel < 1.0f);
+	}
 
 	public RYBKColor getColor() {
 		return color;
 	}
 
+	public float getBleachLevel() {
+		return bleachLevel;
+	}
+
+	public double getWaterHeight() {
+		return 0.2 + ((double) waterLevel / (double) MAX_WATER_LEVEL) * 0.875;
+	}
+	
 }

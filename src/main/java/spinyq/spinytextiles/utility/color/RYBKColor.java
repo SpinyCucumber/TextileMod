@@ -181,6 +181,10 @@ public class RYBKColor {
 		return "RYBKColor [r=" + r + ", y=" + y + ", b=" + b + ", k=" + k + "]";
 	}
 
+	public boolean hasValue() {
+		return r > 0.0f || y > 0.0f || b > 0.0f || k > 0.0f;
+	}
+
 	public RGBColor toRGB(RGBColor color, Optional<RGBColor> base) {
 		// Apply bias function to color values
 		float rb = BIAS_FUNCTION.apply(r),

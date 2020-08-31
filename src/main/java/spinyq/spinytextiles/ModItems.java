@@ -36,6 +36,8 @@ public class ModItems {
 	public static final RegistryObject<Item> BRUSH_ITEM = ITEMS.register("brush",
 			() -> new Item(new Item.Properties().maxDamage(128).group(ItemGroupTextiles.instance))),
 			SPINDLE_ITEM = ITEMS.register("spindle",
+					() -> new Item(new Item.Properties().group(ItemGroupTextiles.instance))),
+			LYE_ITEM = ITEMS.register("lye",
 					() -> new Item(new Item.Properties().group(ItemGroupTextiles.instance)));
 
 	// TODO Might move "Mod..." classes to a single "Registration" class to simplify

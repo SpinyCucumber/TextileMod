@@ -25,7 +25,6 @@ import spinyq.spinytextiles.utility.color.RGBColor;
 public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 	private static final RGBColor WATER_COLOR = new RGBColor().fromIntString("0x3F76E4");
-
 	private static final int STAGES = 200;
 
 	private final CuboidModel[] fluidModels = new CuboidModel[STAGES];
@@ -35,13 +34,13 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 		// Set the model's texture
 		model.setTexture(texture.getSprite(Fluids.WATER.getAttributes().getStillTexture()));
 		// Set the model dimensions
-		model.minX = 0.125 + .01;
-		model.minY = 0.2 + .01;
-		model.minZ = 0.125 + .01;
+		model.minX = 0.125 - .01;
+		model.minY = 0.2 - .01;
+		model.minZ = 0.125 - .01;
 
-		model.maxX = 0.875 - .01;
-		model.maxY = 0.2 + ((float) stage / (float) STAGES) * 0.875 - .01;
-		model.maxZ = 0.875 - .01;
+		model.maxX = 0.875 + .01;
+		model.maxY = 0.2 + ((float) stage / (float) STAGES) * 0.875 + .01;
+		model.maxZ = 0.875 + .01;
 		// Done
 		return model;
 	}
@@ -70,7 +69,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 			int combinedLightIn, int combinedOverlayIn) {
 		// Don't render anything if basin is empty
 		if (!basin.isEmpty()) {
-			// Calculate stage
+			// Calculate stage and model
 			int stage = (int) Math
 					.floor((float) STAGES * (float) basin.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
 			CuboidModel model = fluidModels[stage];
