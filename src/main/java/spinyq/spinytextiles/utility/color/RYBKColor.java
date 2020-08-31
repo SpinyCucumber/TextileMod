@@ -62,7 +62,7 @@ public class RYBKColor {
 			.put(DyeColor.PINK, new RYBKColor(0.5f, 0.0f, 0.0f, 0.0f))
 			.put(DyeColor.PURPLE, new RYBKColor(1.0f, 0.0f, 1.0f, 0.0f))
 			.put(DyeColor.RED, new RYBKColor(1.0f, 0.0f, 0.0f, 0.0f))
-			.put(DyeColor.WHITE, new RYBKColor(1.0f, 1.0f, 1.0f, 0.0f))
+			.put(DyeColor.WHITE, new RYBKColor(0.0f, 0.0f, 0.0f, 0.0f))
 			.put(DyeColor.YELLOW, new RYBKColor(0.0f, 1.0f, 0.0f, 0.0f)).build());
 	
 	// Used to "bias" the interpolation factor towards the corners of the cube

@@ -129,7 +129,7 @@ public class SpinningWheelBlock extends Block {
 		TileEntity tile = worldIn.getTileEntity(pos);
 		// Pass logic over to tile entity
 		if (tile instanceof SpinningWheelTile) {
-			Optional<ActionResultType> result = ((SpinningWheelTile) tile).onBlockActivated(state, worldIn, pos, player, handIn, hit);
+			Optional<ActionResultType> result = ((SpinningWheelTile) tile).onInteract(player, handIn, hit);
 			if (result.isPresent()) return result.get();
 		}
 		return super.onBlockActivated(state, worldIn, pos, player, handIn, hit);

@@ -17,9 +17,7 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import spinyq.spinytextiles.ModItems;
 import spinyq.spinytextiles.ModSounds;
@@ -156,15 +154,14 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		return spinningTimer;
 	}
 
-	public Optional<ActionResultType> onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player,
-			Hand handIn, BlockRayTraceResult hit) {
+	public Optional<ActionResultType> onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
 		ItemStack itemstack = player.getHeldItem(handIn);
 		Item item = itemstack.getItem();
 		if (!spinning) {
 			if(isFinished()) {
 				// If we are finished spinning thread, allow the player to put the thread on a spindle item.
 				if (item == ModItems.SPINDLE_ITEM.get()) {
-					if (!worldIn.isRemote) {
+					if (!world.isRemote) {
 						// Consume one spindle
 						itemstack.shrink(1);
 						// Create new thread item and set color
@@ -186,11 +183,11 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			else {
 				// If there is some fiber present, spin it. Otherwise, try to add some more fiber.
 				if (fiberInfo.isPresent()) {
-					if (!worldIn.isRemote) {
+					if (!world.isRemote) {
 						// If we already have some thread present, combine the new fiber into the thread.
 						// Otherwise, simply set the thread to the new fiber
 						threadInfo.push(threadInfo.peek().combine(fiberInfo.get()));
-						TextileMod.LOGGER.trace("SpinningWheelTile onBlockActivated... threadInfo: {} fiberInfo: {}", threadInfo, fiberInfo);
+						TextileMod.LOGGER.info("SpinningWheelTile onBlockActivated... threadInfo: {} fiberInfo: {}", threadInfo, fiberInfo);
 						// Consume the fiber
 						fiberInfo = Optional.empty();
 						// Enter spinning state
@@ -203,7 +200,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 					return Optional.of(ActionResultType.SUCCESS);
 				}
 				else if (item instanceof IFiberItem) {
-					if (!worldIn.isRemote) {
+					if (!world.isRemote) {
 						// Split off one item
 						ItemStack fiberItem = itemstack.split(1);
 						// Get new fiber info
