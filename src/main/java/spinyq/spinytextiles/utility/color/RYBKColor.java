@@ -35,11 +35,11 @@ public class RYBKColor {
 	
 	private static final RGBColor[] RGB_POINTS = {
 			new RGBColor(1.0f, 1.0f, 1.0f), // WHITE
-			new RGBColor(0.163f, 0.373f, 0.85f), // BLUE
+			new RGBColor(0.163f, 0.373f, 0.95f), // BLUE
 			new RGBColor(1.0f, 1.0f, 0.0f), // YELLOW
-			new RGBColor(0.0f, 0.85f, 0.2f), // GREEN
+			new RGBColor(0.0f, 0.95f, 0.2f), // GREEN
 			new RGBColor(1.0f, 0.0f, 0.0f), // RED
-			new RGBColor(0.85f, 0.0f, 0.85f), // PURPLE
+			new RGBColor(0.75f, 0.0f, 0.75f), // PURPLE
 			new RGBColor(1.0f, 0.5f, 0.0f), // ORANGE
 			new RGBColor(0.2f, 0.094f, 0.0f), // BROWN
 	};
@@ -214,13 +214,13 @@ public class RYBKColor {
 		return color;
 	}
 	
-	// This should phased out or revised.
+	@Deprecated
 	public RYBKColor fromRGB(RGBColor rgb, Optional<RGBColor> base) {
 		// Our initial guess, arbitrary
 		RYBKColor guess = new RYBKColor(0.5f, 0.5f, 0.5f, 0.5f);
 		// The function to minimize
 		Function<RYBKColor, Double> errorFunction = (color) -> { return color.toRGB(new RGBColor(), base).distSquared(rgb); };
-		double epsilon = 0.00001, margin = 0.001, error;
+		double epsilon = 0.00001, margin = 0.00001, error;
 		int maxIters = 400, iters = 0;
 		// Keep adjusting guess until error is small enough
 		while (true) {
@@ -241,7 +241,7 @@ public class RYBKColor {
 			// System.out.println(String.format("Guess: %s Error: %f Gradient: %s", guess, error, gradient));
 			// Move guess by opposite of gradient
 			// Break if maximum iterations reached
-			guess.add(gradient.scaledBy(-0.1));
+			guess.add(gradient.scaledBy(-0.2));
 			if (iters == maxIters) break;
 		}
 		// Set ourselves to be the adjusted guess

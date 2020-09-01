@@ -30,7 +30,7 @@ public class ModItems {
 					() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance),
 							new RYBKColor().fromDye(DyeColor.BROWN), 1)),
 			SILK_FIBER_ITEM = ITEMS.register("silk_fiber",
-					() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance),
+					() -> new FiberItem(new Item.Properties(),
 							new RYBKColor().fromDye(DyeColor.WHITE), 1));
 
 	public static final RegistryObject<Item> BRUSH_ITEM = ITEMS.register("brush",

@@ -125,6 +125,7 @@ public class RGBColor {
 		return this;
 	}
 	
+	@Deprecated
 	public RYBKColor toRYB(RYBKColor ryb, Optional<RGBColor> base) {
 		ryb.fromRGB(this, base);
 		return ryb;

@@ -40,7 +40,7 @@ public class ThreadItem extends Item implements IDyeableItem {
 	@Override
 	public ItemStack getDefaultInstance() {
 		ItemStack result = super.getDefaultInstance();
-		setColor(result, ColorWord.WHITE.ryb);
+		setColor(result, ColorWord.WHITE.color);
 		return result;
 	}
 
@@ -61,7 +61,7 @@ public class ThreadItem extends Item implements IDyeableItem {
 			for (ColorWord colorWord : ColorWord.values()) {
 				// Create itemstack and add it
 				ItemStack stack = new ItemStack(this);
-				setColor(stack, colorWord.ryb);
+				setColor(stack, colorWord.color);
 				items.add(stack);
 			}
 		}
