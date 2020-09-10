@@ -2,8 +2,8 @@ package spinyq.spinytextiles.items;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import spinyq.spinytextiles.utility.FiberInfo;
 import spinyq.spinytextiles.utility.color.RYBKColor;
+import spinyq.spinytextiles.utility.textile.FiberInfo;
 
 public class FiberItem extends Item implements IFiberItem {
 

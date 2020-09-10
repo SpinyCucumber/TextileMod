@@ -1,4 +1,4 @@
-package spinyq.spinytextiles.utility;
+package spinyq.spinytextiles.utility.textile;
 
 import spinyq.spinytextiles.utility.color.RYBKColor;
 

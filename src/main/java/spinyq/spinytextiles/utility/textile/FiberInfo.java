@@ -1,4 +1,4 @@
-package spinyq.spinytextiles.utility;
+package spinyq.spinytextiles.utility.textile;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.util.INBTSerializable;
@@ -11,7 +11,7 @@ import spinyq.spinytextiles.utility.color.RYBKColor;
  * @author Elijah Hilty
  *
  */
-public class FiberInfo implements INBTSerializable<CompoundNBT> {
+public class FiberInfo implements INBTSerializable<CompoundNBT>, IGarmentComponent {
 	
 	private static final String TAG_COLOR = "Color", TAG_AMOUNT = "Amount";
 	

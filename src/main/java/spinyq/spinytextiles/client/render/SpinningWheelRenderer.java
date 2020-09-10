@@ -23,10 +23,10 @@ import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.SpinningWheelTile;
-import spinyq.spinytextiles.utility.FiberInfo;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
+import spinyq.spinytextiles.utility.textile.FiberInfo;
 
 @OnlyIn(Dist.CLIENT)
 public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile> {

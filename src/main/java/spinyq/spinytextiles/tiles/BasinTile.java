@@ -9,9 +9,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.Constants;
 import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.TextileMod;
-import spinyq.spinytextiles.utility.IDyeable;
 import spinyq.spinytextiles.utility.color.HSVColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
+import spinyq.spinytextiles.utility.textile.IDyeable;
 
 // TODO Should probably use an FSM
 public class BasinTile extends TileEntity {

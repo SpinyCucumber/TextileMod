@@ -26,9 +26,9 @@ import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.items.IFiberItem;
 import spinyq.spinytextiles.utility.EvictingStack;
-import spinyq.spinytextiles.utility.FiberInfo;
 import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.color.RYBKColor;
+import spinyq.spinytextiles.utility.textile.FiberInfo;
 
 public class SpinningWheelTile extends TileEntity implements ITickableTileEntity {
 
