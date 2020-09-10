@@ -1,7 +1,6 @@
 package spinyq.spinytextiles.utility.textile;
 
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraftforge.common.util.INBTSerializable;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 
 /**
@@ -11,7 +10,7 @@ import spinyq.spinytextiles.utility.color.RYBKColor;
  * @author Elijah Hilty
  *
  */
-public class FiberInfo implements INBTSerializable<CompoundNBT>, IGarmentComponent {
+public class FiberInfo implements IGarmentComponent {
 	
 	private static final String TAG_COLOR = "Color", TAG_AMOUNT = "Amount";
 	
@@ -64,6 +63,11 @@ public class FiberInfo implements INBTSerializable<CompoundNBT>, IGarmentCompone
 	public void deserializeNBT(CompoundNBT nbt) {
 		color = new RYBKColor().fromInt(nbt.getInt(TAG_COLOR));
 		amount = nbt.getInt(TAG_AMOUNT);
+	}
+	
+	@Override
+	public Type<?> getType() {
+		return IGarmentComponent.FIBER;
 	}
 	
 }
