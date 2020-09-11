@@ -18,7 +18,7 @@ public class FabricInfo implements IGarmentComponent {
 
 	@Override
 	public Type<?> getType() {
-		return IGarmentComponent.FABRIC;
+		return ComponentManager.FABRIC;
 	}
 
 }

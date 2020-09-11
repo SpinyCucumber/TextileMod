@@ -66,7 +66,7 @@ public class FiberInfo implements IGarmentComponent {
 	
 	@Override
 	public Type<?> getType() {
-		return IGarmentComponent.FIBER;
+		return ComponentManager.FIBER;
 	}
 	
 }
