@@ -13,7 +13,7 @@ import spinyq.spinytextiles.utility.textile.IGarmentComponent.Type;
  */
 public class ComponentManager {
 
-	public static final String TAG_ID = "Id";
+	private static final String TAG_ID = "Id";
 
 	private static final Map<String, Type<?>> TYPES = new HashMap<>();
 	

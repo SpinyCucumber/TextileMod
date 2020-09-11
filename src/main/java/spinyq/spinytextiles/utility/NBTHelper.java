@@ -1,6 +1,7 @@
 package spinyq.spinytextiles.utility;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -66,6 +67,43 @@ public class NBTHelper {
 			return Optional.of(newObject);
 		}
 		else return Optional.empty();
+	}
+	
+	/**
+	 * Writes a map to a key of a CompoundNBT by creating another compound nbt and populating it with entries from the map.
+	 * @param <T>
+	 * @param <K>
+	 * @param nbt
+	 * @param key
+	 * @param map
+	 */
+	public static <T extends INBTSerializable<K>, K extends INBT> void putMap(CompoundNBT nbt, String key, Map<String, T> map) {
+		// Create sub-tag
+		CompoundNBT mapNBT = new CompoundNBT();
+		// Write each entry in map to the new tag
+		map.entrySet().forEach((entry) -> {
+			mapNBT.put(entry.getKey(), entry.getValue().serializeNBT());
+		});
+		// Add sub-tag to main tag
+		nbt.put(key, mapNBT);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <M extends Map<String, T>, T extends INBTSerializable<K>, K extends INBT> Map<String, T> getMap(Supplier<M> mapFactory, Supplier<T> objectFactory, CompoundNBT nbt, String key) {
+		// Create new map
+		M map = mapFactory.get();
+		// Get sub-tag
+		CompoundNBT mapNBT = nbt.getCompound(key);
+		// Populate map with entries in sub-tag
+		mapNBT.keySet().forEach((mapKey) -> {
+			// Create new object and deserialize value
+			T newObject = objectFactory.get();
+			newObject.deserializeNBT((K) mapNBT.get(mapKey));
+			// Add to map
+			map.put(mapKey, newObject);
+		});
+		// Done
+		return map;
 	}
 	
 }

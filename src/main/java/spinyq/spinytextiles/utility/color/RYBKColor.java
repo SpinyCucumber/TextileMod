@@ -8,6 +8,8 @@ import java.util.function.Function;
 import com.google.common.collect.ImmutableMap;
 
 import net.minecraft.item.DyeColor;
+import net.minecraft.nbt.IntNBT;
+import net.minecraftforge.common.util.INBTSerializable;
 
 /**
  * Using Idealized RYB Model defined by following paper with an additional black channel to allow for pure blacks
@@ -16,7 +18,7 @@ import net.minecraft.item.DyeColor;
  * @author Elijah Hilty
  *
  */
-public class RYBKColor {
+public class RYBKColor implements INBTSerializable<IntNBT> {
 
 	public static enum Axis {
 		
@@ -261,6 +263,16 @@ public class RYBKColor {
 	
 	public RYBKColor fromHSV(HSVColor hsv) {
 		return this.fromRGB(new RGBColor().fromHSV(hsv), Optional.empty());
+	}
+
+	@Override
+	public IntNBT serializeNBT() {
+		return IntNBT.valueOf(this.toInt());
+	}
+
+	@Override
+	public void deserializeNBT(IntNBT nbt) {
+		fromInt(nbt.getInt());
 	}
 	
 }
