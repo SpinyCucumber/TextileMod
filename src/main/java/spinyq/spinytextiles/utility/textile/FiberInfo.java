@@ -6,7 +6,6 @@ import spinyq.spinytextiles.utility.color.RYBKColor;
 /**
  * Used to track info about the thread a player is spinning,
  * as well as fiber a player is adding to the spinning wheel.
- * TODO Move this
  * @author Elijah Hilty
  *
  */
