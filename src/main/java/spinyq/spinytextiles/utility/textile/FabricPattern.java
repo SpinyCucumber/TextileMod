@@ -4,14 +4,14 @@ import com.google.common.collect.ImmutableList;
 
 public class FabricPattern extends AbstractPattern<FabricPattern> {
 
-	private ImmutableList<String> paramaters;
+	private ImmutableList<String> colors;
 
-	public FabricPattern(ImmutableList<String> paramaters) {
-		this.paramaters = paramaters;
+	public FabricPattern(ImmutableList<String> colors) {
+		this.colors = colors;
 	}
 
-	public ImmutableList<String> getParamaters() {
-		return paramaters;
+	public ImmutableList<String> getColors() {
+		return colors;
 	} 
 	
 }
