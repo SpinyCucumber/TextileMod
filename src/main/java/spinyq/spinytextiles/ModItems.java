@@ -40,11 +40,9 @@ public class ModItems {
 			LYE_ITEM = ITEMS.register("lye",
 					() -> new Item(new Item.Properties().group(ItemGroupTextiles.instance)));
 
-	// TODO Might move "Mod..." classes to a single "Registration" class to simplify
-	// things. Or not.
 	public static void init() {
 		TextileMod.LOGGER.info("ModItems init...");
 		ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
 	}
-
+	
 }

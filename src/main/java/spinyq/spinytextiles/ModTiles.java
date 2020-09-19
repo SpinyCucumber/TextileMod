@@ -27,6 +27,10 @@ public class ModTiles {
 	public static final RegistryObject<TileEntityType<SpinningWheelTile>> SPINNING_WHEEL_TILE = TILES.register("spinning_wheel",
 			() -> TileEntityType.Builder.create(SpinningWheelTile::new, ModBlocks.SPINNING_WHEEL_BLOCK.get()).build(null));
 	
+	public static void init() {
+		TILES.register(FMLJavaModLoadingContext.get().getModEventBus());
+	}
+	
 	/**
 	 * Handles registering Tile Entity Renderers and such.
 	 * TODO Add manager
@@ -37,10 +41,6 @@ public class ModTiles {
 	public static void onClientSetup(FMLClientSetupEvent event) {
 		ClientRegistry.bindTileEntityRenderer(BASIN_TILE.get(), BasinRenderer::new);
 		ClientRegistry.bindTileEntityRenderer(SPINNING_WHEEL_TILE.get(), SpinningWheelRenderer::new);
-	}
-	
-	public static void init() {
-		TILES.register(FMLJavaModLoadingContext.get().getModEventBus());
 	}
 	
 }

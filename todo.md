@@ -11,3 +11,4 @@
 - [ ] Fix Brush Recipe
 - [ ] Pattern Registry
 - [ ] Module System
+- [ ] Mod Event Bus
