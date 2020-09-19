@@ -13,18 +13,17 @@ import net.minecraft.util.ResourceLocation;
  */
 public class FabricPattern extends AbstractPattern<FabricPattern> {
 
+	/**
+	 * Utility class which can be used to create a FabricPattern.
+	 * @author Elijah Hilty
+	 *
+	 */
 	public static class Builder {
 		
 		private SortedMap<String, ResourceLocation> layers;
 		
 		public Builder withLayer(String layerName, ResourceLocation texture) {
 			layers.put(layerName, texture);
-			return this;
-		}
-		
-		public Builder withLayer(String layerName) {
-			// TODO Generate texture location using layer name and pattern registry name.
-			// Check out the Item class?
 			return this;
 		}
 		
