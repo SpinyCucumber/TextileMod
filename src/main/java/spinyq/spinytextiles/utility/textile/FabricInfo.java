@@ -11,7 +11,7 @@ import spinyq.spinytextiles.utility.color.RYBKColor;
 
 public class FabricInfo implements IGarmentComponent {
 
-	private static String TAG_PATTERN = "Pattern", TAG_COLORS = "Colors";
+	private static final String TAG_PATTERN = "Pattern", TAG_COLORS = "Colors";
 	
 	private static IForgeRegistry<FabricPattern> REGISTRY = null;
 	

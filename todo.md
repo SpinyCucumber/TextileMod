@@ -1,7 +1,7 @@
 - [x] Basin Rendering... See BlockModelShapes, ModelLoaderRegistry. Going to use Multipart models and Data Generators, E.g. split model into basin part (which will be static) and water part (which is generated). Create properties in Basin Block to expose water level, etc. Custom IStateMapper?
-- [ ] Spinning Wheel Block: Interacted w/ through right clicks. A spindle must be added first, then a certain amount of fiber. Afer this, right clicking spins the wheel. After a certain amount of spinning, the spindle becomes full and a thread item can be extracted. Multi-models and blockstates can be used to render varying levels of fiber and a spindle.
+- [x] Spinning Wheel Block: Interacted w/ through right clicks. A spindle must be added first, then a certain amount of fiber. Afer this, right clicking spins the wheel. After a certain amount of spinning, the spindle becomes full and a thread item can be extracted. Multi-models and blockstates can be used to render varying levels of fiber and a spindle.
 - [x] Color Word Localization
-- [ ] Better Mixing Algorithm
+- [x] Better Mixing Algorithm
 - [x] Add Feature to boost Basin color saturation. Player can add one glowstone dust which boosts the basin's color saturation.
 - [ ] Drafting Table
 - [x] Fiber Items
@@ -9,3 +9,5 @@
 - [x] Item Color Helper
 - [ ] Fabric Item: Looks like ItemOverrideList can be used to override an Item's model dynamically. Will probably have to create a custom Model and ModelLoader class. Consult DynamicBucketModel. Might create a new Atlas for patterns and such. Color different layers using Item Color. Note: Item Models don't generate their texture locations. I was being silly.
 - [ ] Fix Brush Recipe
+- [ ] Pattern Registry
+- [ ] Module System
