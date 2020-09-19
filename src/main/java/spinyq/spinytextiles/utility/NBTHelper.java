@@ -8,7 +8,10 @@ import java.util.function.Supplier;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.INBTSerializable;
+import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 
 public class NBTHelper {
 
@@ -104,6 +107,16 @@ public class NBTHelper {
 		});
 		// Done
 		return map;
+	}
+	
+	public static <T> void putRegistryEntry(CompoundNBT nbt, String key, IForgeRegistryEntry<T> entry) {
+		// TODO Find is Minecraft supports this already
+		nbt.putString(key, entry.getRegistryName().toString());
+	}
+	
+	public static <T extends IForgeRegistryEntry<T>> T getRegistryEntry(CompoundNBT nbt, String key, IForgeRegistry<T> registry) {
+		// TODO Find is Minecraft supports this already
+		return registry.getValue(new ResourceLocation(nbt.getString(key)));
 	}
 	
 }
