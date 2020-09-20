@@ -2,6 +2,7 @@ package spinyq.spinytextiles.crafting;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 import com.google.gson.JsonArray;
@@ -34,6 +35,19 @@ import spinyq.spinytextiles.TextileMod;
  */
 public class BrushRecipe implements ICraftingRecipe {
 
+	/**
+	 * Represents possible inputs to a brush crafting recipe.
+	 * @author Elijah Hilty
+	 *
+	 */
+	public static class BrushInputs {
+		
+		public Optional<ItemStack> brush;
+		public int brushPos; // Only valid if brush is present
+		public List<ItemStack> ingredients;
+		
+	}
+	
 	private ResourceLocation id;
 	// Used when displaying recipes to the user
 	private String group;
@@ -67,55 +81,51 @@ public class BrushRecipe implements ICraftingRecipe {
 		return this.group;
 	}
 
+	private boolean isBrush(ItemStack stack) {
+		// Check tag
+		return stack.getItem().getTags().contains(ModTags.BRUSH_TAG);
+	}
+	
+	/**
+	 * Retrieve possible inputs to a brush crafting recipe from an inventory.
+	 */
+	private BrushInputs extractInputs(CraftingInventory inv) {
+		BrushInputs result = new BrushInputs();
+		// Set brush and ingredients to be empty initially
+		result.brush = Optional.empty();
+		result.ingredients = new ArrayList<>();
+		// Scan items in inventory
+		for (int i = 0; i < inv.getSizeInventory(); i++) {
+			ItemStack stack = inv.getStackInSlot(i);
+			// Skip empty items
+			if (stack.isEmpty()) continue;
+			// If the item is a brush and we don't have a brush already, set the item to be our brush.
+			// Otherwise, add the item to the list of other ingredients.
+			if(isBrush(stack) && !result.brush.isPresent()) {
+				result.brush = Optional.of(stack);
+				result.brushPos = i;
+			}
+			else result.ingredients.add(stack);
+		}
+		// Done
+		return result;
+	}
+	
 	@Override
 	public boolean matches(CraftingInventory inv, World worldIn) {
 
-		// First, check if there is a brush
-		int brushPos = findBrush(inv);
+		// Extract possible inputs
+		BrushInputs inputs = extractInputs(inv);
+		
+		// If brush is not present we can exit
+		if (!inputs.brush.isPresent()) return false;
 
-		TextileMod.LOGGER.trace("matches... brushPos: {}", brushPos);
+		// Next compare the other inputs with the recipe's inputs
+		boolean matches = (inputs.ingredients.size() == this.recipeItems.size() && RecipeMatcher.findMatches(inputs.ingredients, this.recipeItems) != null);
 
-		if (brushPos == -1)
-			return false;
-		else {
-			// Compile a list of the other inputs
-			// Make sure to skip the brush
-			List<ItemStack> inputs = new ArrayList<>();
+		TextileMod.LOGGER.trace("inputs: {} recipeItems: {} matches: {}", inputs, recipeItems, matches);
+		return matches;
 
-			for (int j = 0; j < inv.getSizeInventory(); ++j) {
-				if (brushPos == j)
-					continue;
-				ItemStack itemstack = inv.getStackInSlot(j);
-				if (!itemstack.isEmpty()) inputs.add(itemstack);
-			}
-
-			boolean matches = (inputs.size() == this.recipeItems.size() && RecipeMatcher.findMatches(inputs, this.recipeItems) != null);
-
-			TextileMod.LOGGER.trace("inputs: {} recipeItems: {} matches: {}", inputs, recipeItems, matches);
-			return matches;
-		}
-
-	}
-
-	/**
-	 * Attempts to find a brush item in the given crafting inventory.
-	 * 
-	 * @param inv
-	 * @return The integer of the brush, if there is one. (Else -1)
-	 */
-	private int findBrush(CraftingInventory inv) {
-		for (int j = 0; j < inv.getSizeInventory(); ++j) {
-			ItemStack itemstack = inv.getStackInSlot(j);
-			if (itemstack.isEmpty())
-				continue;
-			// Detect brush tag
-			TextileMod.LOGGER.trace("findBrush... stack: {} item: {} tags: {}", itemstack, itemstack.getItem(),
-					itemstack.getItem().getTags());
-			if (itemstack.getItem().getTags().contains(ModTags.BRUSH_TAG))
-				TextileMod.LOGGER.trace("Found brush!");
-			return j;
-		}
-		return -1;
 	}
 
 	@Override
@@ -123,11 +133,10 @@ public class BrushRecipe implements ICraftingRecipe {
 		// Get initial list from supermethod
 		NonNullList<ItemStack> result = ICraftingRecipe.super.getRemainingItems(inv);
 		// Look for brush
-		int brushPos = findBrush(inv);
+		BrushInputs inputs = extractInputs(inv);
 		// If there is a brush present, decrement the damage by one
-		TextileMod.LOGGER.trace("BrushRecipe getRemainingItems... brushPos: {}", brushPos);
-		if (brushPos != -1) {
-			ItemStack stack = inv.getStackInSlot(brushPos);
+		if (inputs.brush.isPresent()) {
+			ItemStack stack = inputs.brush.get();
 			// Damage it here
 			boolean broken = stack.attemptDamageItem(1, random, null);
 			// If the stack isn't broken, add it as a remaining item.
@@ -135,7 +144,7 @@ public class BrushRecipe implements ICraftingRecipe {
 			if (!broken) {
 				ItemStack newStack = stack.copy();
 				newStack.setCount(1);
-				result.set(brushPos, newStack);
+				result.set(inputs.brushPos, newStack);
 			}
 		}
 		TextileMod.LOGGER.trace("result: {}", result);
