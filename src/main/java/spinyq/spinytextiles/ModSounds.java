@@ -2,11 +2,16 @@ package spinyq.spinytextiles;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
+@EventBusSubscriber(bus = Bus.MOD)
 public class ModSounds {
 
 	public static final DeferredRegister<SoundEvent> SOUNDS = new DeferredRegister<>(ForgeRegistries.SOUND_EVENTS, TextileMod.MODID);
@@ -17,7 +22,9 @@ public class ModSounds {
 		return SOUNDS.register(key, () -> new SoundEvent(new ResourceLocation(TextileMod.MODID, key)));
 	}
 	
-	public static void init() {
+	@SubscribeEvent
+	public static void createRegistry(RegistryEvent.NewRegistry event) {
+		// Hook up deferred register
 		SOUNDS.register(FMLJavaModLoadingContext.get().getModEventBus());
 	}
 			

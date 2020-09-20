@@ -13,15 +13,4 @@ public class TextileMod
     
     public static final Logger LOGGER = LogManager.getLogger(MODID);
     
-    public TextileMod() {
-		TextileMod.LOGGER.info("TextileMod Constructor...");
-		// TODO Abstract this in some way
-    	// ModBlocks.init();
-    	ModTiles.init();
-    	ModItems.init();
-    	ModRecipes.init();
-    	ModSounds.init();
-    	// ModPatterns.init();
-    }
-    
 }

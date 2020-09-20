@@ -2,7 +2,11 @@ package spinyq.spinytextiles;
 
 import net.minecraft.item.DyeColor;
 import net.minecraft.item.Item;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -16,6 +20,7 @@ import spinyq.spinytextiles.utility.color.RYBKColor;
  * @author SpinyQ
  *
  */
+@EventBusSubscriber(bus = Bus.MOD)
 public class ModItems {
 
 	public static final DeferredRegister<Item> ITEMS = new DeferredRegister<>(ForgeRegistries.ITEMS, TextileMod.MODID);
@@ -39,9 +44,10 @@ public class ModItems {
 					() -> new Item(new Item.Properties().group(ItemGroupTextiles.instance))),
 			LYE_ITEM = ITEMS.register("lye",
 					() -> new Item(new Item.Properties().group(ItemGroupTextiles.instance)));
-
-	public static void init() {
-		TextileMod.LOGGER.info("ModItems init...");
+	
+	@SubscribeEvent
+	public static void createRegistry(RegistryEvent.NewRegistry event) {
+		// Hook up deferred register
 		ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
 	}
 	
