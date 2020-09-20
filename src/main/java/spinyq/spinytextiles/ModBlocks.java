@@ -7,9 +7,10 @@ import net.minecraft.block.material.MaterialColor;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -23,6 +24,7 @@ import spinyq.spinytextiles.blocks.SpinningWheelBlock;
  * @author SpinyQ
  *
  */
+@EventBusSubscriber(bus = Bus.MOD)
 public class ModBlocks {
  
 	public static final DeferredRegister<Block> BLOCKS = new DeferredRegister<>(ForgeRegistries.BLOCKS, TextileMod.MODID);
@@ -32,22 +34,12 @@ public class ModBlocks {
 	
 	public static final RegistryObject<SpinningWheelBlock> SPINNING_WHEEL_BLOCK = BLOCKS.register("spinning_wheel",
 			() -> new SpinningWheelBlock(Block.Properties.create(Material.WOOD).hardnessAndResistance(2.5F).notSolid().sound(SoundType.WOOD)));
-
-	/**
-	 * Constructs instance and registers event handlers
-	 * TODO Loot table registry objects?
-	 */
-	public static void init() {
-		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
-		bus.register(ModBlocks.class);
-		BLOCKS.register(bus);
-	}
 	
 	/**
 	 * Handles registering BlockItems for each block declared in this class.
 	 * @param registry
 	 */
-	private void registerBlockItems(IForgeRegistry<Item> registry) {
+	private static void registerBlockItems(IForgeRegistry<Item> registry) {
 		BLOCKS.getEntries().forEach((block) -> {
 			registry.register(createBlockItem(block.get()));
 		});
@@ -65,8 +57,14 @@ public class ModBlocks {
 	}
 	
 	@SubscribeEvent
-	public void registerItems(RegistryEvent.Register<Item> event) {
+	public static void registerItems(RegistryEvent.Register<Item> event) {
 		registerBlockItems(event.getRegistry());
+	}
+	
+	@SubscribeEvent
+	public static void createRegistries(RegistryEvent.NewRegistry event) {
+		// Hoop up deferred register
+		BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
 	}
 	
 }

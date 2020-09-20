@@ -16,12 +16,12 @@ public class TextileMod
     public TextileMod() {
 		TextileMod.LOGGER.info("TextileMod Constructor...");
 		// TODO Abstract this in some way
-    	ModBlocks.init();
+    	// ModBlocks.init();
     	ModTiles.init();
     	ModItems.init();
     	ModRecipes.init();
     	ModSounds.init();
-    	ModPatterns.init();
+    	// ModPatterns.init();
     }
     
 }
