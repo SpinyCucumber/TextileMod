@@ -8,7 +8,6 @@
 - [x] Brush Item
 - [x] Item Color Helper
 - [ ] Fabric Item: Looks like ItemOverrideList can be used to override an Item's model dynamically. Will probably have to create a custom Model and ModelLoader class. Consult DynamicBucketModel. Might create a new Atlas for patterns and such. Color different layers using Item Color. Note: Item Models don't generate their texture locations. I was being silly.
-- [ ] Fix Brush Recipe
-- [ ] Pattern Registry
+- [x] Fix Brush Recipe
+- [x] Pattern Registry
 - [ ] Module System
-- [ ] Mod Event Bus
