@@ -4,6 +4,9 @@
 - [x] Better Mixing Algorithm
 - [x] Add Feature to boost Basin color saturation. Player can add one glowstone dust which boosts the basin's color saturation.
 - [ ] Drafting Table
+- [ ] Embroidery Table?
+- [ ] Ability to dye fabric
+- [ ] Pattern items
 - [x] Fiber Items
 - [x] Brush Item
 - [x] Item Color Helper
