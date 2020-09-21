@@ -100,6 +100,10 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 		this.k = k;
 	}
 	
+	public RYBKColor(float s) {
+		this(s, s, s, s);
+	}
+	
 	public RYBKColor setAll(RYBKColor other) {
 		this.r = other.r;
 		this.y = other.y;

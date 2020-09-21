@@ -125,20 +125,16 @@ public class BasinTile extends TileEntity {
 	public <T,C> void dye(T object, C context, IDyeable<T,C> dyeable) {
 		// Calculate the new color by mixing the current color of the object and the basin's color
 		// Interpolate between them using the dye concentration
-		RYBKColor newColor = dyeable.getColor(object).plus(color);
-		newColor.clamp();
-		dyeable.dye(object, context, newColor);
+		dyeable.dye(object, context, color);
 		int cost = dyeable.getDyeCost();
 		if (waterLevel >= cost) drain(cost);
 		else throw new RuntimeException("Attempted to dye an item without enough dye.");
 	}
 
 	public <T,C> void bleach(T object, C context, IDyeable<T,C> dyeable) {
-		RYBKColor newColor = dyeable.getColor(object).plus(new RYBKColor(-bleachLevel, -bleachLevel, -bleachLevel, -bleachLevel));
-		newColor.clamp();
-		dyeable.dye(object, context, newColor);
+		dyeable.bleach(object, context, bleachLevel);
 		// Apply cost
-		int cost = dyeable.getDyeCost();
+		int cost = dyeable.getBleachCost();
 		drain(cost);
 	}
 
@@ -194,19 +190,14 @@ public class BasinTile extends TileEntity {
 		return hsv.sat < 1.0f;
 	}
 	
-	public boolean canDye(IDyeable<?,?> dyeable) {
-		return (waterLevel >= dyeable.getDyeCost());
+	public <T, C> boolean canDye(T object, C context, IDyeable<T,C> dyeable) {
+		return dyeable.canDye(object, context, this);
 	}
 	
 	public <T, C> boolean canBleach(T object, C context, IDyeable<T,C> dyeable) {
-		if (waterLevel < dyeable.getDyeCost()) return false;
-		// If any of the colors components is above zero, we can still apply bleach
-		// Retrieve color
-		RYBKColor dye = dyeable.getColor(object);
-		for (RYBKColor.Axis axis : RYBKColor.Axis.values()) {
-			if (dye.project(axis.direction) > 0.0f) return true;
-		}
-		return false;
+		// Check if we have dye, then pass logic to dyeable
+		if (!hasDye()) return false;
+		return dyeable.canBleach(object, context, this);
 	}
 	
 	/**
