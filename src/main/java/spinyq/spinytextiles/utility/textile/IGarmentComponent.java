@@ -1,24 +1,17 @@
 package spinyq.spinytextiles.utility.textile;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraftforge.common.util.INBTSerializable;
+import com.google.common.collect.ImmutableMap;
 
-public interface IGarmentComponent extends INBTSerializable<CompoundNBT> {
+import spinyq.spinytextiles.utility.NBTHelper.INBTPolymorphic;
 
-	public static class Type<T extends IGarmentComponent> {
-		
-		String id;
-		Supplier<T> factory;
-		
-		public Type(String id, Supplier<T> factory) {
-			this.id = id;
-			this.factory = factory;
-		}
-		
-	}
-	
-	Type<?> getType();
+public interface IGarmentComponent extends INBTPolymorphic<IGarmentComponent> {
+
+	static final Map<String, Supplier<IGarmentComponent>> factoryMap = new ImmutableMap.Builder<String, Supplier<IGarmentComponent>>()
+			.put("fiber", FiberInfo::new)
+			.put("fabric", FabricInfo::new)
+			.build();
 		
 }

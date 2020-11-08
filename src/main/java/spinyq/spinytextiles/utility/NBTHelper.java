@@ -3,6 +3,7 @@ package spinyq.spinytextiles.utility;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import net.minecraft.nbt.CompoundNBT;
@@ -13,7 +14,61 @@ import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 
+/**
+ * Utility class that makes manipulating NBT easier.
+ * @author Elijah Hilty
+ *
+ */
 public class NBTHelper {
+
+	public static final String TYPE_TAG = "Type";
+	
+	public static interface INBTPolymorphic<T extends INBTPolymorphic<T>> extends INBTSerializable<CompoundNBT> {
+		
+		Supplier<T> getFactory();
+		
+	}
+	
+	/**
+	 * Writes a polymorphic object to a Compount NBT tag.
+	 * Each polymorphic object is associated with a factory which creates more of that object,
+	 * and the method client passes a function that maps each factory to an ID.
+	 * The method works by writing said ID to a compound NBT.
+	 * @param <T> The type of the polymorphic NBT object
+	 * @param nbt The compound nbt
+	 * @param key The key containing the object
+	 * @param object The polymorphic NBT object
+	 * @param idMap A function mapping factories to string IDs
+	 */
+	public static <T extends INBTPolymorphic<T>> void putPolymorphic(CompoundNBT nbt, String key, INBTPolymorphic<T> object,
+			Function<Supplier<T>, String> idMap) {
+		// Create a new compound NBT and write type ID 
+		CompoundNBT objectNBT = object.serializeNBT();
+		objectNBT.putString(TYPE_TAG, idMap.apply(object.getFactory()));
+		// Put nbt into compound
+		nbt.put(key, objectNBT);
+	}
+	
+	/**
+	 * Reads a polymorphic object from a Compound NBT tag.
+	 * Works by first reading a "type ID" from a compound;
+	 * the method client passes a function thats maps said ID to a factory,
+	 * which creates a polymorphic object.
+	 * @param <T> The type of the polymorphic NBT object
+	 * @param nbt The compound nbt
+	 * @param key The key containing the object
+	 * @param factoryMap A function mapping string IDs to factories
+	 */
+	public static <T extends INBTPolymorphic<T>> T getPolymorphic(CompoundNBT nbt, String key, Function<String, Supplier<T>> factoryMap) {
+		// Read the object nbt
+		CompoundNBT objectNBT = nbt.getCompound(key);
+		// Read the object's type and create a new object
+		String type = objectNBT.getString(TYPE_TAG);
+		T object = factoryMap.apply(type).get();
+		// Deserialize and return object
+		object.deserializeNBT(objectNBT);
+		return object;
+	}
 
 	/**
 	 * Converts a collection to a ListNBT and writes it to a compound nbt

@@ -2,6 +2,7 @@ package spinyq.spinytextiles.utility.textile;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -42,8 +43,8 @@ public class FabricInfo implements IGarmentComponent {
 	}
 
 	@Override
-	public Type<?> getType() {
-		return ComponentManager.FABRIC;
+	public Supplier<IGarmentComponent> getFactory() {
+		return FabricInfo::new;
 	}
 
 }
