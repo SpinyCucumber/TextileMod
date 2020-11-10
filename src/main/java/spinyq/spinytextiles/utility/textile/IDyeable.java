@@ -1,12 +1,13 @@
 package spinyq.spinytextiles.utility.textile;
 
-import spinyq.spinytextiles.utility.color.RYBKColor;
+import spinyq.spinytextiles.tiles.BasinTile;
 
 public interface IDyeable<T, C> {
 
-	void dye(T object, C context, RYBKColor color);
-	RYBKColor getColor(T object);
+	void dye(T object, C context, BasinTile basin);
+	void bleach(T object, C context, BasinTile basin);
 	
-	int getDyeCost();
+	boolean canDye(T object, C context, BasinTile basin);
+	boolean canBleach(T object, C context, BasinTile basin);
 	
 }
