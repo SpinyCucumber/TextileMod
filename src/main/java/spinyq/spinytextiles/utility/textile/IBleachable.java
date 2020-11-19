@@ -1,7 +1,7 @@
 package spinyq.spinytextiles.utility.textile;
 
-public interface IBleachable<T, C> {
+public interface IBleachable<T> {
 
-	boolean bleach(T object, C context, IBleachProvider provider);
+	boolean bleach(T object, IBleachProvider provider);
 	
 }
