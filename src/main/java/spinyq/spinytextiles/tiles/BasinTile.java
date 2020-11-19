@@ -1,5 +1,7 @@
 package spinyq.spinytextiles.tiles;
 
+import java.util.Optional;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CampfireBlock;
 import net.minecraft.nbt.CompoundNBT;
@@ -11,10 +13,10 @@ import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.utility.color.HSVColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
-import spinyq.spinytextiles.utility.textile.IDyeable;
+import spinyq.spinytextiles.utility.textile.IDyeProvider;
 
 // TODO Should probably use an FSM
-public class BasinTile extends TileEntity {
+public class BasinTile extends TileEntity implements IDyeProvider {
 
 	public static final int MAX_WATER_LEVEL = 9;
 	public static final float DYE_MULTIPLIER = 0.25f, BLEACH_MULTIPLIER = 0.25f;
@@ -116,27 +118,6 @@ public class BasinTile extends TileEntity {
 		bleachLevel = Math.min(1.0f, bleachLevel + BLEACH_MULTIPLIER * amount);
 		update();
 	}
-	
-	/**
-	 * Dyes an item, also consuming some water.
-	 * @param stack
-	 * @param dyeable
-	 */
-	public <T,C> void dye(T object, C context, IDyeable<T,C> dyeable) {
-		// Calculate the new color by mixing the current color of the object and the basin's color
-		// Interpolate between them using the dye concentration
-		dyeable.dye(object, context, color);
-		int cost = dyeable.getDyeCost();
-		if (waterLevel >= cost) drain(cost);
-		else throw new RuntimeException("Attempted to dye an item without enough dye.");
-	}
-
-	public <T,C> void bleach(T object, C context, IDyeable<T,C> dyeable) {
-		dyeable.bleach(object, context, bleachLevel);
-		// Apply cost
-		int cost = dyeable.getBleachCost();
-		drain(cost);
-	}
 
 	/**
 	 * Sets the water level to the max.
@@ -151,17 +132,18 @@ public class BasinTile extends TileEntity {
 	 * If the basin is emptied, its color and dye level is reset.
 	 * @param amt
 	 */
-	public void drain(int amt) {
+	public boolean drain(int amt) {
 		if (waterLevel >= amt) {
 			waterLevel -= amt;
-			if (waterLevel == 0) {
+			if (waterLevel <= 0) {
 				// Reset bleach level, color
 				bleachLevel = 0.0f;
 				color = new RYBKColor();
 			}
 			update();
+			return true;
 		}
-		else throw new RuntimeException("Attempted to drain non-existent water.");
+		return false;
 	}
 	
 	/**
@@ -171,13 +153,17 @@ public class BasinTile extends TileEntity {
 	 * The saturation won't exceed 1.0.
 	 * @param amt
 	 */
-	public void boostColorSaturation(float amt) {
+	public boolean boostColorSaturation(float amt) {
 		HSVColor hsv = new HSVColor();
 		color.toHSV(hsv);
-		hsv.sat = Math.min(hsv.sat + amt, 1.0f);
-		// Convert back to rgb
-		color.fromHSV(hsv);
-		update();
+		if (hsv.sat < 1.0f) {
+			hsv.sat = Math.min(hsv.sat + amt, 1.0f);
+			// Convert back to rgb
+			color.fromHSV(hsv);
+			update();
+			return true;
+		}
+		return false;
 	}
 	
 	/**
@@ -188,16 +174,6 @@ public class BasinTile extends TileEntity {
 		HSVColor hsv = new HSVColor();
 		color.toHSV(hsv);
 		return hsv.sat < 1.0f;
-	}
-	
-	public <T, C> boolean canDye(T object, C context, IDyeable<T,C> dyeable) {
-		return dyeable.canDye(object, context, this);
-	}
-	
-	public <T, C> boolean canBleach(T object, C context, IDyeable<T,C> dyeable) {
-		// Check if we have dye, then pass logic to dyeable
-		if (!hasDye()) return false;
-		return dyeable.canBleach(object, context, this);
 	}
 	
 	/**
@@ -259,5 +235,5 @@ public class BasinTile extends TileEntity {
 	public double getWaterHeight() {
 		return 0.2 + ((double) waterLevel / (double) MAX_WATER_LEVEL) * 0.875;
 	}
-	
+
 }

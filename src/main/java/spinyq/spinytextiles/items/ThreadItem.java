@@ -119,6 +119,7 @@ public class ThreadItem extends Item implements IDyeableItem {
 		return storageHandler.getColor(stack);
 	}
 
+	/**
 	@Override
 	public void dye(ItemStack stack, IInventory inventory, BasinTile basin) {
 		// Only dye one item at a time
@@ -173,5 +174,6 @@ public class ThreadItem extends Item implements IDyeableItem {
 		}
 		return false;
 	}
+	*/
 
 }

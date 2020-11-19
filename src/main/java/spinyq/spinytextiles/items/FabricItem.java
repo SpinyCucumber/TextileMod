@@ -17,17 +17,5 @@ public class FabricItem extends Item implements IDyeableItem {
 		// TODO Auto-generated method stub
 		
 	}
-
-	@Override
-	public RYBKColor getColor(ItemStack object) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public int getDyeCost() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
+	
 }
