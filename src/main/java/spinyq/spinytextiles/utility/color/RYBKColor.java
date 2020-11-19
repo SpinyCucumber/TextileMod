@@ -126,11 +126,12 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 	}
 	
 	// Modifies this color
-	public void clamp() {
+	public RYBKColor clamp() {
 		this.r = Math.min(Math.max(r, 0.0f), 1.0f);
 		this.y = Math.min(Math.max(y, 0.0f), 1.0f);
 		this.b = Math.min(Math.max(b, 0.0f), 1.0f);
 		this.k = Math.min(Math.max(k, 0.0f), 1.0f);
+		return this;
 	}
 	
 	// Does not modify
