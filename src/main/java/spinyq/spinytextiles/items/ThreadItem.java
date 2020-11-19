@@ -14,6 +14,7 @@ import spinyq.spinytextiles.client.render.ItemColorHelper;
 import spinyq.spinytextiles.utility.color.ColorWord;
 import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
+import spinyq.spinytextiles.utility.textile.IBleachProvider;
 import spinyq.spinytextiles.utility.textile.IDyeProvider;
 
 public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
@@ -124,7 +125,7 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 	}
 
 	@Override
-	public boolean bleach(ItemStack object, IInventory context, IDyeProvider provider) {
+	public boolean bleach(ItemStack object, IInventory context, IBleachProvider provider) {
 		// TODO Auto-generated method stub
 		return false;
 	}
