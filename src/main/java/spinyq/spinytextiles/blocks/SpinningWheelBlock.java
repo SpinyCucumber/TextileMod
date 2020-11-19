@@ -2,7 +2,6 @@ package spinyq.spinytextiles.blocks;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Optional;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -121,7 +120,6 @@ public class SpinningWheelBlock extends Block {
 		return false;
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player,
 			Hand handIn, BlockRayTraceResult hit) {
@@ -129,10 +127,9 @@ public class SpinningWheelBlock extends Block {
 		TileEntity tile = worldIn.getTileEntity(pos);
 		// Pass logic over to tile entity
 		if (tile instanceof SpinningWheelTile) {
-			Optional<ActionResultType> result = ((SpinningWheelTile) tile).onInteract(player, handIn, hit);
-			if (result.isPresent()) return result.get();
+			return ((SpinningWheelTile) tile).onInteract(player, handIn, hit);
 		}
-		return super.onBlockActivated(state, worldIn, pos, player, handIn, hit);
+		return ActionResultType.PASS;
 	}
 
 }

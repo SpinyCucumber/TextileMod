@@ -154,7 +154,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		return spinningTimer;
 	}
 
-	public Optional<ActionResultType> onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+	public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
 		ItemStack itemstack = player.getHeldItem(handIn);
 		Item item = itemstack.getItem();
 		if (!spinning) {
@@ -177,7 +177,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 					// Play a fun pop sound
 					world.playSound((PlayerEntity) null, pos, SoundEvents.ENTITY_ITEM_PICKUP,
 							SoundCategory.BLOCKS, 1.0F, 1.0F);
-					return Optional.of(ActionResultType.SUCCESS);
+					return ActionResultType.SUCCESS;
 				}
 			}
 			else {
@@ -197,7 +197,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 					// Play a fun spinning sound
 					world.playSound((PlayerEntity) null, pos, ModSounds.BLOCK_SPINNING_WHEEL_SPIN.get(),
 							SoundCategory.BLOCKS, 1.0F, 1.0F);
-					return Optional.of(ActionResultType.SUCCESS);
+					return ActionResultType.SUCCESS;
 				}
 				else if (item instanceof IFiberItem) {
 					if (!world.isRemote) {
@@ -210,12 +210,12 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 					// Play fun wool sound
 					world.playSound((PlayerEntity) null, pos, SoundEvents.BLOCK_WOOL_PLACE,
 							SoundCategory.BLOCKS, 1.0F, 1.0F);
-					return Optional.of(ActionResultType.SUCCESS);
+					return ActionResultType.SUCCESS;
 				}
 			}
 		}
 		// Default return
-		return Optional.empty();
+		return ActionResultType.PASS;
 	}
 
 	@Override
