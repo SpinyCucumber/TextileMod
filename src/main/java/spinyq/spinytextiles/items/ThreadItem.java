@@ -2,7 +2,7 @@ package spinyq.spinytextiles.items;
 
 import java.util.Optional;
 
-import net.minecraft.inventory.IInventory;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -11,6 +11,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import spinyq.spinytextiles.client.render.ItemColorHelper;
+import spinyq.spinytextiles.utility.ContainedItemStack;
 import spinyq.spinytextiles.utility.color.ColorWord;
 import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
@@ -119,72 +120,48 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 	}
 
 	@Override
-	public boolean dye(ItemStack object, IInventory context, IDyeProvider provider) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean bleach(ItemStack object, IInventory context, IBleachProvider provider) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	/**
-	@Override
-	public void dye(ItemStack stack, IInventory inventory, BasinTile basin) {
-		// Only dye one item at a time
-		// Add colors to get new color
-		ItemStack dyedStack = stack.split(1);
-		RYBKColor newColor = basin.getColor().plus(getColor(dyedStack));
-		newColor.clamp();
-		setColor(dyedStack, newColor);
-		// Add dyed stack to inventory
-		if (inventory instanceof PlayerInventory) {
-			((PlayerInventory) inventory).addItemStackToInventory(dyedStack);
-		} else if (inventory instanceof Inventory) {
-			((Inventory) inventory).addItem(dyedStack);
+	public boolean dye(ContainedItemStack<PlayerInventory> stack, IDyeProvider provider) {
+		// Add dye color to existing color to get new color
+		RYBKColor oldColor = getColor(stack.getStack());
+		RYBKColor newColor = provider.getColor().plus(oldColor).clamp();
+		// If the new color didn't change, don't dye the object
+		if (oldColor.equals(newColor)) return false;
+		// "Pay" for dye
+		// If the dye provider has enough dye, proceed to dye the object
+		if (provider.drain(dyeCost)) {
+			// Only dye one item at a time, so split off a stack
+			ItemStack dyedStack = stack.getStack().split(1);
+			setColor(dyedStack, newColor);
+			// Add dyed stack to inventory
+			stack.getInventory().addItemStackToInventory(dyedStack);
+			return true;
 		}
-		// Drain some water from basin
-		basin.drain(dyeCost);
-	}
-
-	@Override
-	public void bleach(ItemStack stack, IInventory inventory, BasinTile basin) {
-		// Only bleach one item at time
-		// Subtract from current color to get new color
-		ItemStack bleachedStack = stack.split(1);
-		RYBKColor newColor = getColor(bleachedStack).plus(new RYBKColor(-basin.getBleachLevel()));
-		newColor.clamp();
-		setColor(bleachedStack, newColor);
-		// Add bleached stack to inventory
-		if (inventory instanceof PlayerInventory) {
-			((PlayerInventory) inventory).addItemStackToInventory(bleachedStack);
-		} else if (inventory instanceof Inventory) {
-			((Inventory) inventory).addItem(bleachedStack);
+		else {
+			return false;
 		}
-		// Drain water
-		basin.drain(bleachCost);
 	}
 
 	@Override
-	public boolean canDye(ItemStack object, IInventory context, BasinTile basin) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean canBleach(ItemStack stack, IInventory context, BasinTile basin) {
-		// Check if basin has enough water
-		if (basin.getWaterLevel() < bleachCost) return false;
-		// If any of the colors components is above zero, we can still apply bleach
-		// Retrieve color
-		RYBKColor dye = getColor(stack);
-		for (RYBKColor.Axis axis : RYBKColor.Axis.values()) {
-			if (dye.project(axis.direction) > 0.0f) return true;
+	public boolean bleach(ContainedItemStack<PlayerInventory> stack, IBleachProvider provider) {
+		// Subtract from each component of current color to get new color
+		RYBKColor oldColor = getColor(stack.getStack());
+		RYBKColor newColor = oldColor.minus(new RYBKColor(provider.getBleachLevel())).clamp();
+		// If the new color didn't change, don't bleach the object
+		if (oldColor.equals(newColor)) return false;
+		// "Pay" for bleach
+		// If the bleach provider has enough bleach, proceed to bleach the object
+		if (provider.drain(bleachCost)) {
+			// Only bleach one item at a time, so split off a stack
+			// Subtract from each component of current color to get new color
+			ItemStack bleachedStack = stack.getStack().split(1);
+			setColor(bleachedStack, newColor);
+			// Add bleached stack to inventory
+			stack.getInventory().addItemStackToInventory(bleachedStack);
+			return true;
 		}
-		return false;
+		else {
+			return false;
+		}
 	}
-	*/
 
 }
