@@ -1,7 +1,5 @@
 package spinyq.spinytextiles.tiles;
 
-import java.util.Optional;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CampfireBlock;
 import net.minecraft.nbt.CompoundNBT;
@@ -13,10 +11,11 @@ import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.utility.color.HSVColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
+import spinyq.spinytextiles.utility.textile.IBleachProvider;
 import spinyq.spinytextiles.utility.textile.IDyeProvider;
 
 // TODO Should probably use an FSM
-public class BasinTile extends TileEntity implements IDyeProvider {
+public class BasinTile extends TileEntity implements IDyeProvider, IBleachProvider {
 
 	public static final int MAX_WATER_LEVEL = 9;
 	public static final float DYE_MULTIPLIER = 0.25f, BLEACH_MULTIPLIER = 0.25f;

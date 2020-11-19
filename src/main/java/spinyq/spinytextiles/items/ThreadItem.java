@@ -2,9 +2,7 @@ package spinyq.spinytextiles.items;
 
 import java.util.Optional;
 
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -13,12 +11,12 @@ import net.minecraft.util.NonNullList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import spinyq.spinytextiles.client.render.ItemColorHelper;
-import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.utility.color.ColorWord;
 import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
+import spinyq.spinytextiles.utility.textile.IDyeProvider;
 
-public class ThreadItem extends Item implements IDyeableItem {
+public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 
 	/**
 	 * Class that handles reading/writing color data from stacks.
@@ -117,6 +115,18 @@ public class ThreadItem extends Item implements IDyeableItem {
 	
 	public RYBKColor getColor(ItemStack stack) {
 		return storageHandler.getColor(stack);
+	}
+
+	@Override
+	public boolean dye(ItemStack object, IInventory context, IDyeProvider provider) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean bleach(ItemStack object, IInventory context, IDyeProvider provider) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	/**
