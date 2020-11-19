@@ -140,6 +140,11 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 	}
 	
 	// Does not modify
+	public RYBKColor minus(RYBKColor other) {
+		return new RYBKColor(r - other.r, y - other.y, b - other.b, k - other.k);
+	}
+	
+	// Does not modify
 	public RYBKColor scaledBy(double factor) {
 		return new RYBKColor((float) (r * factor), (float) (y * factor), (float) (b * factor), (float) (k * factor));
 	}
