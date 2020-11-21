@@ -1,6 +1,10 @@
 package spinyq.spinytextiles.tiles;
 
+import java.util.Set;
 import java.util.Stack;
+import java.util.function.Function;
+
+import com.google.common.collect.ImmutableSet;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -29,23 +33,25 @@ import spinyq.spinytextiles.utility.textile.IDyeProvider;
  */
 public class BasinTile extends TileEntity {
 
+	private static final int MAX_WATER_LEVEL = 8;
+	
 	public static abstract class State {
 		
-		protected BasinTile basin;
+		protected BasinTile stack;
 		
 		public abstract ActionResultType onInteract(BlockState state, World world, BlockPos pos, PlayerEntity player,
 				Hand handIn, BlockRayTraceResult hit);
 		
-		public static abstract class ChildState<T extends State> extends State {
+		public static abstract class SubState<T extends State> extends State {
 			
-			private T parent;
+			private T superState;
 
-			public ChildState(T parent) {
-				this.parent = parent;
+			public SubState(T superState) {
+				this.superState = superState;
 			}
 
-			public T getParent() {
-				return parent;
+			public T getSuperState() {
+				return superState;
 			}
 			
 		}
@@ -61,7 +67,7 @@ public class BasinTile extends TileEntity {
 			
 		}
 		
-		public static class EmptyState extends ChildState<BaseState> {
+		public static class EmptyState extends SubState<BaseState> {
 
 			public EmptyState(BaseState parent) {
 				super(parent);
@@ -80,7 +86,7 @@ public class BasinTile extends TileEntity {
 						if (!player.abilities.isCreativeMode) {
 							player.setHeldItem(handIn, new ItemStack(Items.BUCKET));
 						}
-						basin.swapState(new FilledState(getParent()));
+						stack.swapState(new FilledState(getSuperState()));
 						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
 								1.0F, 1.0F);
 					}
@@ -88,33 +94,52 @@ public class BasinTile extends TileEntity {
 					return ActionResultType.SUCCESS;
 
 				}
-				// Fall back to parent state
-				return getParent().onInteract(state, world, pos, player, handIn, hit);
+				// Fall back to superstate
+				return getSuperState().onInteract(state, world, pos, player, handIn, hit);
 			}
 			
 		}
 		
-		public static class FilledState extends ChildState<BaseState> {
+		public static class FilledState extends SubState<BaseState> {
 
+			// Water level starts out at maximum
+			private int waterLevel = MAX_WATER_LEVEL;
+			private Set<Function<FilledState, State>> subStateFactories = ImmutableSet.of(DyeState::new, BleachState::new);
+			
 			public FilledState(BaseState parent) {
 				super(parent);
 			}
 			
 			public boolean drain(int amount) {
-				// TODO
-				return false;
+				// Fail if amount is greater than water level
+				if (amount > waterLevel) return false;
+				// Subtract amount from water level
+				// If water level reaches zero, transition to empty state
+				waterLevel -= amount;
+				if (waterLevel == 0) stack.swapState(new EmptyState(getSuperState()));
+				return true;
 			}
 
 			@Override
 			public ActionResultType onInteract(BlockState state, World world, BlockPos pos, PlayerEntity player,
 					Hand handIn, BlockRayTraceResult hit) {
-				// TODO Auto-generated method stub
-				return null;
+				// TODO Will have to change this, doesn't make sense in all situations
+				// Iterate through possible substates
+				// If substate can handle the interaction, switch to it
+				for (Function<FilledState, State> factory : subStateFactories) {
+					// Create new substate
+					State subState = factory.apply(this);
+					// Let new substate handle action
+					ActionResultType result = subState.onInteract(state, world, pos, player, handIn, hit);
+					if (!result.equals(ActionResultType.PASS)) stack.pushState(subState);
+				}
+				// Fall back to superstate
+				return getSuperState().onInteract(state, world, pos, player, handIn, hit);
 			}
 			
 		}
 		
-		public static class DyeState extends ChildState<FilledState> implements IDyeProvider {
+		public static class DyeState extends SubState<FilledState> implements IDyeProvider {
 
 			public DyeState(FilledState parent) {
 				super(parent);
@@ -128,7 +153,7 @@ public class BasinTile extends TileEntity {
 
 			@Override
 			public boolean drain(int amount) {
-				return getParent().drain(amount);
+				return getSuperState().drain(amount);
 			}
 
 			@Override
@@ -140,7 +165,7 @@ public class BasinTile extends TileEntity {
 			
 		}
 		
-		public static class BleachState extends ChildState<FilledState> implements IBleachProvider {
+		public static class BleachState extends SubState<FilledState> implements IBleachProvider {
 
 			public BleachState(FilledState parent) {
 				super(parent);
@@ -154,7 +179,7 @@ public class BasinTile extends TileEntity {
 			
 			@Override
 			public boolean drain(int amount) {
-				return getParent().drain(amount);
+				return getSuperState().drain(amount);
 			}
 
 			@Override
@@ -172,7 +197,7 @@ public class BasinTile extends TileEntity {
 	
 	public void pushState(State state) {
 		// Give the state a reference to the basin so they can change state and such
-		state.basin = this;
+		state.stack = this;
 		stateStack.add(state);
 	}
 	
