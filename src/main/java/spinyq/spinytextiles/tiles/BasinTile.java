@@ -49,6 +49,10 @@ public class BasinTile extends TileEntity {
 			return ActionResultType.PASS;
 		}
 
+		public State getSuperState() {
+			return superState;
+		}
+
 		public static class EmptyState extends State {
 
 			@Override
@@ -83,6 +87,10 @@ public class BasinTile extends TileEntity {
 			// Water level starts out at maximum
 			private int waterLevel = MAX_WATER_LEVEL;
 
+			public double getWaterHeight() {
+				return 0.2 + ((double) waterLevel / (double) MAX_WATER_LEVEL) * 0.875;
+			}
+			
 			public boolean drain(int amount) {
 				// Fail if amount is greater than water level
 				if (amount > waterLevel)
@@ -138,7 +146,7 @@ public class BasinTile extends TileEntity {
 
 			@Override
 			public boolean drain(int amount) {
-				return ((FilledState) superState).drain(amount);
+				return ((FilledState) getSuperState()).drain(amount);
 			}
 
 			@Override
@@ -181,6 +189,7 @@ public class BasinTile extends TileEntity {
 					ContainedItemStack<PlayerInventory> containedStack = new ContainedItemStack<>(itemStack, player.inventory);
 					if (dyeable.dye(containedStack, this)) return ActionResultType.SUCCESS;
 				}
+				// TODO Glowstone saturation modifier
 				return ActionResultType.PASS;
 			}
 
@@ -197,7 +206,7 @@ public class BasinTile extends TileEntity {
 
 			@Override
 			public boolean drain(int amount) {
-				return ((FilledState) superState).drain(amount);
+				return ((FilledState) getSuperState()).drain(amount);
 			}
 
 			@Override
