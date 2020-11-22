@@ -19,8 +19,9 @@ import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import spinyq.spinytextiles.tiles.BasinTile;
-import spinyq.spinytextiles.tiles.BasinTile.BasinState.BleachState;
 import spinyq.spinytextiles.tiles.BasinTile.BasinState.FilledState;
+import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
+import spinyq.spinytextiles.tiles.BasinTile.BleachState;
 
 public class BasinBlock extends Block {
 
@@ -54,18 +55,23 @@ public class BasinBlock extends Block {
 			BasinTile basin = (BasinTile) tile;
 
 			// Spawn particles if basin is bleaching some shi
-			// Need to check basin state
-			// TODO Could do this without instanceof
-			if (basin.getState() instanceof BleachState) {
-				BleachState state = (BleachState) basin.getState();
-				double bubbleChance = state.getBleachLevel();
-				if (rand.nextDouble() < bubbleChance) {
-					double x = (double) pos.getX() + 2.0 / 16.0 + 12.0 / 16.0 * rand.nextDouble(),
-							y = (double) pos.getY() + ((FilledState) state.getSuperState()).getWaterHeight(),
-							z = (double) pos.getZ() + 2.0 / 16.0 + 12.0 / 16.0 * rand.nextDouble();
-					worldIn.addParticle(ParticleTypes.BUBBLE_POP, x, y, z, 0.0D, 0.0D, 0.0D);
+			BasinStateVisitor blockAnimator = new BasinStateVisitor() {
+
+				@Override
+				public void visit(BleachState state) {
+					double bubbleChance = state.getBleachLevel();
+					if (rand.nextDouble() < bubbleChance) {
+						double x = (double) pos.getX() + 2.0 / 16.0 + 12.0 / 16.0 * rand.nextDouble(),
+								y = (double) pos.getY() + ((FilledState) state.getSuperState()).getWaterHeight(),
+								z = (double) pos.getZ() + 2.0 / 16.0 + 12.0 / 16.0 * rand.nextDouble();
+						worldIn.addParticle(ParticleTypes.BUBBLE_POP, x, y, z, 0.0D, 0.0D, 0.0D);
+					}
 				}
-			}
+
+			};
+
+			// Visit basin state
+			basin.getState().accept(blockAnimator);
 		}
 	}
 
