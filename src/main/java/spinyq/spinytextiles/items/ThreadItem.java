@@ -1,7 +1,5 @@
 package spinyq.spinytextiles.items;
 
-import java.util.Optional;
-
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
@@ -69,7 +67,7 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
 			ItemColorHelper.setItemColorHandler(this, (stack, tintIndex) -> {
 				// For the overlay layer, return the color of the thread
-				RGBColor rgb = getColor(stack).toRGB(new RGBColor(), Optional.empty());
+				RGBColor rgb = getColor(stack).toRGB(new RGBColor(), null);
 				if (tintIndex == 1)
 					return rgb.toInt();
 				// For all other layers, return -1 (white)

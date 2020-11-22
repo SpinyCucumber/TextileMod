@@ -2,7 +2,6 @@ package spinyq.spinytextiles.utility.color;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 
 import com.google.common.collect.ImmutableMap;
@@ -197,13 +196,13 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 		return r > 0.0f || y > 0.0f || b > 0.0f || k > 0.0f;
 	}
 
-	public RGBColor toRGB(RGBColor color, Optional<RGBColor> base) {
+	public RGBColor toRGB(RGBColor color, RGBColor base) {
 		// Apply bias function to color values
 		float rb = BIAS_FUNCTION.apply(r),
 				yb = BIAS_FUNCTION.apply(y),
 				bb = BIAS_FUNCTION.apply(b);
 		// Trilinear interpolation
-		RGBColor c000 = base.isPresent() ? base.get() : getRGBPoint(0,0,0),
+		RGBColor c000 = (base == null) ? getRGBPoint(0,0,0) : base,
 				c001 = getRGBPoint(0,0,1),
 				c010 = getRGBPoint(0,1,0),
 				c011 = getRGBPoint(0,1,1),
@@ -225,9 +224,9 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 		color.setAll(c);
 		return color;
 	}
-	
+
 	@Deprecated
-	public RYBKColor fromRGB(RGBColor rgb, Optional<RGBColor> base) {
+	public RYBKColor fromRGB(RGBColor rgb, RGBColor base) {
 		// Our initial guess, arbitrary
 		RYBKColor guess = new RYBKColor(0.5f, 0.5f, 0.5f, 0.5f);
 		// The function to minimize
@@ -297,13 +296,14 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 		return DYE_MAP.get(dye);
 	}
 
-	public HSVColor toHSV(HSVColor hsv) {
+	public HSVColor toHSV(HSVColor hsv, RGBColor base) {
 		// This has the potential to be finnicky
-		return this.toRGB(new RGBColor(), Optional.empty()).toHSV(hsv);
+		return this.toRGB(new RGBColor(), base).toHSV(hsv);
 	}
 	
-	public RYBKColor fromHSV(HSVColor hsv) {
-		return this.fromRGB(new RGBColor().fromHSV(hsv), Optional.empty());
+	@Deprecated
+	public RYBKColor fromHSV(HSVColor hsv, RGBColor base) {
+		return this.fromRGB(new RGBColor().fromHSV(hsv), base);
 	}
 
 	@Override

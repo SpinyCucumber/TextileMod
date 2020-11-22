@@ -55,10 +55,10 @@ public class BasinBlock extends Block {
 			BasinTile basin = (BasinTile) tile;
 
 			// Spawn particles if basin is bleaching some shi
-			BasinStateVisitor blockAnimator = new BasinStateVisitor() {
+			BasinStateVisitor<Void> blockAnimator = new BasinStateVisitor<Void>() {
 
 				@Override
-				public void visit(BleachState state) {
+				public Void visit(BleachState state) {
 					double bubbleChance = state.getBleachLevel();
 					if (rand.nextDouble() < bubbleChance) {
 						double x = (double) pos.getX() + 2.0 / 16.0 + 12.0 / 16.0 * rand.nextDouble(),
@@ -66,6 +66,7 @@ public class BasinBlock extends Block {
 								z = (double) pos.getZ() + 2.0 / 16.0 + 12.0 / 16.0 * rand.nextDouble();
 						worldIn.addParticle(ParticleTypes.BUBBLE_POP, x, y, z, 0.0D, 0.0D, 0.0D);
 					}
+					return null;
 				}
 
 			};

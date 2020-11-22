@@ -1,6 +1,5 @@
 package spinyq.spinytextiles.client.render;
 
-import java.util.Optional;
 import java.util.Stack;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -90,7 +89,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 			}
 			// Calculate the final color
 			// TODO Cache this
-			RGBAColor color = new RGBAColor(threadColor.toRGB(new RGBColor(), Optional.empty()), threadAmount / (float) SpinningWheelTile.REQUIRED_THREAD);
+			RGBAColor color = new RGBAColor(threadColor.toRGB(new RGBColor(), null), threadAmount / (float) SpinningWheelTile.REQUIRED_THREAD);
 			// Rotate based on blockstate
 			// Also have to center model
 			matrixStackIn.push();
