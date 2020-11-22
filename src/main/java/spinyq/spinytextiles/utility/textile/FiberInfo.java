@@ -1,7 +1,5 @@
 package spinyq.spinytextiles.utility.textile;
 
-import java.util.function.Supplier;
-
 import net.minecraft.nbt.CompoundNBT;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 
@@ -64,11 +62,6 @@ public class FiberInfo implements IGarmentComponent {
 	public void deserializeNBT(CompoundNBT nbt) {
 		color = new RYBKColor().fromInt(nbt.getInt(TAG_COLOR));
 		amount = nbt.getInt(TAG_AMOUNT);
-	}
-
-	@Override
-	public Supplier<IGarmentComponent> getFactory() {
-		return FiberInfo::new;
 	}
 	
 }

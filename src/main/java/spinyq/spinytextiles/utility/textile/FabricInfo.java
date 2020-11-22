@@ -2,7 +2,6 @@ package spinyq.spinytextiles.utility.textile;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -40,11 +39,6 @@ public class FabricInfo implements IGarmentComponent {
 		pattern = NBTHelper.getRegistryEntry(nbt, TAG_PATTERN, REGISTRY);
 		// Retrieve the colors
 		colors = NBTHelper.getMap(HashMap::new, RYBKColor::new, nbt, TAG_COLORS);
-	}
-
-	@Override
-	public Supplier<IGarmentComponent> getFactory() {
-		return FabricInfo::new;
 	}
 
 }

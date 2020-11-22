@@ -4,8 +4,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.function.Supplier;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableSet;
 
 import net.minecraft.entity.player.PlayerEntity;
@@ -25,6 +23,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraftforge.common.util.INBTSerializable;
 import spinyq.spinytextiles.ModTags;
 import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.items.IBleachableItem;
@@ -32,7 +31,7 @@ import spinyq.spinytextiles.items.IDyeableItem;
 import spinyq.spinytextiles.tiles.BasinTile.BasinState.FilledState;
 import spinyq.spinytextiles.utility.ContainedItemStack;
 import spinyq.spinytextiles.utility.NBTHelper;
-import spinyq.spinytextiles.utility.NBTHelper.INBTPolymorphic;
+import spinyq.spinytextiles.utility.NBTHelper.ClassMapper;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 import spinyq.spinytextiles.utility.textile.IBleachProvider;
 import spinyq.spinytextiles.utility.textile.IDyeProvider;
@@ -50,8 +49,7 @@ public class BasinTile extends TileEntity {
 
 	private static final String STATE_TAG = "State";
 
-	private static final BiMap<String, Supplier<BasinState>> STATE_MAP = ImmutableBiMap.of("Empty", EmptyState::new,
-			"Filled", FilledState::new, "Dye", DyeState::new, "Bleach", BleachState::new);
+	private static final ClassMapper CLASS_MAPPER = new ClassMapper(EmptyState.class, FilledState.class, DyeState.class, BleachState.class);
 
 	public static interface BasinStateVisitor<T> {
 
@@ -73,7 +71,7 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	public static abstract class BasinState implements INBTPolymorphic<BasinState> {
+	public static abstract class BasinState implements INBTSerializable<CompoundNBT> {
 
 		protected BasinTile basin;
 		protected BasinState superState, subState;
@@ -137,11 +135,6 @@ public class BasinTile extends TileEntity {
 			}
 
 			@Override
-			public Supplier<BasinState> getFactory() {
-				return FilledState::new;
-			}
-
-			@Override
 			public CompoundNBT serializeNBT() {
 				// TODO Auto-generated method stub
 				return null;
@@ -185,11 +178,6 @@ public class BasinTile extends TileEntity {
 
 			}
 			return ActionResultType.PASS;
-		}
-
-		@Override
-		public Supplier<BasinState> getFactory() {
-			return EmptyState::new;
 		}
 
 		@Override
@@ -278,11 +266,6 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public Supplier<BasinState> getFactory() {
-			return DyeState::new;
-		}
-
-		@Override
 		public CompoundNBT serializeNBT() {
 			// TODO Auto-generated method stub
 			return null;
@@ -358,11 +341,6 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public Supplier<BasinState> getFactory() {
-			return BleachState::new;
-		}
-
-		@Override
 		public CompoundNBT serializeNBT() {
 			// TODO Auto-generated method stub
 			return null;
@@ -423,7 +401,7 @@ public class BasinTile extends TileEntity {
 		// Convert each list element to a new state, and add them to our stack
 		for (INBT elementNBT : listNBT) {
 			CompoundNBT objectNBT = (CompoundNBT) elementNBT;
-			BasinState state = NBTHelper.readPolymorphic(objectNBT, STATE_MAP::get);
+			BasinState state = NBTHelper.readPolymorphic(objectNBT, CLASS_MAPPER);
 			pushState(state);
 		}
 	}
@@ -435,7 +413,7 @@ public class BasinTile extends TileEntity {
 		ListNBT listNBT = new ListNBT();
 		// Write each state to the list
 		for (BasinState state : stack) {
-			CompoundNBT objectNBT = NBTHelper.writePolymorphic(state, STATE_MAP.inverse()::get);
+			CompoundNBT objectNBT = NBTHelper.writePolymorphic(state, CLASS_MAPPER);
 			listNBT.add(objectNBT);
 		}
 		// Set value and return
