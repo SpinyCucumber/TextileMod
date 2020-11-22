@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.fluid.Fluids;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelBakeEvent;
@@ -18,6 +19,9 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.BasinTile;
+import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
+import spinyq.spinytextiles.tiles.BasinTile.BleachState;
+import spinyq.spinytextiles.tiles.BasinTile.BasinState.FilledState;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RGBColor;
 
@@ -68,19 +72,24 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	public void render(BasinTile basin, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer renderer,
 			int combinedLightIn, int combinedOverlayIn) {
 		// Don't render anything if basin is empty
-		if (!basin.isEmpty()) {
-			// Calculate stage and model
-			int stage = (int) Math
-					.floor((float) STAGES * (float) basin.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
-			CuboidModel model = fluidModels[stage];
-			// Calculate water color as "base" color
-			RGBColor rgb = basin.getColor().toRGB(new RGBColor(), Optional.of(WATER_COLOR));
-			RGBAColor color = new RGBAColor(rgb, 1.0f);
-			// Allocate buffer
-			IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
-			// Render model
-			CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
-		}
+		BasinStateVisitor blockRenderer = new BasinStateVisitor() {
+
+			@Override
+			public void visit(FilledState state) {
+				// Calculate stage and model
+				int stage = (int) Math
+						.floor((float) STAGES * (float) state.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
+				CuboidModel model = fluidModels[stage];
+				// Calculate water color as "base" color
+				RGBColor rgb = basin.getColor().toRGB(new RGBColor(), Optional.of(WATER_COLOR));
+				RGBAColor color = new RGBAColor(rgb, 1.0f);
+				// Allocate buffer
+				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
+				// Render model
+				CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
+			}
+			
+		};
 	}
 
 }
