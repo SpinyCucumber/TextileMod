@@ -1,7 +1,5 @@
 package spinyq.spinytextiles.client.render;
 
-import java.util.Optional;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
@@ -10,7 +8,6 @@ import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.fluid.Fluids;
-import net.minecraft.particles.ParticleTypes;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelBakeEvent;
@@ -19,9 +16,10 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.BasinTile;
+import spinyq.spinytextiles.tiles.BasinTile.BasinState.FilledState;
 import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
 import spinyq.spinytextiles.tiles.BasinTile.BleachState;
-import spinyq.spinytextiles.tiles.BasinTile.BasinState.FilledState;
+import spinyq.spinytextiles.tiles.BasinTile.DyeState;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RGBColor;
 
@@ -31,6 +29,25 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	private static final RGBColor WATER_COLOR = new RGBColor().fromIntString("0x3F76E4");
 	private static final int STAGES = 200;
 
+	private final BasinStateVisitor<RGBColor> waterColorCalculator = new BasinStateVisitor<RGBColor>() {
+
+		@Override
+		public RGBColor visit(FilledState state) {
+			return WATER_COLOR;
+		}
+
+		@Override
+		public RGBColor visit(DyeState state) {
+			return state.getColor().toRGB(new RGBColor(), WATER_COLOR);
+		}
+
+		@Override
+		public RGBColor visit(BleachState state) {
+			return state.getSuperState().accept(this);
+		}
+		
+	};
+	
 	private final CuboidModel[] fluidModels = new CuboidModel[STAGES];
 
 	private CuboidModel getFluidModel(int stage, AtlasTexture texture) {
@@ -71,25 +88,30 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	@Override
 	public void render(BasinTile basin, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer renderer,
 			int combinedLightIn, int combinedOverlayIn) {
+		
+		RGBColor waterColor = basin.getState().accept(waterColorCalculator);
+		
 		// Don't render anything if basin is empty
-		BasinStateVisitor blockRenderer = new BasinStateVisitor() {
+		BasinStateVisitor<Void> blockRenderer = new BasinStateVisitor<Void>() {
 
 			@Override
-			public void visit(FilledState state) {
+			public Void visit(FilledState state) {
 				// Calculate stage and model
 				int stage = (int) Math
 						.floor((float) STAGES * (float) state.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
 				CuboidModel model = fluidModels[stage];
 				// Calculate water color as "base" color
-				RGBColor rgb = basin.getColor().toRGB(new RGBColor(), Optional.of(WATER_COLOR));
-				RGBAColor color = new RGBAColor(rgb, 1.0f);
+				RGBAColor color = new RGBAColor(waterColor, 1.0f);
 				// Allocate buffer
 				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 				// Render model
 				CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
+				return null;
 			}
 			
 		};
+		
+		basin.getState().accept(blockRenderer);
 	}
 
 }
