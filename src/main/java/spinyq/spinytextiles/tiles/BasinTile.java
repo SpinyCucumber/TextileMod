@@ -277,6 +277,7 @@ public class BasinTile extends TileEntity {
 		@Override
 		public void accept(BasinStateVisitor visitor) {
 			visitor.visit(this);
+			superState.accept(visitor);
 		}
 	
 	}
@@ -355,6 +356,7 @@ public class BasinTile extends TileEntity {
 		@Override
 		public void accept(BasinStateVisitor visitor) {
 			visitor.visit(this);
+			superState.accept(visitor);
 		}
 	
 	}
