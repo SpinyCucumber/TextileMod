@@ -42,11 +42,7 @@ public class NBTHelper {
 	 */
 	public static <T extends INBTPolymorphic<T>> void putPolymorphic(CompoundNBT nbt, String key, INBTPolymorphic<T> object,
 			Function<Supplier<T>, String> idMap) {
-		// Create a new compound NBT and write type ID 
-		CompoundNBT objectNBT = object.serializeNBT();
-		objectNBT.putString(TYPE_TAG, idMap.apply(object.getFactory()));
-		// Put nbt into compound
-		nbt.put(key, objectNBT);
+		nbt.put(key, writePolymorphic(object, idMap));
 	}
 	
 	/**
@@ -60,8 +56,18 @@ public class NBTHelper {
 	 * @param factoryMap A function mapping string IDs to factories
 	 */
 	public static <T extends INBTPolymorphic<T>> T getPolymorphic(CompoundNBT nbt, String key, Function<String, Supplier<T>> factoryMap) {
-		// Read the object nbt
-		CompoundNBT objectNBT = nbt.getCompound(key);
+		return readPolymorphic(nbt.getCompound(key), factoryMap);
+	}
+	
+	public static <T extends INBTPolymorphic<T>> CompoundNBT writePolymorphic(INBTPolymorphic<T> object,
+			Function<Supplier<T>, String> idMap) {
+		// Create a new compound NBT and write type ID 
+		CompoundNBT objectNBT = object.serializeNBT();
+		objectNBT.putString(TYPE_TAG, idMap.apply(object.getFactory()));
+		return objectNBT;
+	}
+	
+	public static <T extends INBTPolymorphic<T>> T readPolymorphic(CompoundNBT objectNBT, Function<String, Supplier<T>> factoryMap) {
 		// Read the object's type and create a new object
 		String type = objectNBT.getString(TYPE_TAG);
 		T object = factoryMap.apply(type).get();
