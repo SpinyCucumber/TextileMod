@@ -19,8 +19,8 @@ import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import spinyq.spinytextiles.tiles.BasinTile;
-import spinyq.spinytextiles.tiles.BasinTile.State.BleachState;
-import spinyq.spinytextiles.tiles.BasinTile.State.FilledState;
+import spinyq.spinytextiles.tiles.BasinTile.BasinState.BleachState;
+import spinyq.spinytextiles.tiles.BasinTile.BasinState.FilledState;
 
 public class BasinBlock extends Block {
 

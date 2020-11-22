@@ -29,7 +29,7 @@ import spinyq.spinytextiles.ModTags;
 import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.items.IBleachableItem;
 import spinyq.spinytextiles.items.IDyeableItem;
-import spinyq.spinytextiles.tiles.BasinTile.State.FilledState;
+import spinyq.spinytextiles.tiles.BasinTile.BasinState.FilledState;
 import spinyq.spinytextiles.utility.ContainedItemStack;
 import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.NBTHelper.INBTPolymorphic;
@@ -50,20 +50,27 @@ public class BasinTile extends TileEntity {
 	
 	private static final String STATE_TAG = "State";
 
-	private static final BiMap<String, Supplier<State>> STATE_MAP = ImmutableBiMap.of("Empty", EmptyState::new, "Filled", FilledState::new,
+	private static final BiMap<String, Supplier<BasinState>> STATE_MAP = ImmutableBiMap.of("Empty", EmptyState::new, "Filled", FilledState::new,
 			"Dye", DyeState::new, "Bleach", BleachState::new);
 	
-	public static abstract class State implements INBTPolymorphic<State> {
+	public static interface BasinStateVisitor {
+		
+		default void visit(EmptyState state) { }
+		default void visit(FilledState state) { }
+		default void visit(DyeState state) { }
+		default void visit(BleachState state) { }
+		
+	}
+	
+	public static abstract class BasinState implements INBTPolymorphic<BasinState> {
 
 		protected BasinTile basin;
-		protected State superState, subState;
+		protected BasinState superState, subState;
 
-		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-			// By default do nothing
-			return ActionResultType.PASS;
-		}
+		public abstract ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
+		public abstract void accept(BasinStateVisitor visitor);
 
-		public State getSuperState() {
+		public BasinState getSuperState() {
 			return superState;
 		}
 		
@@ -75,7 +82,7 @@ public class BasinTile extends TileEntity {
 		@Override
 		public void deserializeNBT(CompoundNBT nbt) { }
 
-		public static class FilledState extends State {
+		public static class FilledState extends BasinState {
 
 			private Set<Supplier<SaturatedState>> substateSuppliers = ImmutableSet.of(DyeState::new, BleachState::new);
 
@@ -113,7 +120,7 @@ public class BasinTile extends TileEntity {
 			}
 
 			@Override
-			public Supplier<State> getFactory() {
+			public Supplier<BasinState> getFactory() {
 				return FilledState::new;
 			}
 
@@ -129,11 +136,16 @@ public class BasinTile extends TileEntity {
 				
 			}
 
+			@Override
+			public void accept(BasinStateVisitor visitor) {
+				visitor.visit(this);
+			}
+
 		}
 
 	}
 
-	public static class EmptyState extends State {
+	public static class EmptyState extends BasinState {
 	
 		@Override
 		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
@@ -159,13 +171,19 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public Supplier<State> getFactory() {
+		public Supplier<BasinState> getFactory() {
 			return EmptyState::new;
+		}
+
+		@Override
+		public void accept(BasinStateVisitor visitor) {
+			visitor.visit(this);
 		}
 	
 	}
 
-	public static abstract class SaturatedState extends State {
+	// TODO Simplify this
+	public static abstract class SaturatedState extends BasinState {
 	
 		public abstract boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
 		public abstract ActionResultType finishInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
@@ -240,7 +258,7 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public Supplier<State> getFactory() {
+		public Supplier<BasinState> getFactory() {
 			return DyeState::new;
 		}
 
@@ -254,6 +272,11 @@ public class BasinTile extends TileEntity {
 		public void deserializeNBT(CompoundNBT nbt) {
 			// TODO Auto-generated method stub
 			
+		}
+
+		@Override
+		public void accept(BasinStateVisitor visitor) {
+			visitor.visit(this);
 		}
 	
 	}
@@ -313,7 +336,7 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public Supplier<State> getFactory() {
+		public Supplier<BasinState> getFactory() {
 			return BleachState::new;
 		}
 
@@ -328,35 +351,40 @@ public class BasinTile extends TileEntity {
 			// TODO Auto-generated method stub
 			
 		}
+
+		@Override
+		public void accept(BasinStateVisitor visitor) {
+			visitor.visit(this);
+		}
 	
 	}
 
-	private Stack<State> stack = new Stack<>();
+	private Stack<BasinState> stack = new Stack<>();
 
-	public void pushState(State state) {
+	public void pushState(BasinState state) {
 		// Give the state a reference to the basin so they can change state and such
 		state.basin = this;
 		// If there is already a state in the stack, hook up substate/superstate
 		// references
 		if (!stack.empty()) {
-			State superState = stack.peek();
+			BasinState superState = stack.peek();
 			superState.subState = state;
 			state.superState = superState;
 		}
 		stack.add(state);
 	}
 
-	public void popState(State state) {
-		State popped = null;
+	public void popState(BasinState state) {
+		BasinState popped = null;
 		while (!popped.equals(state)) popped = stack.pop();
 	}
 
-	public void swapState(State oldState, State newState) {
+	public void swapState(BasinState oldState, BasinState newState) {
 		popState(oldState);
 		pushState(newState);
 	}
 
-	public State getState() {
+	public BasinState getState() {
 		return stack.peek();
 	}
 
@@ -372,7 +400,7 @@ public class BasinTile extends TileEntity {
 		// Convert each list element to a new state, and add them to our stack
 		for (INBT elementNBT : listNBT) {
 			CompoundNBT objectNBT = (CompoundNBT) elementNBT;
-			State state = NBTHelper.readPolymorphic(objectNBT, STATE_MAP::get);
+			BasinState state = NBTHelper.readPolymorphic(objectNBT, STATE_MAP::get);
 			pushState(state);
 		}
 	}
@@ -383,7 +411,7 @@ public class BasinTile extends TileEntity {
 		// Create a new ListNBT
 		ListNBT listNBT = new ListNBT();
 		// Write each state to the list
-		for (State state : stack) {
+		for (BasinState state : stack) {
 			CompoundNBT objectNBT = NBTHelper.writePolymorphic(state, STATE_MAP.inverse()::get);
 			listNBT.add(objectNBT);
 		}
