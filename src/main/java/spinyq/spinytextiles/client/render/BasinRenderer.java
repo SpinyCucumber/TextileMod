@@ -89,6 +89,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	public void render(BasinTile basin, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer renderer,
 			int combinedLightIn, int combinedOverlayIn) {
 		
+		// Calculate water color
 		RGBColor waterColor = basin.getState().accept(waterColorCalculator);
 		
 		// Don't render anything if basin is empty
@@ -107,6 +108,16 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 				// Render model
 				CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
 				return null;
+			}
+
+			@Override
+			public Void visit(DyeState state) {
+				return state.getSuperState().accept(this);
+			}
+
+			@Override
+			public Void visit(BleachState state) {
+				return state.getSuperState().accept(this);
 			}
 			
 		};
