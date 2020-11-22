@@ -1,10 +1,13 @@
 package spinyq.spinytextiles.utility;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Supplier;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -23,9 +26,29 @@ public class NBTHelper {
 
 	public static final String TYPE_TAG = "Type";
 	
-	public static interface INBTPolymorphic<T extends INBTPolymorphic<T>> extends INBTSerializable<CompoundNBT> {
+	public static class ClassMapper {
 		
-		Supplier<T> getFactory();
+		private BiMap<Integer, Class<?>> map;
+		
+		@SafeVarargs
+		public ClassMapper(Class<?>... classes) {
+			// Construct a new immutable map
+			int id = 0;
+			ImmutableBiMap.Builder<Integer, Class<?>> builder = new ImmutableBiMap.Builder<>();
+			for (Class<?> clazz : classes) {
+				builder.put(id, clazz);
+				id++;
+			}
+			map = builder.build();
+		}
+		
+		public Class<?> getClass(int id) {
+			return map.get(id);
+		}
+		
+		public int getId(Class<?> clazz) {
+			return map.inverse().get(clazz);
+		}
 		
 	}
 	
@@ -40,9 +63,9 @@ public class NBTHelper {
 	 * @param object The polymorphic NBT object
 	 * @param idMap A function mapping factories to string IDs
 	 */
-	public static <T extends INBTPolymorphic<T>> void putPolymorphic(CompoundNBT nbt, String key, INBTPolymorphic<T> object,
-			Function<Supplier<T>, String> idMap) {
-		nbt.put(key, writePolymorphic(object, idMap));
+	public static <T extends INBTSerializable<CompoundNBT>> void putPolymorphic(CompoundNBT nbt, String key, T object,
+			ClassMapper mapper) {
+		nbt.put(key, writePolymorphic(object, mapper));
 	}
 	
 	/**
@@ -55,25 +78,32 @@ public class NBTHelper {
 	 * @param key The key containing the object
 	 * @param factoryMap A function mapping string IDs to factories
 	 */
-	public static <T extends INBTPolymorphic<T>> T getPolymorphic(CompoundNBT nbt, String key, Function<String, Supplier<T>> factoryMap) {
-		return readPolymorphic(nbt.getCompound(key), factoryMap);
+	public static <T extends INBTSerializable<CompoundNBT>> T getPolymorphic(CompoundNBT nbt, String key, ClassMapper mapper) {
+		return readPolymorphic(nbt.getCompound(key), mapper);
 	}
 	
-	public static <T extends INBTPolymorphic<T>> CompoundNBT writePolymorphic(INBTPolymorphic<T> object,
-			Function<Supplier<T>, String> idMap) {
-		// Create a new compound NBT and write type ID 
+	public static <T extends INBTSerializable<CompoundNBT>> CompoundNBT writePolymorphic(T object,
+			ClassMapper mapper) {
+		// Create a new compound NBT and write type ID
 		CompoundNBT objectNBT = object.serializeNBT();
-		objectNBT.putString(TYPE_TAG, idMap.apply(object.getFactory()));
+		objectNBT.putInt(TYPE_TAG, mapper.getId(object.getClass()));
 		return objectNBT;
 	}
 	
-	public static <T extends INBTPolymorphic<T>> T readPolymorphic(CompoundNBT objectNBT, Function<String, Supplier<T>> factoryMap) {
+	@SuppressWarnings("unchecked")
+	public static <T extends INBTSerializable<CompoundNBT>> T readPolymorphic(CompoundNBT objectNBT, ClassMapper mapper) {
 		// Read the object's type and create a new object
-		String type = objectNBT.getString(TYPE_TAG);
-		T object = factoryMap.apply(type).get();
-		// Deserialize and return object
-		object.deserializeNBT(objectNBT);
-		return object;
+		Class<?> clazz = mapper.getClass(objectNBT.getInt(TYPE_TAG));
+		T object;
+		try {
+			object = (T) clazz.getConstructor().newInstance();
+			// Deserialize and return object
+			object.deserializeNBT(objectNBT);
+			return object;
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			throw new RuntimeException("Error occured while reading polymorphic NBT.", e);
+		}
 	}
 
 	/**
