@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableSet;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.DyeItem;
@@ -20,6 +21,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraftforge.common.util.Constants;
 import spinyq.spinytextiles.ModTags;
 import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.items.IBleachableItem;
@@ -49,8 +51,6 @@ public class BasinTile extends TileEntity {
 			COLOR_TAG = "Color",
 			BLEACH_LEVEL_TAG = "Bleach";
 
-	private static final ClassMapper CLASS_MAPPER = new ClassMapper(EmptyState.class, FilledState.class, DyeState.class, BleachState.class);
-
 	public static interface BasinStateVisitor<T> {
 
 		default T visit(EmptyState state) {
@@ -71,16 +71,14 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	public static abstract class BasinState extends State<BasinState> {
+	public abstract class BasinState extends State<BasinState> {
 
-		protected BasinTile basin;
-		
 		public abstract ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
 		public abstract <T> T accept(BasinStateVisitor<T> visitor);
 		
 	}
 
-	public static class FilledState extends BasinState {
+	public class FilledState extends BasinState {
 	
 		private Set<Supplier<SaturatedState>> substateSuppliers = ImmutableSet.of(DyeState::new, BleachState::new);
 	
@@ -104,6 +102,8 @@ public class BasinTile extends TileEntity {
 			waterLevel -= amount;
 			if (waterLevel == 0)
 				fsm.swapState(this, new EmptyState());
+			else
+				BasinTile.this.notifyChange();
 			return true;
 		}
 	
@@ -143,7 +143,7 @@ public class BasinTile extends TileEntity {
 	
 	}
 
-	public static class EmptyState extends BasinState {
+	public class EmptyState extends BasinState {
 
 		@Override
 		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
@@ -153,12 +153,12 @@ public class BasinTile extends TileEntity {
 			// If player is holding a water bucket, empty the bucket and fill the cauldron.
 			if (item == Items.WATER_BUCKET) {
 
-				if (!basin.world.isRemote) {
+				if (!BasinTile.this.world.isRemote) {
 					if (!player.abilities.isCreativeMode) {
 						player.setHeldItem(handIn, new ItemStack(Items.BUCKET));
 					}
 					fsm.swapState(this, new FilledState());
-					basin.world.playSound((PlayerEntity) null, basin.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
 							SoundCategory.BLOCKS, 1.0F, 1.0F);
 				}
 
@@ -175,7 +175,7 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	public static abstract class SaturatedState extends BasinState {
+	public abstract class SaturatedState extends BasinState {
 
 		public abstract boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
 
@@ -192,7 +192,7 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	public static class DyeState extends SaturatedState implements IDyeProvider {
+	public class DyeState extends SaturatedState implements IDyeProvider {
 
 		private RYBKColor color = new RYBKColor();
 
@@ -221,15 +221,16 @@ public class BasinTile extends TileEntity {
 			if (newColor.equals(color))
 				return false;
 
-			if (!basin.world.isRemote) {
+			if (!BasinTile.this.world.isRemote) {
 				// Consume one item if player is not in creative
 				if (!player.abilities.isCreativeMode) {
 					itemStack.shrink(1);
 				}
 				// Change the color
 				color = newColor;
-				basin.world.playSound((PlayerEntity) null, basin.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+				BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
 						SoundCategory.BLOCKS, 1.0F, 1.0F);
+				BasinTile.this.notifyChange();
 			}
 
 			return true;
@@ -273,7 +274,7 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	public static class BleachState extends SaturatedState implements IBleachProvider {
+	public class BleachState extends SaturatedState implements IBleachProvider {
 
 		private float bleachLevel = 0.0f;
 
@@ -299,15 +300,16 @@ public class BasinTile extends TileEntity {
 			if (newBleachLevel == bleachLevel)
 				return false;
 
-			if (!basin.world.isRemote) {
+			if (!BasinTile.this.world.isRemote) {
 				// Consume one item if player is not in creative
 				if (!player.abilities.isCreativeMode) {
 					itemStack.shrink(1);
 				}
 				// Change the bleach level
 				bleachLevel = newBleachLevel;
-				basin.world.playSound((PlayerEntity) null, basin.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+				BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
 						SoundCategory.BLOCKS, 1.0F, 1.0F);
+				BasinTile.this.notifyChange();
 			}
 
 			return true;
@@ -355,9 +357,22 @@ public class BasinTile extends TileEntity {
 	public BasinTile() {
 		super(ModTiles.BASIN_TILE.get());
 		// Construct fsm and push some initial state
-		fsm = new StackFSM<>(CLASS_MAPPER);
-		fsm.addPushObserver((state) -> state.basin = this);
+		ClassMapper mapper = new ClassMapper()
+				.withClass(EmptyState.class, EmptyState::new)
+				.withClass(FilledState.class, FilledState::new)
+				.withClass(DyeState.class, DyeState::new)
+				.withClass(BleachState.class, BleachState::new);
+		fsm = new StackFSM<>(mapper);
 		fsm.pushState(new EmptyState());
+	}
+	
+	/**
+	 * Syncs data with clients and marks this tile to be saved.
+	 */
+	private void notifyChange() {
+		BlockState state = getBlockState();
+		world.notifyBlockUpdate(pos, state, state, Constants.BlockFlags.BLOCK_UPDATE);
+		markDirty();
 	}
 
 	public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {

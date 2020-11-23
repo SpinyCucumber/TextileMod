@@ -1,13 +1,10 @@
 package spinyq.spinytextiles.utility;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-
-import com.google.common.collect.BiMap;
-import com.google.common.collect.ImmutableBiMap;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -28,26 +25,23 @@ public class NBTHelper {
 	
 	public static class ClassMapper {
 		
-		private BiMap<Integer, Class<?>> map;
+		private Map<Class<?>, Integer> classToId = new HashMap<>();
+		private Map<Integer, Supplier<?>> idToSupplier = new HashMap<>();
+		private int idCounter = 0;
 		
-		@SafeVarargs
-		public ClassMapper(Class<?>... classes) {
-			// Construct a new immutable map
-			int id = 0;
-			ImmutableBiMap.Builder<Integer, Class<?>> builder = new ImmutableBiMap.Builder<>();
-			for (Class<?> clazz : classes) {
-				builder.put(id, clazz);
-				id++;
-			}
-			map = builder.build();
-		}
-		
-		public Class<?> getClass(int id) {
-			return map.get(id);
+		public <T> ClassMapper withClass(Class<T> clazz, Supplier<T> supplier) {
+			int id = ++idCounter;
+			classToId.put(clazz, id);
+			idToSupplier.put(id, supplier);
+			return this;
 		}
 		
 		public int getId(Class<?> clazz) {
-			return map.inverse().get(clazz);
+			return classToId.get(clazz);
+		}
+		
+		public Supplier<?> getSupplier(int id) {
+			return idToSupplier.get(id);
 		}
 		
 	}
@@ -86,24 +80,19 @@ public class NBTHelper {
 			ClassMapper mapper) {
 		// Create a new compound NBT and write type ID
 		CompoundNBT objectNBT = object.serializeNBT();
-		objectNBT.putInt(TYPE_TAG, mapper.getId(object.getClass()));
+		int id = mapper.getId(object.getClass());
+		objectNBT.putInt(TYPE_TAG, id);
 		return objectNBT;
 	}
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends INBTSerializable<CompoundNBT>> T readPolymorphic(CompoundNBT objectNBT, ClassMapper mapper) {
 		// Read the object's type and create a new object
-		Class<?> clazz = mapper.getClass(objectNBT.getInt(TYPE_TAG));
-		T object;
-		try {
-			object = (T) clazz.getConstructor().newInstance();
-			// Deserialize and return object
-			object.deserializeNBT(objectNBT);
-			return object;
-		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| NoSuchMethodException | SecurityException e) {
-			throw new RuntimeException("Error occured while reading polymorphic NBT.", e);
-		}
+		int id = objectNBT.getInt(TYPE_TAG);
+		T object = (T) mapper.getSupplier(id).get();
+		// Deserialize and return object
+		object.deserializeNBT(objectNBT);
+		return object;
 	}
 
 	/**
