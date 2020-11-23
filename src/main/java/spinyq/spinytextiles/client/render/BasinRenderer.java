@@ -95,7 +95,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 			public Void visit(FilledState state) {
 				// Calculate stage and model
 				int stage = (int) Math
-						.floor((float) STAGES * (float) state.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
+						.floor((float) (STAGES - 1) * (float) state.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
 				CuboidModel model = fluidModels[stage];
 				// Calculate water color
 				RGBAColor color = new RGBAColor(basin.accept(COLOR_CALCULATOR), 1.0f);

@@ -62,9 +62,10 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 	}
 	
 	public void popState(T state) {
-		T popped = null;
-		while (!popped.equals(state))
+		T popped;
+		do {
 			popped = stack.pop();
+		} while(!popped.equals(state));
 	}
 
 	public void swapState(T oldState, T newState) {
