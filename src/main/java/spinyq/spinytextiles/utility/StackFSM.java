@@ -1,9 +1,6 @@
 package spinyq.spinytextiles.utility;
 
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.Stack;
-import java.util.function.Consumer;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -40,31 +37,18 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 	}
 
 	private Stack<T> stack = new Stack<>();
-	private Collection<Consumer<T>> pushObservers = new LinkedList<>();
-	private Collection<Consumer<T>> popObservers = new LinkedList<>();
-	private Collection<Runnable> changeObservers = new LinkedList<>();
 	private ClassMapper mapper;
 
 	public StackFSM(ClassMapper mapper) {
 		this.mapper = mapper;
 	}
 	
-	public StackFSM<T> addPushObserver(Consumer<T> observer) {
-		pushObservers.add(observer);
-		return this;
+	public void reset() {
+		// Remove all state
+		stack.clear();
 	}
 	
-	public StackFSM<T> addPopObserver(Consumer<T> observer) {
-		popObservers.add(observer);
-		return this;
-	}
-	
-	public StackFSM<T> addChangeObserver(Runnable observer) {
-		changeObservers.add(observer);
-		return this;
-	}
-	
-	private void push(T state) {
+	public void pushState(T state) {
 		// Give the state a reference to the basin so they can change state and such
 		state.fsm = this;
 		// If there is already a state in the stack, hook up substate/superstate
@@ -77,33 +61,15 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 		stack.add(state);
 	}
 	
-	private void pop(T state) {
+	public void popState(T state) {
 		T popped = null;
 		while (!popped.equals(state))
 			popped = stack.pop();
 	}
 
-	public void pushState(T state) {
-		push(state);
-		// Notify observers
-		pushObservers.forEach((observer) -> observer.accept(state));
-		changeObservers.forEach(Runnable::run);
-	}
-
-	public void popState(T state) {
-		pop(state);
-		// Notify observers
-		popObservers.forEach((observer) -> observer.accept(state));
-		changeObservers.forEach(Runnable::run);
-	}
-
 	public void swapState(T oldState, T newState) {
-		pop(oldState);
-		push(newState);
-		// Notify observers
-		pushObservers.forEach((observer) -> observer.accept(newState));
-		popObservers.forEach((observer) -> observer.accept(oldState));
-		changeObservers.forEach(Runnable::run);
+		popState(oldState);
+		pushState(newState);
 	}
 
 	public T getState() {
@@ -126,7 +92,7 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 	public void deserializeNBT(ListNBT nbt) {
 		// Convert each list element to a new state, and add them to our stack
 		// Clear stack first
-		stack.clear();
+		reset();
 		for (INBT elementNBT : nbt) {
 			CompoundNBT objectNBT = (CompoundNBT) elementNBT;
 			T state = NBTHelper.readPolymorphic(objectNBT, mapper);
