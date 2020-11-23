@@ -89,10 +89,6 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	public void render(BasinTile basin, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer renderer,
 			int combinedLightIn, int combinedOverlayIn) {
 		
-		// Calculate water color
-		RGBColor waterColor = basin.getState().accept(waterColorCalculator);
-		
-		// Don't render anything if basin is empty
 		BasinStateVisitor<Void> blockRenderer = new BasinStateVisitor<Void>() {
 
 			@Override
@@ -101,8 +97,8 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 				int stage = (int) Math
 						.floor((float) STAGES * (float) state.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
 				CuboidModel model = fluidModels[stage];
-				// Calculate water color as "base" color
-				RGBAColor color = new RGBAColor(waterColor, 1.0f);
+				// Calculate water color
+				RGBAColor color = new RGBAColor(basin.getState().accept(waterColorCalculator), 1.0f);
 				// Allocate buffer
 				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 				// Render model
