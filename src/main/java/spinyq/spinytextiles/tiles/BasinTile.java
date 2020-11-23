@@ -42,12 +42,16 @@ import spinyq.spinytextiles.utility.textile.IDyeProvider;
  * @author Elijah Hilty
  *
  */
+// TODO Notify updates so that we can sync client, also mark dirty
 public class BasinTile extends TileEntity {
 
 	public static final int MAX_WATER_LEVEL = 8;
 	public static final float LYE_VALUE = 0.25f;
 
-	private static final String STATE_TAG = "State";
+	private static final String STATE_TAG = "State",
+			WATER_LEVEL_TAG = "Level",
+			COLOR_TAG = "Color",
+			BLEACH_LEVEL_TAG = "Bleach";
 
 	private static final ClassMapper CLASS_MAPPER = new ClassMapper(EmptyState.class, FilledState.class, DyeState.class, BleachState.class);
 
@@ -120,6 +124,7 @@ public class BasinTile extends TileEntity {
 				return true;
 			}
 
+			// TODO Simplify this
 			@Override
 			public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
 				// Check if a substate can handle the action.
@@ -136,14 +141,16 @@ public class BasinTile extends TileEntity {
 
 			@Override
 			public CompoundNBT serializeNBT() {
-				// TODO Auto-generated method stub
-				return null;
+				// Write water level
+				CompoundNBT result = new CompoundNBT();
+				result.putInt(WATER_LEVEL_TAG, waterLevel);
+				return result;
 			}
 
 			@Override
 			public void deserializeNBT(CompoundNBT nbt) {
-				// TODO Auto-generated method stub
-
+				// Read water level
+				waterLevel = nbt.getInt(WATER_LEVEL_TAG);
 			}
 
 			@Override
@@ -187,7 +194,6 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	// TODO Simplify this
 	public static abstract class SaturatedState extends BasinState {
 
 		public abstract boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
@@ -267,14 +273,16 @@ public class BasinTile extends TileEntity {
 
 		@Override
 		public CompoundNBT serializeNBT() {
-			// TODO Auto-generated method stub
-			return null;
+			// Write color
+			CompoundNBT result = new CompoundNBT();
+			result.putInt(COLOR_TAG, color.toInt());
+			return result;
 		}
 
 		@Override
 		public void deserializeNBT(CompoundNBT nbt) {
-			// TODO Auto-generated method stub
-
+			// Read color
+			color = new RYBKColor().fromInt(nbt.getInt(COLOR_TAG));
 		}
 
 		@Override
@@ -342,14 +350,16 @@ public class BasinTile extends TileEntity {
 
 		@Override
 		public CompoundNBT serializeNBT() {
-			// TODO Auto-generated method stub
-			return null;
+			// Write bleach level
+			CompoundNBT result = new CompoundNBT();
+			result.putFloat(BLEACH_LEVEL_TAG, bleachLevel);
+			return result;
 		}
 
 		@Override
 		public void deserializeNBT(CompoundNBT nbt) {
-			// TODO Auto-generated method stub
-
+			// Read bleach level
+			bleachLevel = nbt.getFloat(BLEACH_LEVEL_TAG);
 		}
 
 		@Override
