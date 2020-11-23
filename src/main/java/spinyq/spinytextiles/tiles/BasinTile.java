@@ -47,9 +47,7 @@ public class BasinTile extends TileEntity {
 	public static final int MAX_WATER_LEVEL = 8;
 	public static final float DYE_MULTIPLIER = 0.25f, BLEACH_MULTIPLIER = 0.25f;
 
-	private static final String STATE_TAG = "State",
-			WATER_LEVEL_TAG = "Level",
-			COLOR_TAG = "Color",
+	private static final String STATE_TAG = "State", WATER_LEVEL_TAG = "Level", COLOR_TAG = "Color",
 			BLEACH_LEVEL_TAG = "Bleach";
 
 	public static interface BasinStateVisitor<T> {
@@ -75,42 +73,32 @@ public class BasinTile extends TileEntity {
 	public abstract class BasinState extends State<BasinState> {
 
 		public abstract ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
+
 		public abstract <T> T accept(BasinStateVisitor<T> visitor);
-		
+
 	}
 
 	public abstract class ConsumerState extends BasinState {
-	
+
 		public abstract boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
-	
-		public abstract ActionResultType finishInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
-	
-		@Override
-		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-			// If we can consume, return success
-			if (consumeInteraction(player, handIn, hit))
-				return ActionResultType.SUCCESS;
-			else
-				return finishInteraction(player, handIn, hit);
-		}
-	
+
 	}
 
 	public class FilledState extends BasinState {
-	
+
 		private Set<Supplier<ConsumerState>> substateSuppliers = ImmutableSet.of(DyeState::new, BleachState::new);
-	
+
 		// Water level starts out at maximum
 		private int waterLevel = MAX_WATER_LEVEL;
-	
+
 		public double getWaterHeight() {
 			return 0.2 + ((double) waterLevel / (double) MAX_WATER_LEVEL) * 0.875;
 		}
-	
+
 		public int getWaterLevel() {
 			return waterLevel;
 		}
-	
+
 		public boolean drain(int amount) {
 			// Fail if amount is greater than water level
 			if (amount > waterLevel)
@@ -123,7 +111,7 @@ public class BasinTile extends TileEntity {
 			BasinTile.this.notifyChange();
 			return true;
 		}
-	
+
 		// TODO Could possibly simplify this
 		@Override
 		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
@@ -139,7 +127,7 @@ public class BasinTile extends TileEntity {
 			}
 			return ActionResultType.PASS;
 		}
-	
+
 		@Override
 		public CompoundNBT serializeNBT() {
 			// Write water level
@@ -147,18 +135,18 @@ public class BasinTile extends TileEntity {
 			result.putInt(WATER_LEVEL_TAG, waterLevel);
 			return result;
 		}
-	
+
 		@Override
 		public void deserializeNBT(CompoundNBT nbt) {
 			// Read water level
 			waterLevel = nbt.getInt(WATER_LEVEL_TAG);
 		}
-	
+
 		@Override
 		public <T> T accept(BasinStateVisitor<T> visitor) {
 			return visitor.visit(this);
 		}
-	
+
 	}
 
 	public class EmptyState extends BasinState {
@@ -176,8 +164,8 @@ public class BasinTile extends TileEntity {
 						player.setHeldItem(handIn, new ItemStack(Items.BUCKET));
 					}
 					fsm.swapState(this, new FilledState());
-					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
-							SoundCategory.BLOCKS, 1.0F, 1.0F);
+					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos,
+							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
 					BasinTile.this.notifyChange();
 				}
 
@@ -211,7 +199,8 @@ public class BasinTile extends TileEntity {
 		@Override
 		public boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
 			// Basin must be heated to consume dye
-			if (!BasinTile.this.isHeated()) return false;
+			if (!BasinTile.this.isHeated())
+				return false;
 			// Get itemstack and item
 			ItemStack itemStack = player.getHeldItem(handIn);
 			Item item = itemStack.getItem();
@@ -241,7 +230,10 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public ActionResultType finishInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+			// If we can consume, return success
+			if (consumeInteraction(player, handIn, hit))
+				return ActionResultType.SUCCESS;
 			// Get itemstack and item
 			ItemStack itemStack = player.getHeldItem(handIn);
 			Item item = itemStack.getItem();
@@ -251,9 +243,9 @@ public class BasinTile extends TileEntity {
 				ContainedItemStack<PlayerInventory> containedStack = new ContainedItemStack<>(itemStack,
 						player.inventory);
 				if (dyeable.dye(containedStack, this))
-					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
-							SoundCategory.BLOCKS, 1.0F, 1.0F);
-					return ActionResultType.SUCCESS;
+					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos,
+							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
+				return ActionResultType.SUCCESS;
 			}
 			// TODO Glowstone saturation modifier
 			return ActionResultType.PASS;
@@ -297,7 +289,8 @@ public class BasinTile extends TileEntity {
 		@Override
 		public boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
 			// Basin must be heated to add more bleach
-			if (!BasinTile.this.isHeated()) return false;
+			if (!BasinTile.this.isHeated())
+				return false;
 			// Get itemstack and item
 			ItemStack itemStack = player.getHeldItem(handIn);
 			Item item = itemStack.getItem();
@@ -324,7 +317,10 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public ActionResultType finishInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+			// If we can consume, return success
+			if (consumeInteraction(player, handIn, hit))
+				return ActionResultType.SUCCESS;
 			// Get itemstack and item
 			ItemStack itemStack = player.getHeldItem(handIn);
 			Item item = itemStack.getItem();
@@ -334,9 +330,9 @@ public class BasinTile extends TileEntity {
 				ContainedItemStack<PlayerInventory> containedStack = new ContainedItemStack<>(itemStack,
 						player.inventory);
 				if (bleachable.bleach(containedStack, this))
-					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
-							SoundCategory.BLOCKS, 1.0F, 1.0F);
-					return ActionResultType.SUCCESS;
+					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos,
+							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
+				return ActionResultType.SUCCESS;
 			}
 			return ActionResultType.PASS;
 		}
@@ -367,15 +363,13 @@ public class BasinTile extends TileEntity {
 	public BasinTile() {
 		super(ModTiles.BASIN_TILE.get());
 		// Construct fsm and push some initial state
-		ClassMapper mapper = new ClassMapper()
-				.withClass(EmptyState.class, EmptyState::new)
-				.withClass(FilledState.class, FilledState::new)
-				.withClass(DyeState.class, DyeState::new)
+		ClassMapper mapper = new ClassMapper().withClass(EmptyState.class, EmptyState::new)
+				.withClass(FilledState.class, FilledState::new).withClass(DyeState.class, DyeState::new)
 				.withClass(BleachState.class, BleachState::new);
 		fsm = new StackFSM<>(mapper);
 		fsm.pushState(new EmptyState());
 	}
-	
+
 	/**
 	 * Syncs data with clients and marks this tile to be saved.
 	 */
@@ -388,13 +382,14 @@ public class BasinTile extends TileEntity {
 	public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
 		return fsm.getState().onInteract(player, handIn, hit);
 	}
-	
+
 	public <T> T accept(BasinStateVisitor<T> visitor) {
 		return fsm.getState().accept(visitor);
 	}
-	
+
 	/**
 	 * Whether the basin is heated. Heat is required to dye and bleach objects.
+	 * 
 	 * @return
 	 */
 	public boolean isHeated() {
