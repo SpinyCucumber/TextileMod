@@ -22,6 +22,7 @@ import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
 import spinyq.spinytextiles.tiles.BasinTile.BleachState;
 import spinyq.spinytextiles.tiles.BasinTile.FilledState;
+import spinyq.spinytextiles.utility.BlockInteraction;
 
 public class BasinBlock extends Block {
 
@@ -40,7 +41,7 @@ public class BasinBlock extends Block {
 		TileEntity tile = world.getTileEntity(pos);
 		// Pass logic over to tile entity
 		if (tile instanceof BasinTile) {
-			return ((BasinTile) tile).onInteract(player, handIn, hit);
+			return ((BasinTile) tile).onInteract(new BlockInteraction(state, world, player, handIn, hit));
 		}
 		return ActionResultType.PASS;
 	}

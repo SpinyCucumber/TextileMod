@@ -10,7 +10,6 @@ import net.minecraft.block.CampfireBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.DyeItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
@@ -18,16 +17,15 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraftforge.common.util.Constants;
 import spinyq.spinytextiles.ModTags;
 import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.IBleachableItem;
 import spinyq.spinytextiles.items.IDyeableItem;
+import spinyq.spinytextiles.utility.BlockInteraction;
 import spinyq.spinytextiles.utility.ContainedItemStack;
 import spinyq.spinytextiles.utility.NBTHelper.ClassMapper;
 import spinyq.spinytextiles.utility.StackFSM;
@@ -72,7 +70,7 @@ public class BasinTile extends TileEntity {
 
 	public abstract class BasinState extends State<BasinState> {
 
-		public abstract ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
+		public abstract ActionResultType onInteract(BlockInteraction interaction);
 
 		public abstract <T> T accept(BasinStateVisitor<T> visitor);
 
@@ -80,7 +78,7 @@ public class BasinTile extends TileEntity {
 
 	public abstract class ConsumerState extends BasinState {
 
-		public abstract boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
+		public abstract boolean consumeInteraction(BlockInteraction interaction);
 
 	}
 
@@ -112,14 +110,13 @@ public class BasinTile extends TileEntity {
 			return true;
 		}
 
-		// TODO Could possibly simplify this
 		@Override
-		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+		public ActionResultType onInteract(BlockInteraction interaction) {
 			// Check if a substate can handle the action.
 			// If they can, push the new state
 			for (Supplier<ConsumerState> supplier : substateSuppliers) {
 				ConsumerState subState = supplier.get();
-				if (subState.consumeInteraction(player, handIn, hit)) {
+				if (subState.consumeInteraction(interaction)) {
 					fsm.pushState(subState);
 					BasinTile.this.notifyChange();
 					return ActionResultType.SUCCESS;
@@ -152,16 +149,13 @@ public class BasinTile extends TileEntity {
 	public class EmptyState extends BasinState {
 
 		@Override
-		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-			// Get itemstack and item
-			ItemStack itemstack = player.getHeldItem(handIn);
-			Item item = itemstack.getItem();
+		public ActionResultType onInteract(BlockInteraction interaction) {
 			// If player is holding a water bucket, empty the bucket and fill the cauldron.
-			if (item == Items.WATER_BUCKET) {
+			if (interaction.item == Items.WATER_BUCKET) {
 
 				if (!BasinTile.this.world.isRemote) {
-					if (!player.abilities.isCreativeMode) {
-						player.setHeldItem(handIn, new ItemStack(Items.BUCKET));
+					if (!interaction.player.abilities.isCreativeMode) {
+						interaction.player.setHeldItem(interaction.hand, new ItemStack(Items.BUCKET));
 					}
 					fsm.swapState(this, new FilledState());
 					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos,
@@ -197,17 +191,14 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+		public boolean consumeInteraction(BlockInteraction interaction) {
 			// Basin must be heated to consume dye
 			if (!BasinTile.this.isHeated())
 				return false;
-			// Get itemstack and item
-			ItemStack itemStack = player.getHeldItem(handIn);
-			Item item = itemStack.getItem();
-			if (!(item instanceof DyeItem))
+			if (!(interaction.item instanceof DyeItem))
 				return false;
 			// Retrieve the color of the dye
-			DyeItem dye = (DyeItem) item;
+			DyeItem dye = (DyeItem) interaction.item;
 			RYBKColor dyeColor = new RYBKColor().fromDye(dye.getDyeColor());
 			// If new color didn't change at all, don't accept dye
 			RYBKColor newColor = color.plus(dyeColor.scaledBy(DYE_MULTIPLIER)).clamp();
@@ -216,8 +207,8 @@ public class BasinTile extends TileEntity {
 
 			if (!BasinTile.this.world.isRemote) {
 				// Consume one item if player is not in creative
-				if (!player.abilities.isCreativeMode) {
-					itemStack.shrink(1);
+				if (!interaction.player.abilities.isCreativeMode) {
+					interaction.itemstack.shrink(1);
 				}
 				// Change the color
 				color = newColor;
@@ -230,18 +221,15 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+		public ActionResultType onInteract(BlockInteraction interaction) {
 			// If we can consume, return success
-			if (consumeInteraction(player, handIn, hit))
+			if (consumeInteraction(interaction))
 				return ActionResultType.SUCCESS;
-			// Get itemstack and item
-			ItemStack itemStack = player.getHeldItem(handIn);
-			Item item = itemStack.getItem();
 			// If item is dyeable, dye it
-			if (item instanceof IDyeableItem) {
-				IDyeableItem dyeable = (IDyeableItem) item;
-				ContainedItemStack<PlayerInventory> containedStack = new ContainedItemStack<>(itemStack,
-						player.inventory);
+			if (interaction.item instanceof IDyeableItem) {
+				IDyeableItem dyeable = (IDyeableItem) interaction.item;
+				ContainedItemStack<PlayerInventory> containedStack = new ContainedItemStack<>(interaction.itemstack,
+						interaction.player.inventory);
 				if (dyeable.dye(containedStack, this))
 					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos,
 							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
@@ -287,14 +275,11 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+		public boolean consumeInteraction(BlockInteraction interaction) {
 			// Basin must be heated to add more bleach
 			if (!BasinTile.this.isHeated())
 				return false;
-			// Get itemstack and item
-			ItemStack itemStack = player.getHeldItem(handIn);
-			Item item = itemStack.getItem();
-			if (!item.getTags().contains(ModTags.LYE_TAG))
+			if (!interaction.item.getTags().contains(ModTags.LYE_TAG))
 				return false;
 			// If bleach level didn't change at all, don't accept bleach
 			float newBleachLevel = Math.min(bleachLevel + BLEACH_MULTIPLIER, 1.0f);
@@ -303,8 +288,8 @@ public class BasinTile extends TileEntity {
 
 			if (!BasinTile.this.world.isRemote) {
 				// Consume one item if player is not in creative
-				if (!player.abilities.isCreativeMode) {
-					itemStack.shrink(1);
+				if (!interaction.player.abilities.isCreativeMode) {
+					interaction.itemstack.shrink(1);
 				}
 				// Change the bleach level
 				bleachLevel = newBleachLevel;
@@ -317,18 +302,15 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+		public ActionResultType onInteract(BlockInteraction interaction) {
 			// If we can consume, return success
-			if (consumeInteraction(player, handIn, hit))
+			if (consumeInteraction(interaction))
 				return ActionResultType.SUCCESS;
-			// Get itemstack and item
-			ItemStack itemStack = player.getHeldItem(handIn);
-			Item item = itemStack.getItem();
 			// If item is bleachable, bleach it
-			if (item instanceof IDyeableItem) {
-				IBleachableItem bleachable = (IBleachableItem) item;
-				ContainedItemStack<PlayerInventory> containedStack = new ContainedItemStack<>(itemStack,
-						player.inventory);
+			if (interaction.item instanceof IDyeableItem) {
+				IBleachableItem bleachable = (IBleachableItem) interaction.item;
+				ContainedItemStack<PlayerInventory> containedStack = new ContainedItemStack<>(interaction.itemstack,
+						interaction.player.inventory);
 				if (bleachable.bleach(containedStack, this))
 					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos,
 							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
@@ -379,8 +361,8 @@ public class BasinTile extends TileEntity {
 		markDirty();
 	}
 
-	public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-		return fsm.getState().onInteract(player, handIn, hit);
+	public ActionResultType onInteract(BlockInteraction interaction) {
+		return fsm.getState().onInteract(interaction);
 	}
 
 	public <T> T accept(BasinStateVisitor<T> visitor) {
