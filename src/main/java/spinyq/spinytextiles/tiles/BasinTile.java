@@ -79,9 +79,26 @@ public class BasinTile extends TileEntity {
 		
 	}
 
+	public abstract class ConsumerState extends BasinState {
+	
+		public abstract boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
+	
+		public abstract ActionResultType finishInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
+	
+		@Override
+		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+			// If we can consume, return success
+			if (consumeInteraction(player, handIn, hit))
+				return ActionResultType.SUCCESS;
+			else
+				return finishInteraction(player, handIn, hit);
+		}
+	
+	}
+
 	public class FilledState extends BasinState {
 	
-		private Set<Supplier<SaturatedState>> substateSuppliers = ImmutableSet.of(DyeState::new, BleachState::new);
+		private Set<Supplier<ConsumerState>> substateSuppliers = ImmutableSet.of(DyeState::new, BleachState::new);
 	
 		// Water level starts out at maximum
 		private int waterLevel = MAX_WATER_LEVEL;
@@ -112,8 +129,8 @@ public class BasinTile extends TileEntity {
 		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
 			// Check if a substate can handle the action.
 			// If they can, push the new state
-			for (Supplier<SaturatedState> supplier : substateSuppliers) {
-				SaturatedState subState = supplier.get();
+			for (Supplier<ConsumerState> supplier : substateSuppliers) {
+				ConsumerState subState = supplier.get();
 				if (subState.consumeInteraction(player, handIn, hit)) {
 					fsm.pushState(subState);
 					BasinTile.this.notifyChange();
@@ -177,24 +194,7 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	public abstract class SaturatedState extends BasinState {
-
-		public abstract boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
-
-		public abstract ActionResultType finishInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
-
-		@Override
-		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-			// If we can consume, return success
-			if (consumeInteraction(player, handIn, hit))
-				return ActionResultType.SUCCESS;
-			else
-				return finishInteraction(player, handIn, hit);
-		}
-
-	}
-
-	public class DyeState extends SaturatedState implements IDyeProvider {
+	public class DyeState extends ConsumerState implements IDyeProvider {
 
 		private RYBKColor color = new RYBKColor();
 
@@ -280,7 +280,7 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	public class BleachState extends SaturatedState implements IBleachProvider {
+	public class BleachState extends ConsumerState implements IBleachProvider {
 
 		private float bleachLevel = 0.0f;
 
