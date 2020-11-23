@@ -1,7 +1,6 @@
 package spinyq.spinytextiles.tiles;
 
 import java.util.Set;
-import java.util.Stack;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableSet;
@@ -13,8 +12,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.TileEntity;
@@ -23,15 +20,14 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraftforge.common.util.INBTSerializable;
 import spinyq.spinytextiles.ModTags;
 import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.items.IBleachableItem;
 import spinyq.spinytextiles.items.IDyeableItem;
-import spinyq.spinytextiles.tiles.BasinTile.BasinState.FilledState;
 import spinyq.spinytextiles.utility.ContainedItemStack;
-import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.NBTHelper.ClassMapper;
+import spinyq.spinytextiles.utility.StackFSM;
+import spinyq.spinytextiles.utility.StackFSM.State;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 import spinyq.spinytextiles.utility.textile.IBleachProvider;
 import spinyq.spinytextiles.utility.textile.IDyeProvider;
@@ -75,94 +71,77 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	public static abstract class BasinState implements INBTSerializable<CompoundNBT> {
-
-		protected BasinTile basin;
-		protected BasinState superState, subState;
+	public static abstract class BasinState extends State<BasinState> {
 
 		public abstract ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
-
 		public abstract <T> T accept(BasinStateVisitor<T> visitor);
-
-		public BasinState getSuperState() {
-			return superState;
-		}
-
-		@Override
-		public CompoundNBT serializeNBT() {
-			return new CompoundNBT();
-		}
-
-		@Override
-		public void deserializeNBT(CompoundNBT nbt) {
-		}
-
-		public static class FilledState extends BasinState {
-
-			private Set<Supplier<SaturatedState>> substateSuppliers = ImmutableSet.of(DyeState::new, BleachState::new);
-
-			// Water level starts out at maximum
-			private int waterLevel = MAX_WATER_LEVEL;
-
-			public double getWaterHeight() {
-				return 0.2 + ((double) waterLevel / (double) MAX_WATER_LEVEL) * 0.875;
-			}
-
-			public int getWaterLevel() {
-				return waterLevel;
-			}
-
-			public boolean drain(int amount) {
-				// Fail if amount is greater than water level
-				if (amount > waterLevel)
-					return false;
-				// Subtract amount from water level
-				// If water level reaches zero, transition to empty state
-				waterLevel -= amount;
-				if (waterLevel == 0)
-					basin.swapState(this, new EmptyState());
-				return true;
-			}
-
-			// TODO Simplify this
-			@Override
-			public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-				// Check if a substate can handle the action.
-				// If they can, push the new state
-				for (Supplier<SaturatedState> supplier : substateSuppliers) {
-					SaturatedState subState = supplier.get();
-					if (subState.consumeInteraction(player, handIn, hit)) {
-						basin.pushState(subState);
-						return ActionResultType.SUCCESS;
-					}
-				}
-				return ActionResultType.PASS;
-			}
-
-			@Override
-			public CompoundNBT serializeNBT() {
-				// Write water level
-				CompoundNBT result = new CompoundNBT();
-				result.putInt(WATER_LEVEL_TAG, waterLevel);
-				return result;
-			}
-
-			@Override
-			public void deserializeNBT(CompoundNBT nbt) {
-				// Read water level
-				waterLevel = nbt.getInt(WATER_LEVEL_TAG);
-			}
-
-			@Override
-			public <T> T accept(BasinStateVisitor<T> visitor) {
-				return visitor.visit(this);
-			}
-
-		}
-
+		
 	}
 
-	public static class EmptyState extends BasinState {
+	public class FilledState extends BasinState {
+	
+		private Set<Supplier<SaturatedState>> substateSuppliers = ImmutableSet.of(DyeState::new, BleachState::new);
+	
+		// Water level starts out at maximum
+		private int waterLevel = MAX_WATER_LEVEL;
+	
+		public double getWaterHeight() {
+			return 0.2 + ((double) waterLevel / (double) MAX_WATER_LEVEL) * 0.875;
+		}
+	
+		public int getWaterLevel() {
+			return waterLevel;
+		}
+	
+		public boolean drain(int amount) {
+			// Fail if amount is greater than water level
+			if (amount > waterLevel)
+				return false;
+			// Subtract amount from water level
+			// If water level reaches zero, transition to empty state
+			waterLevel -= amount;
+			if (waterLevel == 0)
+				fsm.swapState(this, new EmptyState());
+			return true;
+		}
+	
+		// TODO Simplify this
+		@Override
+		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+			// Check if a substate can handle the action.
+			// If they can, push the new state
+			for (Supplier<SaturatedState> supplier : substateSuppliers) {
+				SaturatedState subState = supplier.get();
+				if (subState.consumeInteraction(player, handIn, hit)) {
+					fsm.pushState(subState);
+					return ActionResultType.SUCCESS;
+				}
+			}
+			return ActionResultType.PASS;
+		}
+	
+		@Override
+		public CompoundNBT serializeNBT() {
+			// Write water level
+			CompoundNBT result = new CompoundNBT();
+			result.putInt(WATER_LEVEL_TAG, waterLevel);
+			return result;
+		}
+	
+		@Override
+		public void deserializeNBT(CompoundNBT nbt) {
+			// Read water level
+			waterLevel = nbt.getInt(WATER_LEVEL_TAG);
+		}
+	
+		@Override
+		public <T> T accept(BasinStateVisitor<T> visitor) {
+			return visitor.visit(this);
+		}
+	
+	}
+
+	public class EmptyState extends BasinState {
 
 		@Override
 		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
@@ -172,12 +151,12 @@ public class BasinTile extends TileEntity {
 			// If player is holding a water bucket, empty the bucket and fill the cauldron.
 			if (item == Items.WATER_BUCKET) {
 
-				if (!basin.world.isRemote) {
+				if (!BasinTile.this.world.isRemote) {
 					if (!player.abilities.isCreativeMode) {
 						player.setHeldItem(handIn, new ItemStack(Items.BUCKET));
 					}
-					basin.swapState(this, new FilledState());
-					basin.world.playSound((PlayerEntity) null, basin.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+					fsm.swapState(this, new FilledState());
+					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
 							SoundCategory.BLOCKS, 1.0F, 1.0F);
 				}
 
@@ -211,7 +190,7 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	public static class DyeState extends SaturatedState implements IDyeProvider {
+	public class DyeState extends SaturatedState implements IDyeProvider {
 
 		private RYBKColor color = new RYBKColor();
 
@@ -222,7 +201,7 @@ public class BasinTile extends TileEntity {
 
 		@Override
 		public boolean drain(int amount) {
-			return ((FilledState) getSuperState()).drain(amount);
+			return ((FilledState) superState).drain(amount);
 		}
 
 		@Override
@@ -240,14 +219,14 @@ public class BasinTile extends TileEntity {
 			if (newColor.equals(color))
 				return false;
 
-			if (!basin.world.isRemote) {
+			if (!BasinTile.this.world.isRemote) {
 				// Consume one item if player is not in creative
 				if (!player.abilities.isCreativeMode) {
 					itemStack.shrink(1);
 				}
 				// Change the color
 				color = newColor;
-				basin.world.playSound((PlayerEntity) null, basin.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+				BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
 						SoundCategory.BLOCKS, 1.0F, 1.0F);
 			}
 
@@ -292,7 +271,7 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	public static class BleachState extends SaturatedState implements IBleachProvider {
+	public class BleachState extends SaturatedState implements IBleachProvider {
 
 		private float bleachLevel = 0.0f;
 
@@ -303,7 +282,7 @@ public class BasinTile extends TileEntity {
 
 		@Override
 		public boolean drain(int amount) {
-			return ((FilledState) getSuperState()).drain(amount);
+			return ((FilledState) superState).drain(amount);
 		}
 
 		@Override
@@ -318,14 +297,14 @@ public class BasinTile extends TileEntity {
 			if (newBleachLevel == bleachLevel)
 				return false;
 
-			if (!basin.world.isRemote) {
+			if (!BasinTile.this.world.isRemote) {
 				// Consume one item if player is not in creative
 				if (!player.abilities.isCreativeMode) {
 					itemStack.shrink(1);
 				}
 				// Change the bleach level
 				bleachLevel = newBleachLevel;
-				basin.world.playSound((PlayerEntity) null, basin.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+				BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
 						SoundCategory.BLOCKS, 1.0F, 1.0F);
 			}
 
@@ -369,65 +348,28 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	private Stack<BasinState> stack = new Stack<>();
-
-	public void pushState(BasinState state) {
-		// Give the state a reference to the basin so they can change state and such
-		state.basin = this;
-		// If there is already a state in the stack, hook up substate/superstate
-		// references
-		if (!stack.empty()) {
-			BasinState superState = stack.peek();
-			superState.subState = state;
-			state.superState = superState;
-		}
-		stack.add(state);
-	}
-
-	public void popState(BasinState state) {
-		BasinState popped = null;
-		while (!popped.equals(state))
-			popped = stack.pop();
-	}
-
-	public void swapState(BasinState oldState, BasinState newState) {
-		popState(oldState);
-		pushState(newState);
-	}
-
-	public BasinState getState() {
-		return stack.peek();
-	}
+	private StackFSM<BasinState> fsm = new StackFSM<>(CLASS_MAPPER);
 
 	public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-		return getState().onInteract(player, handIn, hit);
+		return fsm.getState().onInteract(player, handIn, hit);
+	}
+	
+	public <T> T accept(BasinStateVisitor<T> visitor) {
+		return fsm.getState().accept(visitor);
 	}
 
 	@Override
 	public void read(CompoundNBT compound) {
 		super.read(compound);
 		// Retrieve a list NBT
-		ListNBT listNBT = compound.getList(STATE_TAG, 10);
-		// Convert each list element to a new state, and add them to our stack
-		for (INBT elementNBT : listNBT) {
-			CompoundNBT objectNBT = (CompoundNBT) elementNBT;
-			BasinState state = NBTHelper.readPolymorphic(objectNBT, CLASS_MAPPER);
-			pushState(state);
-		}
+		fsm.deserializeNBT(compound.getList(STATE_TAG, 10));
 	}
 
 	@Override
 	public CompoundNBT write(CompoundNBT compound) {
 		CompoundNBT result = super.write(compound);
 		// Create a new ListNBT
-		ListNBT listNBT = new ListNBT();
-		// Write each state to the list
-		for (BasinState state : stack) {
-			CompoundNBT objectNBT = NBTHelper.writePolymorphic(state, CLASS_MAPPER);
-			listNBT.add(objectNBT);
-		}
-		// Set value and return
-		result.put(STATE_TAG, listNBT);
+		result.put(STATE_TAG, fsm.serializeNBT());
 		return result;
 	}
 
@@ -458,7 +400,7 @@ public class BasinTile extends TileEntity {
 	public BasinTile() {
 		super(ModTiles.BASIN_TILE.get());
 		// Push some initial state
-		pushState(new EmptyState());
+		fsm.pushState(new EmptyState());
 	}
 
 }

@@ -16,10 +16,10 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.BasinTile;
-import spinyq.spinytextiles.tiles.BasinTile.BasinState.FilledState;
 import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
 import spinyq.spinytextiles.tiles.BasinTile.BleachState;
 import spinyq.spinytextiles.tiles.BasinTile.DyeState;
+import spinyq.spinytextiles.tiles.BasinTile.FilledState;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RGBColor;
 
@@ -38,7 +38,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 		@Override
 		public RGBColor visit(DyeState state) {
-			return state.getColor().toRGB(new RGBColor(), WATER_COLOR);
+			return state.getColor().toRGB(new RGBColor(), state.getSuperState().accept(this));
 		}
 
 		@Override
@@ -98,7 +98,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 						.floor((float) STAGES * (float) state.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
 				CuboidModel model = fluidModels[stage];
 				// Calculate water color
-				RGBAColor color = new RGBAColor(basin.getState().accept(COLOR_CALCULATOR), 1.0f);
+				RGBAColor color = new RGBAColor(basin.accept(COLOR_CALCULATOR), 1.0f);
 				// Allocate buffer
 				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 				// Render model
@@ -118,7 +118,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 			
 		};
 		
-		basin.getState().accept(blockRenderer);
+		basin.accept(blockRenderer);
 	}
 
 }

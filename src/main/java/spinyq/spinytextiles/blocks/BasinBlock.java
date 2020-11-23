@@ -19,9 +19,9 @@ import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import spinyq.spinytextiles.tiles.BasinTile;
-import spinyq.spinytextiles.tiles.BasinTile.BasinState.FilledState;
 import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
 import spinyq.spinytextiles.tiles.BasinTile.BleachState;
+import spinyq.spinytextiles.tiles.BasinTile.FilledState;
 
 public class BasinBlock extends Block {
 
@@ -72,7 +72,7 @@ public class BasinBlock extends Block {
 			};
 
 			// Visit basin state
-			basin.getState().accept(blockAnimator);
+			basin.accept(blockAnimator);
 		}
 	}
 
