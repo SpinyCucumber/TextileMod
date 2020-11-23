@@ -21,7 +21,6 @@ import net.minecraft.util.SoundEvents;
 import net.minecraftforge.common.util.Constants;
 import spinyq.spinytextiles.ModTags;
 import spinyq.spinytextiles.ModTiles;
-import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.IBleachableItem;
 import spinyq.spinytextiles.items.IDyeableItem;
 import spinyq.spinytextiles.utility.BlockInteraction;
@@ -375,8 +374,6 @@ public class BasinTile extends TileEntity {
 
 	@Override
 	public void read(CompoundNBT compound) {
-		// DEBUG
-		TextileMod.LOGGER.info("BasinTile read... compound: {}", compound);
 		super.read(compound);
 		// Retrieve a list NBT
 		fsm.deserializeNBT(compound.getList(STATE_TAG, 10));
