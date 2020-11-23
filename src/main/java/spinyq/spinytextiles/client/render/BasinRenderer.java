@@ -60,7 +60,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 		model.minZ = 0.125 - .01;
 
 		model.maxX = 0.875 + .01;
-		model.maxY = 0.2 + ((float) stage / (float) STAGES) * 0.875 + .01;
+		model.maxY = 0.2 + ((float) stage / (float) STAGES) * 0.75 + .01;
 		model.maxZ = 0.875 + .01;
 		// Done
 		return model;

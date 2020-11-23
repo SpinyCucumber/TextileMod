@@ -24,6 +24,7 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraftforge.common.util.Constants;
 import spinyq.spinytextiles.ModTags;
 import spinyq.spinytextiles.ModTiles;
+import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.IBleachableItem;
 import spinyq.spinytextiles.items.IDyeableItem;
 import spinyq.spinytextiles.utility.ContainedItemStack;
@@ -247,6 +248,8 @@ public class BasinTile extends TileEntity {
 				ContainedItemStack<PlayerInventory> containedStack = new ContainedItemStack<>(itemStack,
 						player.inventory);
 				if (dyeable.dye(containedStack, this))
+					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+							SoundCategory.BLOCKS, 1.0F, 1.0F);
 					return ActionResultType.SUCCESS;
 			}
 			// TODO Glowstone saturation modifier
@@ -326,6 +329,8 @@ public class BasinTile extends TileEntity {
 				ContainedItemStack<PlayerInventory> containedStack = new ContainedItemStack<>(itemStack,
 						player.inventory);
 				if (bleachable.bleach(containedStack, this))
+					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+							SoundCategory.BLOCKS, 1.0F, 1.0F);
 					return ActionResultType.SUCCESS;
 			}
 			return ActionResultType.PASS;
@@ -385,6 +390,8 @@ public class BasinTile extends TileEntity {
 
 	@Override
 	public void read(CompoundNBT compound) {
+		// DEBUG
+		TextileMod.LOGGER.info("BasinTile read... compound: {}", compound);
 		super.read(compound);
 		// Retrieve a list NBT
 		fsm.deserializeNBT(compound.getList(STATE_TAG, 10));
