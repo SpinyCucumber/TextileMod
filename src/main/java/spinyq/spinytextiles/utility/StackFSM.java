@@ -42,6 +42,7 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 	private Stack<T> stack = new Stack<>();
 	private Collection<Consumer<T>> pushObservers = new LinkedList<>();
 	private Collection<Consumer<T>> popObservers = new LinkedList<>();
+	private Collection<Runnable> changeObservers = new LinkedList<>();
 	private ClassMapper mapper;
 
 	public StackFSM(ClassMapper mapper) {
@@ -57,8 +58,13 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 		popObservers.add(observer);
 		return this;
 	}
-
-	public void pushState(T state) {
+	
+	public StackFSM<T> addChangeObserver(Runnable observer) {
+		changeObservers.add(observer);
+		return this;
+	}
+	
+	private void push(T state) {
 		// Give the state a reference to the basin so they can change state and such
 		state.fsm = this;
 		// If there is already a state in the stack, hook up substate/superstate
@@ -69,21 +75,35 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 			state.superState = superState;
 		}
 		stack.add(state);
-		// Notify observers
-		pushObservers.forEach((observer) -> observer.accept(state));
 	}
-
-	public void popState(T state) {
+	
+	private void pop(T state) {
 		T popped = null;
 		while (!popped.equals(state))
 			popped = stack.pop();
+	}
+
+	public void pushState(T state) {
+		push(state);
+		// Notify observers
+		pushObservers.forEach((observer) -> observer.accept(state));
+		changeObservers.forEach(Runnable::run);
+	}
+
+	public void popState(T state) {
+		pop(state);
 		// Notify observers
 		popObservers.forEach((observer) -> observer.accept(state));
+		changeObservers.forEach(Runnable::run);
 	}
 
 	public void swapState(T oldState, T newState) {
-		popState(oldState);
-		pushState(newState);
+		pop(oldState);
+		push(newState);
+		// Notify observers
+		pushObservers.forEach((observer) -> observer.accept(newState));
+		popObservers.forEach((observer) -> observer.accept(oldState));
+		changeObservers.forEach(Runnable::run);
 	}
 
 	public T getState() {
