@@ -44,7 +44,7 @@ import spinyq.spinytextiles.utility.textile.IDyeProvider;
 public class BasinTile extends TileEntity {
 
 	public static final int MAX_WATER_LEVEL = 8;
-	public static final float LYE_VALUE = 0.25f;
+	public static final float DYE_MULTIPLIER = 0.25f, BLEACH_MULTIPLIER = 0.25f;
 
 	private static final String STATE_TAG = "State",
 			WATER_LEVEL_TAG = "Level",
@@ -218,7 +218,7 @@ public class BasinTile extends TileEntity {
 			DyeItem dye = (DyeItem) item;
 			RYBKColor dyeColor = new RYBKColor().fromDye(dye.getDyeColor());
 			// If new color didn't change at all, don't accept dye
-			RYBKColor newColor = color.plus(dyeColor).clamp();
+			RYBKColor newColor = color.plus(dyeColor.scaledBy(DYE_MULTIPLIER)).clamp();
 			if (newColor.equals(color))
 				return false;
 
@@ -299,7 +299,7 @@ public class BasinTile extends TileEntity {
 			if (!item.getTags().contains(ModTags.LYE_TAG))
 				return false;
 			// If bleach level didn't change at all, don't accept bleach
-			float newBleachLevel = Math.min(bleachLevel + LYE_VALUE, 1.0f);
+			float newBleachLevel = Math.min(bleachLevel + BLEACH_MULTIPLIER, 1.0f);
 			if (newBleachLevel == bleachLevel)
 				return false;
 
