@@ -163,7 +163,7 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 	}
 	
 	/**
-	 * Converts color into an integer of format 0xRRGGBB
+	 * Converts color into an integer of format 0xRRGGBBKK
 	 * @return
 	 */
 	public int toInt() {
@@ -176,7 +176,7 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 	}
 
 	/**
-	 * Sets this color using an integer
+	 * Sets this color using an integer of format 0xRRGGBBKK
 	 */
 	public RYBKColor fromInt(int hex)
 	{
