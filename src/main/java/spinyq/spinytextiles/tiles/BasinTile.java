@@ -8,7 +8,6 @@ import com.google.common.collect.ImmutableSet;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CampfireBlock;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.DyeItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -228,9 +227,7 @@ public class BasinTile extends TileEntity {
 			// If item is dyeable, dye it
 			if (interaction.item instanceof IDyeableItem) {
 				IDyeableItem dyeable = (IDyeableItem) interaction.item;
-				ContainedItemStack<PlayerInventory> containedStack = new ContainedItemStack<>(interaction.itemstack,
-						interaction.player.inventory);
-				if (dyeable.dye(containedStack, this))
+				if (dyeable.dye(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory), this))
 					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos,
 							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
 				return ActionResultType.SUCCESS;
@@ -309,9 +306,7 @@ public class BasinTile extends TileEntity {
 			// If item is bleachable, bleach it
 			if (interaction.item instanceof IDyeableItem) {
 				IBleachableItem bleachable = (IBleachableItem) interaction.item;
-				ContainedItemStack<PlayerInventory> containedStack = new ContainedItemStack<>(interaction.itemstack,
-						interaction.player.inventory);
-				if (bleachable.bleach(containedStack, this))
+				if (bleachable.bleach(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory), this))
 					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos,
 							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
 				return ActionResultType.SUCCESS;
