@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import com.google.common.collect.ImmutableSet;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.block.CampfireBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.DyeItem;
@@ -209,6 +210,8 @@ public class BasinTile extends TileEntity {
 
 		@Override
 		public boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+			// Basin must be heated to consume dye
+			if (!BasinTile.this.isHeated()) return false;
 			// Get itemstack and item
 			ItemStack itemStack = player.getHeldItem(handIn);
 			Item item = itemStack.getItem();
@@ -293,6 +296,8 @@ public class BasinTile extends TileEntity {
 
 		@Override
 		public boolean consumeInteraction(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+			// Basin must be heated to add more bleach
+			if (!BasinTile.this.isHeated()) return false;
 			// Get itemstack and item
 			ItemStack itemStack = player.getHeldItem(handIn);
 			Item item = itemStack.getItem();
@@ -386,6 +391,14 @@ public class BasinTile extends TileEntity {
 	
 	public <T> T accept(BasinStateVisitor<T> visitor) {
 		return fsm.getState().accept(visitor);
+	}
+	
+	/**
+	 * Whether the basin is heated. Heat is required to dye and bleach objects.
+	 * @return
+	 */
+	public boolean isHeated() {
+		return CampfireBlock.isLitCampfireInRange(world, pos, 2);
 	}
 
 	@Override
