@@ -2,7 +2,7 @@
 - [x] Spinning Wheel Block: Interacted w/ through right clicks. A spindle must be added first, then a certain amount of fiber. Afer this, right clicking spins the wheel. After a certain amount of spinning, the spindle becomes full and a thread item can be extracted. Multi-models and blockstates can be used to render varying levels of fiber and a spindle.
 - [x] Color Word Localization
 - [x] Better Mixing Algorithm
-- [x] Add Feature to boost Basin color saturation. Player can add one glowstone dust which boosts the basin's color saturation.
+- [ ] Add Feature to boost Basin color saturation. Player can add one glowstone dust which boosts the basin's color saturation.
 - [ ] Drafting Table
 - [ ] Embroidery Table?
 - [ ] Ability to dye fabric
