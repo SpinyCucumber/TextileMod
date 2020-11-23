@@ -1,6 +1,9 @@
 package spinyq.spinytextiles.utility;
 
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Stack;
+import java.util.function.Consumer;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -37,10 +40,22 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 	}
 
 	private Stack<T> stack = new Stack<>();
+	private Collection<Consumer<T>> pushObservers = new LinkedList<>();
+	private Collection<Consumer<T>> popObservers = new LinkedList<>();
 	private ClassMapper mapper;
 
 	public StackFSM(ClassMapper mapper) {
 		this.mapper = mapper;
+	}
+	
+	public StackFSM<T> addPushObserver(Consumer<T> observer) {
+		pushObservers.add(observer);
+		return this;
+	}
+	
+	public StackFSM<T> addPopObserver(Consumer<T> observer) {
+		popObservers.add(observer);
+		return this;
 	}
 
 	public void pushState(T state) {
@@ -54,12 +69,16 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 			state.superState = superState;
 		}
 		stack.add(state);
+		// Notify observers
+		pushObservers.forEach((observer) -> observer.accept(state));
 	}
 
 	public void popState(T state) {
 		T popped = null;
 		while (!popped.equals(state))
 			popped = stack.pop();
+		// Notify observers
+		popObservers.forEach((observer) -> observer.accept(state));
 	}
 
 	public void swapState(T oldState, T newState) {
@@ -86,6 +105,8 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 	@Override
 	public void deserializeNBT(ListNBT nbt) {
 		// Convert each list element to a new state, and add them to our stack
+		// Clear stack first
+		stack.clear();
 		for (INBT elementNBT : nbt) {
 			CompoundNBT objectNBT = (CompoundNBT) elementNBT;
 			T state = NBTHelper.readPolymorphic(objectNBT, mapper);

@@ -73,12 +73,14 @@ public class BasinTile extends TileEntity {
 
 	public static abstract class BasinState extends State<BasinState> {
 
+		protected BasinTile basin;
+		
 		public abstract ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit);
 		public abstract <T> T accept(BasinStateVisitor<T> visitor);
 		
 	}
 
-	public class FilledState extends BasinState {
+	public static class FilledState extends BasinState {
 	
 		private Set<Supplier<SaturatedState>> substateSuppliers = ImmutableSet.of(DyeState::new, BleachState::new);
 	
@@ -105,7 +107,7 @@ public class BasinTile extends TileEntity {
 			return true;
 		}
 	
-		// TODO Simplify this
+		// TODO Could possibly simplify this
 		@Override
 		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
 			// Check if a substate can handle the action.
@@ -141,7 +143,7 @@ public class BasinTile extends TileEntity {
 	
 	}
 
-	public class EmptyState extends BasinState {
+	public static class EmptyState extends BasinState {
 
 		@Override
 		public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
@@ -151,12 +153,12 @@ public class BasinTile extends TileEntity {
 			// If player is holding a water bucket, empty the bucket and fill the cauldron.
 			if (item == Items.WATER_BUCKET) {
 
-				if (!BasinTile.this.world.isRemote) {
+				if (!basin.world.isRemote) {
 					if (!player.abilities.isCreativeMode) {
 						player.setHeldItem(handIn, new ItemStack(Items.BUCKET));
 					}
 					fsm.swapState(this, new FilledState());
-					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+					basin.world.playSound((PlayerEntity) null, basin.pos, SoundEvents.ITEM_BUCKET_EMPTY,
 							SoundCategory.BLOCKS, 1.0F, 1.0F);
 				}
 
@@ -190,7 +192,7 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	public class DyeState extends SaturatedState implements IDyeProvider {
+	public static class DyeState extends SaturatedState implements IDyeProvider {
 
 		private RYBKColor color = new RYBKColor();
 
@@ -219,14 +221,14 @@ public class BasinTile extends TileEntity {
 			if (newColor.equals(color))
 				return false;
 
-			if (!BasinTile.this.world.isRemote) {
+			if (!basin.world.isRemote) {
 				// Consume one item if player is not in creative
 				if (!player.abilities.isCreativeMode) {
 					itemStack.shrink(1);
 				}
 				// Change the color
 				color = newColor;
-				BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+				basin.world.playSound((PlayerEntity) null, basin.pos, SoundEvents.ITEM_BUCKET_EMPTY,
 						SoundCategory.BLOCKS, 1.0F, 1.0F);
 			}
 
@@ -271,7 +273,7 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	public class BleachState extends SaturatedState implements IBleachProvider {
+	public static class BleachState extends SaturatedState implements IBleachProvider {
 
 		private float bleachLevel = 0.0f;
 
@@ -297,14 +299,14 @@ public class BasinTile extends TileEntity {
 			if (newBleachLevel == bleachLevel)
 				return false;
 
-			if (!BasinTile.this.world.isRemote) {
+			if (!basin.world.isRemote) {
 				// Consume one item if player is not in creative
 				if (!player.abilities.isCreativeMode) {
 					itemStack.shrink(1);
 				}
 				// Change the bleach level
 				bleachLevel = newBleachLevel;
-				BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+				basin.world.playSound((PlayerEntity) null, basin.pos, SoundEvents.ITEM_BUCKET_EMPTY,
 						SoundCategory.BLOCKS, 1.0F, 1.0F);
 			}
 
@@ -348,7 +350,15 @@ public class BasinTile extends TileEntity {
 
 	}
 
-	private StackFSM<BasinState> fsm = new StackFSM<>(CLASS_MAPPER);
+	private StackFSM<BasinState> fsm;
+
+	public BasinTile() {
+		super(ModTiles.BASIN_TILE.get());
+		// Construct fsm and push some initial state
+		fsm = new StackFSM<>(CLASS_MAPPER);
+		fsm.addPushObserver((state) -> state.basin = this);
+		fsm.pushState(new EmptyState());
+	}
 
 	public ActionResultType onInteract(PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
 		return fsm.getState().onInteract(player, handIn, hit);
@@ -375,32 +385,29 @@ public class BasinTile extends TileEntity {
 
 	@Override
 	public SUpdateTileEntityPacket getUpdatePacket() {
-		// TODO Auto-generated method stub
-		return super.getUpdatePacket();
+		CompoundNBT nbtTag = new CompoundNBT();
+		// Write data into the nbtTag
+		write(nbtTag);
+		return new SUpdateTileEntityPacket(getPos(), -1, nbtTag);
 	}
 
 	@Override
 	public CompoundNBT getUpdateTag() {
-		// TODO Auto-generated method stub
-		return super.getUpdateTag();
+		CompoundNBT nbtTagCompound = new CompoundNBT();
+		write(nbtTagCompound);
+		return nbtTagCompound;
 	}
 
 	@Override
 	public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
-		// TODO Auto-generated method stub
-		super.onDataPacket(net, pkt);
+		CompoundNBT tag = pkt.getNbtCompound();
+		// Handle packet
+		read(tag);
 	}
 
 	@Override
 	public void handleUpdateTag(CompoundNBT tag) {
-		// TODO Auto-generated method stub
-		super.handleUpdateTag(tag);
-	}
-
-	public BasinTile() {
-		super(ModTiles.BASIN_TILE.get());
-		// Push some initial state
-		fsm.pushState(new EmptyState());
+		read(tag);
 	}
 
 }
