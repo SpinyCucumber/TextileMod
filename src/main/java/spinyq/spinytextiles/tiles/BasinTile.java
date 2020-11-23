@@ -40,7 +40,6 @@ import spinyq.spinytextiles.utility.textile.IDyeProvider;
  * @author Elijah Hilty
  *
  */
-// TODO Notify updates so that we can sync client, also mark dirty
 public class BasinTile extends TileEntity {
 
 	public static final int MAX_WATER_LEVEL = 8;
@@ -102,8 +101,7 @@ public class BasinTile extends TileEntity {
 			waterLevel -= amount;
 			if (waterLevel == 0)
 				fsm.swapState(this, new EmptyState());
-			else
-				BasinTile.this.notifyChange();
+			BasinTile.this.notifyChange();
 			return true;
 		}
 	
@@ -116,6 +114,7 @@ public class BasinTile extends TileEntity {
 				SaturatedState subState = supplier.get();
 				if (subState.consumeInteraction(player, handIn, hit)) {
 					fsm.pushState(subState);
+					BasinTile.this.notifyChange();
 					return ActionResultType.SUCCESS;
 				}
 			}
@@ -160,6 +159,7 @@ public class BasinTile extends TileEntity {
 					fsm.swapState(this, new FilledState());
 					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
 							SoundCategory.BLOCKS, 1.0F, 1.0F);
+					BasinTile.this.notifyChange();
 				}
 
 				return ActionResultType.SUCCESS;
