@@ -31,6 +31,7 @@ import net.minecraft.world.World;
 import spinyq.spinytextiles.client.render.RenderTypeHelper;
 import spinyq.spinytextiles.client.render.RenderTypeHelper.BlockRenderMode;
 import spinyq.spinytextiles.tiles.SpinningWheelTile;
+import spinyq.spinytextiles.utility.BlockInteraction;
 
 public class SpinningWheelBlock extends Block {
 
@@ -127,7 +128,7 @@ public class SpinningWheelBlock extends Block {
 		TileEntity tile = worldIn.getTileEntity(pos);
 		// Pass logic over to tile entity
 		if (tile instanceof SpinningWheelTile) {
-			return ((SpinningWheelTile) tile).onInteract(player, handIn, hit);
+			return ((SpinningWheelTile) tile).onInteract(new BlockInteraction(state, worldIn, player, handIn, hit));
 		}
 		return ActionResultType.PASS;
 	}
