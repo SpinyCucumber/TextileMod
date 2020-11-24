@@ -36,7 +36,7 @@ public class NBTHelper {
 		private int idCounter = 0;
 		
 		public <T> ClassMapper withClass(Class<T> clazz, Supplier<T> supplier) {
-			int id = ++idCounter;
+			int id = idCounter++;
 			classToId.put(clazz, id);
 			idToSupplier.put(id, supplier);
 			return this;

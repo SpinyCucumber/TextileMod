@@ -43,7 +43,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 
 		@Override
 		public RGBAColor visit(ThreadState state) {
-			FiberInfo thread = state.getThread(0);
+			FiberInfo thread = state.getCurrThread();
 			return new RGBAColor(thread.color.toRGB(new RGBColor(), null), thread.amount / (float) SpinningWheelTile.REQUIRED_THREAD);
 		}
 
@@ -59,8 +59,8 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 
 		@Override
 		public RGBAColor visit(SpinningState state) {
-			FiberInfo curr = ((ThreadState) state.getSuperState()).getThread(0),
-					prev = ((ThreadState) state.getSuperState()).getThread(1);
+			FiberInfo curr = ((ThreadState) state.getSuperState()).getCurrThread(),
+					prev = ((ThreadState) state.getSuperState()).getPrevThread();
 			float p = Math.min(1.0f, (float) state.getTime() / (float) SpinningWheelTile.SPINNING_TIME);
 			RYBKColor threadColor = prev.color.interp(curr.color, p);
 			float threadAmount = MathHelper.lerp(p, (float) prev.amount, (float) curr.amount);

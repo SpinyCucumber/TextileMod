@@ -1,7 +1,5 @@
 package spinyq.spinytextiles.tiles;
 
-import java.util.Stack;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -20,8 +18,6 @@ import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.items.IFiberItem;
 import spinyq.spinytextiles.utility.BlockInteraction;
-import spinyq.spinytextiles.utility.EvictingStack;
-import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.NBTHelper.ClassMapper;
 import spinyq.spinytextiles.utility.StackFSM;
 import spinyq.spinytextiles.utility.color.RYBKColor;
@@ -34,7 +30,8 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	
 	private static final String STATE_TAG = "State",
 			FIBER_TAG = "Fiber",
-			THREAD_TAG = "Thread";
+			PREV_THREAD_TAG = "Prev",
+			CURR_THREAD_TAG = "Curr";
 	
 	public static interface SpinningWheelStateVisitor<T> {
 		
@@ -59,9 +56,9 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		
 	}
 	
-	public abstract class ThreadAcceptorState extends SpinningWheelState {
+	public abstract class FiberAcceptorState extends SpinningWheelState {
 		
-		public abstract void acceptThread(FiberInfo fiber);
+		public abstract void acceptFiber(FiberInfo fiber);
 		
 	}
 	
@@ -69,14 +66,14 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	 * Used when the spinning wheel has no thread being spun.
 	 *
 	 */
-	public class EmptyState extends ThreadAcceptorState {
+	public class EmptyState extends FiberAcceptorState {
 
 		@Override
-		public void acceptThread(FiberInfo fiber) {
+		public void acceptFiber(FiberInfo fiber) {
 			ThreadState threadState = new ThreadState();
 			fsm.popState(this);
 			fsm.pushState(threadState);
-			threadState.acceptThread(fiber);
+			threadState.acceptFiber(fiber);
 		}
 
 		@Override
@@ -90,28 +87,30 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	 * Used when the spinning wheel has thread.
 	 *
 	 */
-	public class ThreadState extends ThreadAcceptorState {
+	public class ThreadState extends FiberAcceptorState {
 
-		// TODO Do something simpler
-		private Stack<FiberInfo> thread;
+		private FiberInfo prevThread, currThread;
 
 		public ThreadState() {
-			thread = new EvictingStack<>(2);
-			// Add a "dummy" fiberInfo so we can interpolate.
-			thread.add(new FiberInfo(new RYBKColor(), 0));
+			// Set thread to be a dummy thread with no value, so we can interpolate.
+			currThread = new FiberInfo(new RYBKColor(), 0);
 		}
 		
 		@Override
-		public void acceptThread(FiberInfo fiber) {
-			// Combine previous info with new, and push to our "memory"
-			thread.push(thread.peek().combine(fiber));
+		public void acceptFiber(FiberInfo fiber) {
+			prevThread = currThread;
+			currThread = currThread.combine(fiber);
 			// Push new spinning state
 			fsm.pushState(new SpinningState());
 			notifyChange();
 		}
 		
-		public FiberInfo getThread(int i) {
-			return thread.get(thread.size() - i - 1);
+		public FiberInfo getPrevThread() {
+			return prevThread;
+		}
+
+		public FiberInfo getCurrThread() {
+			return currThread;
 		}
 
 		@Override
@@ -122,13 +121,17 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		@Override
 		public CompoundNBT serializeNBT() {
 			CompoundNBT nbt = new CompoundNBT();
-			NBTHelper.putCollection(nbt, THREAD_TAG, thread);
+			nbt.put(PREV_THREAD_TAG, prevThread.serializeNBT());
+			nbt.put(CURR_THREAD_TAG, currThread.serializeNBT());
 			return nbt;
 		}
 
 		@Override
 		public void deserializeNBT(CompoundNBT nbt) {
-			thread = NBTHelper.getCollection(() -> new EvictingStack<>(2), FiberInfo::new, nbt, THREAD_TAG);
+			prevThread = new FiberInfo();
+			currThread = new FiberInfo();
+			prevThread.deserializeNBT(nbt.getCompound(PREV_THREAD_TAG));
+			currThread.deserializeNBT(nbt.getCompound(CURR_THREAD_TAG));
 		}
 		
 	}
@@ -185,7 +188,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			if (!world.isRemote) {
 				fsm.popState(this);
 				// Let superstate accept thread
-				((ThreadAcceptorState) superState).acceptThread(fiber);
+				((FiberAcceptorState) superState).acceptFiber(fiber);
 			}
 			// Play a fun spinning sound
 			world.playSound((PlayerEntity) null, pos, ModSounds.BLOCK_SPINNING_WHEEL_SPIN.get(),
@@ -226,7 +229,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			// Increment our timer
 			timer++;
 			if (timer == SPINNING_TIME) {
-				boolean finished = ((ThreadState) superState).getThread(0).amount >= REQUIRED_THREAD;
+				boolean finished = ((ThreadState) superState).getCurrThread().amount >= REQUIRED_THREAD;
 				fsm.popState(this);
 				fsm.pushState(finished ? new FinishedState() : new IdleState());
 				notifyChange();
@@ -269,7 +272,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 					interaction.itemstack.shrink(1);
 					// Create new thread item and set color
 					ItemStack threadItem = new ItemStack(ModItems.THREAD_ITEM.get());
-					ModItems.THREAD_ITEM.get().setColor(threadItem, ((ThreadState) superState).getThread(0).color);
+					ModItems.THREAD_ITEM.get().setColor(threadItem, ((ThreadState) superState).getCurrThread().color);
 					// Add to player's inventory, drop if we can't
 					if (!interaction.player.inventory.addItemStackToInventory(threadItem)) {
 						interaction.player.dropItem(threadItem, false);
