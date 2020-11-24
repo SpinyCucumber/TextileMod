@@ -264,10 +264,10 @@ public class BasinTile extends TileEntity {
 			// If item is dyeable, dye it
 			if (interaction.item instanceof IDyeableItem) {
 				IDyeableItem dyeable = (IDyeableItem) interaction.item;
-				if (dyeable.dye(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory), this))
-					world.playSound((PlayerEntity) null, pos,
-							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
-				return ActionResultType.SUCCESS;
+				if (dyeable.dye(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory), this)) {
+					world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
+					return ActionResultType.SUCCESS;
+				}
 			}
 			// TODO Glowstone saturation modifier
 			return ActionResultType.PASS;
@@ -348,10 +348,10 @@ public class BasinTile extends TileEntity {
 			// If item is bleachable, bleach it
 			if (interaction.item instanceof IDyeableItem) {
 				IBleachableItem bleachable = (IBleachableItem) interaction.item;
-				if (bleachable.bleach(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory), this))
-					world.playSound((PlayerEntity) null, pos,
-							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
-				return ActionResultType.SUCCESS;
+				if (bleachable.bleach(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory), this)) {
+					world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
+					return ActionResultType.SUCCESS;
+				}
 			}
 			return ActionResultType.PASS;
 		}

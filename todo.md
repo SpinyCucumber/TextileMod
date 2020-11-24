@@ -8,7 +8,7 @@
 - [ ] Ability to dye fabric
 - [ ] Pattern items
 - [x] Rewrite BasinTile using FSM
-- [ ] Rewrite SpinningWheel using FSM
+- [x] Rewrite SpinningWheel using FSM
 - [x] Fiber Items
 - [x] Brush Item
 - [x] Item Color Helper
