@@ -299,6 +299,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	
 	public SpinningWheelTile() {
 		super(ModTiles.SPINNING_WHEEL_TILE.get());
+		// Construct FSM and push some initial state
 		ClassMapper mapper = new ClassMapper()
 				.withClass(EmptyState.class, EmptyState::new)
 				.withClass(ThreadState.class, ThreadState::new)
@@ -307,6 +308,8 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 				.withClass(SpinningState.class, SpinningState::new)
 				.withClass(FinishedState.class, FinishedState::new);
 		fsm = new StackFSM<>(mapper);
+		fsm.pushState(new EmptyState());
+		fsm.pushState(new IdleState());
 	}
 	
 	/**
