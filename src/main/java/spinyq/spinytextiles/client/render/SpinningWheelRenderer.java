@@ -1,7 +1,5 @@
 package spinyq.spinytextiles.client.render;
 
-import java.util.Stack;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
@@ -22,6 +20,12 @@ import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.SpinningWheelTile;
+import spinyq.spinytextiles.tiles.SpinningWheelTile.FiberState;
+import spinyq.spinytextiles.tiles.SpinningWheelTile.FinishedState;
+import spinyq.spinytextiles.tiles.SpinningWheelTile.IdleState;
+import spinyq.spinytextiles.tiles.SpinningWheelTile.SpinningState;
+import spinyq.spinytextiles.tiles.SpinningWheelTile.SpinningWheelStateVisitor;
+import spinyq.spinytextiles.tiles.SpinningWheelTile.ThreadState;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
@@ -32,6 +36,44 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 
 	private CuboidModel threadModel;
 
+	// If the wheel is spinning, interpolate between previous and current thread
+	// infos to get a smooth animation.
+	// Otherwise, simply use the most current thread info.
+	private SpinningWheelStateVisitor<RGBAColor> threadColorCalculator = new SpinningWheelStateVisitor<RGBAColor>() {
+
+		@Override
+		public RGBAColor visit(ThreadState state) {
+			FiberInfo thread = state.getThread(0);
+			return new RGBAColor(thread.color.toRGB(new RGBColor(), null), thread.amount / (float) SpinningWheelTile.REQUIRED_THREAD);
+		}
+
+		@Override
+		public RGBAColor visit(IdleState state) {
+			return state.getSuperState().accept(this);
+		}
+
+		@Override
+		public RGBAColor visit(FiberState state) {
+			return state.getSuperState().accept(this);
+		}
+
+		@Override
+		public RGBAColor visit(SpinningState state) {
+			FiberInfo curr = ((ThreadState) state.getSuperState()).getThread(0),
+					prev = ((ThreadState) state.getSuperState()).getThread(1);
+			float p = Math.min(1.0f, (float) state.getTime() / (float) SpinningWheelTile.SPINNING_TIME);
+			RYBKColor threadColor = prev.color.interp(curr.color, p);
+			float threadAmount = MathHelper.lerp(p, (float) prev.amount, (float) curr.amount);
+			return new RGBAColor(threadColor.toRGB(new RGBColor(), null), threadAmount / (float) SpinningWheelTile.REQUIRED_THREAD);
+		}
+
+		@Override
+		public RGBAColor visit(FinishedState state) {
+			return state.getSuperState().accept(this);
+		}
+		
+	};
+	
 	private void generateModel(AtlasTexture texture) {
 		threadModel = new CuboidModel();
 		// Set the model's texture
@@ -60,49 +102,59 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 	@SuppressWarnings("deprecation")
 	@SubscribeEvent
 	public void onModelBake(ModelBakeEvent event) {
-		TextileMod.LOGGER.info("Generating Fluid Models...");
+		TextileMod.LOGGER.info("Generating Spinning Wheel Model...");
 		generateModel(event.getModelManager().getAtlasTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE));
 	}
 
 	@Override
 	public void render(SpinningWheelTile tileEntityIn, float partialTicks, MatrixStack matrixStackIn,
 			IRenderTypeBuffer renderer, int combinedLightIn, int combinedOverlayIn) {
-		// TODO Add animation
-		// Render thread if we have some
-		if (tileEntityIn.hasThread()) {
-			Stack<FiberInfo> threadInfo = tileEntityIn.getThreadInfo();
-			FiberInfo prev = threadInfo.elementAt(threadInfo.size() - 2), curr = threadInfo.peek();
-			// Construct the info used to render the thread
-			RYBKColor threadColor;
-			float threadAmount;
-			// If the wheel is spinning, interpolate between previous and current thread
-			// infos to get a smooth animation.
-			// Otherwise, simply use the most current thread info.
-			if (tileEntityIn.isSpinning()) {
-				float s = Math.min((float) tileEntityIn.getSpinningTimer() / (float) SpinningWheelTile.SPINNING_TIME,
-						1.0f);
-				threadColor = prev.color.interp(curr.color, s);
-				threadAmount = MathHelper.lerp(s, (float) prev.amount, (float) curr.amount);
-			} else {
-				threadColor = curr.color;
-				threadAmount = curr.amount;
+
+		SpinningWheelStateVisitor<Void> spinningWheelRenderer = new SpinningWheelStateVisitor<Void>() {
+
+			@Override
+			public Void visit(ThreadState state) {
+				// Get thread color
+				RGBAColor color = tileEntityIn.accept(threadColorCalculator);
+				// Rotate based on blockstate
+				// Also have to center model
+				matrixStackIn.push();
+				matrixStackIn.translate(0.5, 0.5, 0.5);
+				Direction facing = tileEntityIn.getBlockState().get(SpinningWheelBlock.FACING);
+				Quaternion quat = new Quaternion(Direction.UP.toVector3f(), facing.getHorizontalAngle(), true);
+				matrixStackIn.rotate(quat);
+				// Allocate buffer
+				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
+				// Render model
+				CuboidRenderer.INSTANCE.renderCube(threadModel, matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
+				// Undo rotation
+				matrixStackIn.pop();
+				return null;
 			}
-			// Calculate the final color
-			// TODO Cache this
-			RGBAColor color = new RGBAColor(threadColor.toRGB(new RGBColor(), null), threadAmount / (float) SpinningWheelTile.REQUIRED_THREAD);
-			// Rotate based on blockstate
-			// Also have to center model
-			matrixStackIn.push();
-			matrixStackIn.translate(0.5, 0.5, 0.5);
-			Direction facing = tileEntityIn.getBlockState().get(SpinningWheelBlock.FACING);
-			Quaternion quat = new Quaternion(Direction.UP.toVector3f(), facing.getHorizontalAngle(), true);
-			matrixStackIn.rotate(quat);
-			// Allocate buffer
-			IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
-			// Render model
-			CuboidRenderer.INSTANCE.renderCube(threadModel, matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
-			// Undo rotation
-			matrixStackIn.pop();
-		}
+
+			@Override
+			public Void visit(IdleState state) {
+				return state.getSuperState().accept(this);
+			}
+
+			@Override
+			public Void visit(FiberState state) {
+				return state.getSuperState().accept(this);
+			}
+
+			@Override
+			public Void visit(SpinningState state) {
+				return state.getSuperState().accept(this);
+			}
+
+			@Override
+			public Void visit(FinishedState state) {
+				return state.getSuperState().accept(this);
+			}
+			
+		};
+		
+		tileEntityIn.accept(spinningWheelRenderer);
+		
 	}
 }

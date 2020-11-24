@@ -22,7 +22,7 @@ import spinyq.spinytextiles.utility.textile.FiberInfo;
 
 public class SpinningWheelTile extends TileEntity implements ITickableTileEntity {
 
-	private static final int SPINNING_TIME = 60,
+	public static final int SPINNING_TIME = 60,
 			REQUIRED_THREAD = 4;
 	
 	public static interface SpinningWheelStateVisitor<T> {
@@ -81,6 +81,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	 */
 	public class ThreadState extends ThreadAcceptorState {
 
+		// TODO Do something simpler
 		private Stack<FiberInfo> threadInfo;
 
 		public ThreadState() {
@@ -97,8 +98,8 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			fsm.pushState(new SpinningState());
 		}
 		
-		public FiberInfo getThread() {
-			return threadInfo.peek();
+		public FiberInfo getThread(int i) {
+			return threadInfo.get(threadInfo.size() - i - 1);
 		}
 
 		@Override
@@ -187,7 +188,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			// Increment our timer
 			timer++;
 			if (timer == SPINNING_TIME) {
-				boolean finished = ((ThreadState) superState).getThread().amount >= REQUIRED_THREAD;
+				boolean finished = ((ThreadState) superState).getThread(0).amount >= REQUIRED_THREAD;
 				fsm.popState(this);
 				fsm.pushState(finished ? new FinishedState() : new IdleState());
 			}
@@ -196,6 +197,10 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		@Override
 		public <T> T accept(SpinningWheelStateVisitor<T> visitor) {
 			return visitor.visit(this);
+		}
+		
+		public int getTime() {
+			return timer;
 		}
 		
 		// TODO Set blockstate
@@ -217,7 +222,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 					interaction.itemstack.shrink(1);
 					// Create new thread item and set color
 					ItemStack threadItem = new ItemStack(ModItems.THREAD_ITEM.get());
-					ModItems.THREAD_ITEM.get().setColor(threadItem, ((ThreadState) superState).getThread().color);
+					ModItems.THREAD_ITEM.get().setColor(threadItem, ((ThreadState) superState).getThread(0).color);
 					// Add to player's inventory, drop if we can't
 					if (!interaction.player.inventory.addItemStackToInventory(threadItem)) {
 						interaction.player.dropItem(threadItem, false);
@@ -263,6 +268,10 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	@Override
 	public void tick() {
 		fsm.getState().tick();
+	}
+	
+	public <T> T accept(SpinningWheelStateVisitor<T> visitor) {
+		return fsm.getState().accept(visitor);
 	}
 
 }
