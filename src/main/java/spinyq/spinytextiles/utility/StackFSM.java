@@ -91,6 +91,9 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 		pushState(newState);
 	}
 
+	/**
+	 * Retrieves the current state.
+	 */
 	public T getState() {
 		return stack.peek();
 	}
