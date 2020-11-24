@@ -2,13 +2,18 @@ package spinyq.spinytextiles.tiles;
 
 import java.util.Stack;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
+import net.minecraftforge.common.util.Constants;
 import spinyq.spinytextiles.ModItems;
 import spinyq.spinytextiles.ModSounds;
 import spinyq.spinytextiles.ModTiles;
@@ -16,6 +21,7 @@ import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.items.IFiberItem;
 import spinyq.spinytextiles.utility.BlockInteraction;
 import spinyq.spinytextiles.utility.EvictingStack;
+import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.NBTHelper.ClassMapper;
 import spinyq.spinytextiles.utility.StackFSM;
 import spinyq.spinytextiles.utility.color.RYBKColor;
@@ -25,6 +31,10 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 
 	public static final int SPINNING_TIME = 60,
 			REQUIRED_THREAD = 4;
+	
+	private static final String STATE_TAG = "State",
+			FIBER_TAG = "Fiber",
+			THREAD_TAG = "Thread";
 	
 	public static interface SpinningWheelStateVisitor<T> {
 		
@@ -83,29 +93,42 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	public class ThreadState extends ThreadAcceptorState {
 
 		// TODO Do something simpler
-		private Stack<FiberInfo> threadInfo;
+		private Stack<FiberInfo> thread;
 
 		public ThreadState() {
-			threadInfo = new EvictingStack<>(2);
+			thread = new EvictingStack<>(2);
 			// Add a "dummy" fiberInfo so we can interpolate.
-			threadInfo.add(new FiberInfo(new RYBKColor(), 0));
+			thread.add(new FiberInfo(new RYBKColor(), 0));
 		}
 		
 		@Override
 		public void acceptThread(FiberInfo fiber) {
 			// Combine previous info with new, and push to our "memory"
-			threadInfo.push(threadInfo.peek().combine(fiber));
+			thread.push(thread.peek().combine(fiber));
 			// Push new spinning state
 			fsm.pushState(new SpinningState());
+			notifyChange();
 		}
 		
 		public FiberInfo getThread(int i) {
-			return threadInfo.get(threadInfo.size() - i - 1);
+			return thread.get(thread.size() - i - 1);
 		}
 
 		@Override
 		public <T> T accept(SpinningWheelStateVisitor<T> visitor) {
 			return visitor.visit(this);
+		}
+
+		@Override
+		public CompoundNBT serializeNBT() {
+			CompoundNBT nbt = new CompoundNBT();
+			NBTHelper.putCollection(nbt, THREAD_TAG, thread);
+			return nbt;
+		}
+
+		@Override
+		public void deserializeNBT(CompoundNBT nbt) {
+			thread = NBTHelper.getCollection(() -> new EvictingStack<>(2), FiberInfo::new, nbt, THREAD_TAG);
 		}
 		
 	}
@@ -126,6 +149,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 					// Transition to FiberState
 					fsm.popState(this);
 					fsm.pushState(new FiberState(info));
+					notifyChange();
 				}
 				// Play fun wool sound
 				world.playSound((PlayerEntity) null, pos, SoundEvents.BLOCK_WOOL_PLACE,
@@ -173,6 +197,19 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		public <T> T accept(SpinningWheelStateVisitor<T> visitor) {
 			return visitor.visit(this);
 		}
+
+		@Override
+		public CompoundNBT serializeNBT() {
+			CompoundNBT nbt = new CompoundNBT();
+			nbt.put(FIBER_TAG, fiber.serializeNBT());
+			return nbt;
+		}
+
+		@Override
+		public void deserializeNBT(CompoundNBT nbt) {
+			fiber = new FiberInfo();
+			fiber.deserializeNBT(nbt.getCompound(FIBER_TAG));
+		}
 		
 	}
 	
@@ -192,6 +229,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 				boolean finished = ((ThreadState) superState).getThread(0).amount >= REQUIRED_THREAD;
 				fsm.popState(this);
 				fsm.pushState(finished ? new FinishedState() : new IdleState());
+				notifyChange();
 			}
 		}
 
@@ -240,6 +278,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 					fsm.popState(superState);
 					fsm.pushState(new EmptyState());
 					fsm.pushState(new IdleState());
+					notifyChange();
 				}
 				// Play a fun pop sound
 				world.playSound((PlayerEntity) null, pos, SoundEvents.ENTITY_ITEM_PICKUP,
@@ -270,6 +309,15 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		fsm = new StackFSM<>(mapper);
 	}
 	
+	/**
+	 * Syncs data with clients and marks this tile to be saved.
+	 */
+	private void notifyChange() {
+		BlockState state = getBlockState();
+		world.notifyBlockUpdate(pos, state, state, Constants.BlockFlags.BLOCK_UPDATE);
+		markDirty();
+	}
+	
 	public ActionResultType onInteract(BlockInteraction interaction) {
 		return fsm.getState().onInteract(interaction);
 	}
@@ -281,6 +329,48 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	
 	public <T> T accept(SpinningWheelStateVisitor<T> visitor) {
 		return fsm.getState().accept(visitor);
+	}
+	
+	@Override
+	public void read(CompoundNBT compound) {
+		super.read(compound);
+		// Retrieve a list NBT
+		fsm.deserializeNBT(compound.getList(STATE_TAG, 10));
+	}
+
+	@Override
+	public CompoundNBT write(CompoundNBT compound) {
+		CompoundNBT result = super.write(compound);
+		// Create a new ListNBT
+		result.put(STATE_TAG, fsm.serializeNBT());
+		return result;
+	}
+
+	@Override
+	public SUpdateTileEntityPacket getUpdatePacket() {
+		CompoundNBT nbtTag = new CompoundNBT();
+		// Write data into the nbtTag
+		write(nbtTag);
+		return new SUpdateTileEntityPacket(getPos(), -1, nbtTag);
+	}
+
+	@Override
+	public CompoundNBT getUpdateTag() {
+		CompoundNBT nbtTagCompound = new CompoundNBT();
+		write(nbtTagCompound);
+		return nbtTagCompound;
+	}
+
+	@Override
+	public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
+		CompoundNBT tag = pkt.getNbtCompound();
+		// Handle packet
+		read(tag);
+	}
+
+	@Override
+	public void handleUpdateTag(CompoundNBT tag) {
+		read(tag);
 	}
 
 }
