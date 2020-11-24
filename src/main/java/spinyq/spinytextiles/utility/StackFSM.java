@@ -37,6 +37,10 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 		public T getSubState() {
 			return subState;
 		}
+		
+		public void onPush() { }
+		
+		public void onPop() { }
 
 		@Override
 		public CompoundNBT serializeNBT() {	return new CompoundNBT(); }
@@ -68,6 +72,8 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 			state.superState = superState;
 		}
 		stack.add(state);
+		// Trigger callback
+		state.onPush();
 	}
 	
 	/**
@@ -79,6 +85,8 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 		do {
 			popped = stack.pop();
 		} while(!popped.equals(state));
+		// Trigger callback
+		state.onPop();
 	}
 
 	/**

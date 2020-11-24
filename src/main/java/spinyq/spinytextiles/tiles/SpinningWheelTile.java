@@ -12,6 +12,7 @@ import net.minecraft.util.SoundEvents;
 import spinyq.spinytextiles.ModItems;
 import spinyq.spinytextiles.ModSounds;
 import spinyq.spinytextiles.ModTiles;
+import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.items.IFiberItem;
 import spinyq.spinytextiles.utility.BlockInteraction;
 import spinyq.spinytextiles.utility.EvictingStack;
@@ -202,8 +203,16 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		public int getTime() {
 			return timer;
 		}
-		
-		// TODO Set blockstate
+
+		@Override
+		public void onPush() {
+			world.setBlockState(getPos(), getBlockState().with(SpinningWheelBlock.SPINNING, Boolean.TRUE));
+		}
+
+		@Override
+		public void onPop() {
+			world.setBlockState(getPos(), getBlockState().with(SpinningWheelBlock.SPINNING, Boolean.FALSE));
+		}
 		
 	}
 	
