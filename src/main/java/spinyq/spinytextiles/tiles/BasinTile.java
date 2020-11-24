@@ -127,8 +127,10 @@ public class BasinTile extends TileEntity {
 			// Subtract amount from water level
 			// If water level reaches zero, transition to empty state
 			waterLevel -= amount;
-			if (waterLevel == 0)
-				fsm.swapState(this, new EmptyState());
+			if (waterLevel == 0) {
+				fsm.popState(this);
+				fsm.pushState(new EmptyState());
+			}
 			notifyChange();
 			return true;
 		}
@@ -185,7 +187,8 @@ public class BasinTile extends TileEntity {
 					if (!interaction.player.abilities.isCreativeMode) {
 						interaction.player.setHeldItem(interaction.hand, new ItemStack(Items.BUCKET));
 					}
-					fsm.swapState(this, new FilledState());
+					fsm.popState(this);
+					fsm.pushState(new FilledState());
 					world.playSound((PlayerEntity) null, BasinTile.this.pos,
 							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
 					notifyChange();

@@ -13,7 +13,7 @@ import spinyq.spinytextiles.utility.StackFSM.State;
  * A Finite State Machine that uses a stack to implement substates.
  * 
  * If a state comes after another in the stack, it's considered to be a substate of the previous.
- * States have references to FSM as well their substate and superstate.
+ * States have references to the FSM as well their substate and superstate.
  * 
  * @author SpinyQ
  *
@@ -79,16 +79,6 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 		do {
 			popped = stack.pop();
 		} while(!popped.equals(state));
-	}
-
-	/**
-	 * Transitions from a given state to another.
-	 * @param oldState
-	 * @param newState
-	 */
-	public void swapState(T oldState, T newState) {
-		popState(oldState);
-		pushState(newState);
 	}
 
 	/**
