@@ -27,7 +27,6 @@ import spinyq.spinytextiles.utility.BlockInteraction;
 import spinyq.spinytextiles.utility.ContainedItemStack;
 import spinyq.spinytextiles.utility.NBTHelper.ClassMapper;
 import spinyq.spinytextiles.utility.StackFSM;
-import spinyq.spinytextiles.utility.StackFSM.State;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 import spinyq.spinytextiles.utility.textile.IBleachProvider;
 import spinyq.spinytextiles.utility.textile.IDyeProvider;
@@ -82,7 +81,7 @@ public class BasinTile extends TileEntity {
 	 * @author SpinyQ
 	 *
 	 */
-	public abstract class BasinState extends State<BasinState> {
+	public abstract class BasinState extends StackFSM.State<BasinState> {
 
 		public abstract ActionResultType onInteract(BlockInteraction interaction);
 
