@@ -33,7 +33,12 @@ import spinyq.spinytextiles.utility.textile.IBleachProvider;
 import spinyq.spinytextiles.utility.textile.IDyeProvider;
 
 /**
- * Uses a stack-based FSM
+ * Allows players to dye and bleach different objects.
+ * 
+ * To use, players fill the basin with water and add dyes and other items into it.
+ * The basin must be heated to operate.
+ * 
+ * Implemented using a stack-based FSM. The basin can either be "empty" or "filled". Having dye or bleach are substates of being filled.
  * 
  * @author Elijah Hilty
  *
