@@ -23,6 +23,12 @@ public class NBTHelper {
 
 	public static final String TYPE_TAG = "Type";
 	
+	/**
+	 * Defines a set of classes, as well as methods for creating them.
+	 * Used for serializing and deserializing polymorphic objects.
+	 * @author SpinyQ
+	 *
+	 */
 	public static class ClassMapper {
 		
 		private Map<Class<?>, Integer> classToId = new HashMap<>();
@@ -48,14 +54,10 @@ public class NBTHelper {
 	
 	/**
 	 * Writes a polymorphic object to a Compount NBT tag.
-	 * Each polymorphic object is associated with a factory which creates more of that object,
-	 * and the method client passes a function that maps each factory to an ID.
-	 * The method works by writing said ID to a compound NBT.
 	 * @param <T> The type of the polymorphic NBT object
 	 * @param nbt The compound nbt
 	 * @param key The key containing the object
 	 * @param object The polymorphic NBT object
-	 * @param idMap A function mapping factories to string IDs
 	 */
 	public static <T extends INBTSerializable<CompoundNBT>> void putPolymorphic(CompoundNBT nbt, String key, T object,
 			ClassMapper mapper) {
@@ -64,13 +66,9 @@ public class NBTHelper {
 	
 	/**
 	 * Reads a polymorphic object from a Compound NBT tag.
-	 * Works by first reading a "type ID" from a compound;
-	 * the method client passes a function thats maps said ID to a factory,
-	 * which creates a polymorphic object.
 	 * @param <T> The type of the polymorphic NBT object
 	 * @param nbt The compound nbt
 	 * @param key The key containing the object
-	 * @param factoryMap A function mapping string IDs to factories
 	 */
 	public static <T extends INBTSerializable<CompoundNBT>> T getPolymorphic(CompoundNBT nbt, String key, ClassMapper mapper) {
 		return readPolymorphic(nbt.getCompound(key), mapper);

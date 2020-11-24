@@ -38,7 +38,8 @@ import spinyq.spinytextiles.utility.textile.IDyeProvider;
  * To use, players fill the basin with water and add dyes and other items into it.
  * The basin must be heated to operate.
  * 
- * Implemented using a stack-based FSM. The basin can either be "empty" or "filled". Having dye or bleach are substates of being filled.
+ * Implemented using a stack-based FSM. The basin can either be "empty" or "filled".
+ * Containing dye or containing bleach are substates of being filled.
  * 
  * @author Elijah Hilty
  *
@@ -51,6 +52,10 @@ public class BasinTile extends TileEntity {
 	private static final String STATE_TAG = "State", WATER_LEVEL_TAG = "Level", COLOR_TAG = "Color",
 			BLEACH_LEVEL_TAG = "Bleach";
 
+	/**
+	 * Allows users to define external operations on basin states,
+	 * like rendering, animating, etc.
+	 */
 	public static interface BasinStateVisitor<T> {
 
 		default T visit(EmptyState state) {
@@ -70,7 +75,13 @@ public class BasinTile extends TileEntity {
 		}
 
 	}
-
+	
+	/**
+	 * A state that a basin can occupy.
+	 * Handles player interactions.
+	 * @author SpinyQ
+	 *
+	 */
 	public abstract class BasinState extends State<BasinState> {
 
 		public abstract ActionResultType onInteract(BlockInteraction interaction);
@@ -79,15 +90,25 @@ public class BasinTile extends TileEntity {
 
 	}
 
+	/**
+	 * A "greedy" state that consumes an interaction to become the top state in the stack.
+	 * @author SpinyQ
+	 *
+	 */
 	public abstract class ConsumerState extends BasinState {
 
 		public abstract boolean consumeInteraction(BlockInteraction interaction);
 
 	}
 
+	/**
+	 * Used when the basin contains water.
+	 * @author SpinyQ
+	 *
+	 */
 	public class FilledState extends BasinState {
 
-		private Set<Supplier<ConsumerState>> substateSuppliers = ImmutableSet.of(DyeState::new, BleachState::new);
+		private Set<Supplier<ConsumerState>> suppliers = ImmutableSet.of(DyeState::new, BleachState::new);
 
 		// Water level starts out at maximum
 		private int waterLevel = MAX_WATER_LEVEL;
@@ -117,10 +138,10 @@ public class BasinTile extends TileEntity {
 		public ActionResultType onInteract(BlockInteraction interaction) {
 			// Check if a substate can handle the action.
 			// If they can, push the new state
-			for (Supplier<ConsumerState> supplier : substateSuppliers) {
-				ConsumerState subState = supplier.get();
-				if (subState.consumeInteraction(interaction)) {
-					fsm.pushState(subState);
+			for (Supplier<ConsumerState> supplier : suppliers) {
+				ConsumerState consumer = supplier.get();
+				if (consumer.consumeInteraction(interaction)) {
+					fsm.pushState(consumer);
 					BasinTile.this.notifyChange();
 					return ActionResultType.SUCCESS;
 				}
@@ -149,6 +170,11 @@ public class BasinTile extends TileEntity {
 
 	}
 
+	/**
+	 * Used when the basin contains no water. By default, basins start in this state.
+	 * @author SpinyQ
+	 *
+	 */
 	public class EmptyState extends BasinState {
 
 		@Override
@@ -179,6 +205,11 @@ public class BasinTile extends TileEntity {
 
 	}
 
+	/**
+	 * Used when the basin contains some dye. Substate of FilledState.
+	 * @author SpinyQ
+	 *
+	 */
 	public class DyeState extends ConsumerState implements IDyeProvider {
 
 		private RYBKColor color = new RYBKColor();
@@ -261,6 +292,11 @@ public class BasinTile extends TileEntity {
 
 	}
 
+	/**
+	 * Used when the basin contains some bleach. Substate of FilledState.
+	 * @author SpinyQ
+	 *
+	 */
 	public class BleachState extends ConsumerState implements IBleachProvider {
 
 		private float bleachLevel = 0.0f;

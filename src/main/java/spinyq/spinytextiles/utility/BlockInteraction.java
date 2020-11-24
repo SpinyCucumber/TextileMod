@@ -9,6 +9,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
 
+/**
+ * Describes an instance of a player interacting with a block.
+ * Used to avoid passing ugly lists of arguments, and makes
+ * accessing things like a player's held item more convenient.
+ * @author SpinyQ
+ *
+ */
 public class BlockInteraction {
 
 	public final BlockState blockState;
