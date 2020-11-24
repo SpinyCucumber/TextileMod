@@ -129,7 +129,7 @@ public class BasinTile extends TileEntity {
 			waterLevel -= amount;
 			if (waterLevel == 0)
 				fsm.swapState(this, new EmptyState());
-			BasinTile.this.notifyChange();
+			notifyChange();
 			return true;
 		}
 
@@ -141,7 +141,7 @@ public class BasinTile extends TileEntity {
 				ConsumerState consumer = supplier.get();
 				if (consumer.consumeInteraction(interaction)) {
 					fsm.pushState(consumer);
-					BasinTile.this.notifyChange();
+					notifyChange();
 					return ActionResultType.SUCCESS;
 				}
 			}
@@ -181,14 +181,14 @@ public class BasinTile extends TileEntity {
 			// If player is holding a water bucket, empty the bucket and fill the cauldron.
 			if (interaction.item == Items.WATER_BUCKET) {
 
-				if (!BasinTile.this.world.isRemote) {
+				if (!world.isRemote) {
 					if (!interaction.player.abilities.isCreativeMode) {
 						interaction.player.setHeldItem(interaction.hand, new ItemStack(Items.BUCKET));
 					}
 					fsm.swapState(this, new FilledState());
-					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos,
+					world.playSound((PlayerEntity) null, BasinTile.this.pos,
 							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
-					BasinTile.this.notifyChange();
+					notifyChange();
 				}
 
 				return ActionResultType.SUCCESS;
@@ -226,7 +226,7 @@ public class BasinTile extends TileEntity {
 		@Override
 		public boolean consumeInteraction(BlockInteraction interaction) {
 			// Basin must be heated to consume dye
-			if (!BasinTile.this.isHeated())
+			if (!isHeated())
 				return false;
 			if (!(interaction.item instanceof DyeItem))
 				return false;
@@ -238,16 +238,16 @@ public class BasinTile extends TileEntity {
 			if (newColor.equals(color))
 				return false;
 
-			if (!BasinTile.this.world.isRemote) {
+			if (!world.isRemote) {
 				// Consume one item if player is not in creative
 				if (!interaction.player.abilities.isCreativeMode) {
 					interaction.itemstack.shrink(1);
 				}
 				// Change the color
 				color = newColor;
-				BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+				world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
 						SoundCategory.BLOCKS, 1.0F, 1.0F);
-				BasinTile.this.notifyChange();
+				notifyChange();
 			}
 
 			return true;
@@ -262,7 +262,7 @@ public class BasinTile extends TileEntity {
 			if (interaction.item instanceof IDyeableItem) {
 				IDyeableItem dyeable = (IDyeableItem) interaction.item;
 				if (dyeable.dye(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory), this))
-					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos,
+					world.playSound((PlayerEntity) null, pos,
 							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
 				return ActionResultType.SUCCESS;
 			}
@@ -313,7 +313,7 @@ public class BasinTile extends TileEntity {
 		@Override
 		public boolean consumeInteraction(BlockInteraction interaction) {
 			// Basin must be heated to add more bleach
-			if (!BasinTile.this.isHeated())
+			if (!isHeated())
 				return false;
 			if (!interaction.item.getTags().contains(ModTags.LYE_TAG))
 				return false;
@@ -322,16 +322,16 @@ public class BasinTile extends TileEntity {
 			if (newBleachLevel == bleachLevel)
 				return false;
 
-			if (!BasinTile.this.world.isRemote) {
+			if (!world.isRemote) {
 				// Consume one item if player is not in creative
 				if (!interaction.player.abilities.isCreativeMode) {
 					interaction.itemstack.shrink(1);
 				}
 				// Change the bleach level
 				bleachLevel = newBleachLevel;
-				BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos, SoundEvents.ITEM_BUCKET_EMPTY,
+				world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
 						SoundCategory.BLOCKS, 1.0F, 1.0F);
-				BasinTile.this.notifyChange();
+				notifyChange();
 			}
 
 			return true;
@@ -346,7 +346,7 @@ public class BasinTile extends TileEntity {
 			if (interaction.item instanceof IDyeableItem) {
 				IBleachableItem bleachable = (IBleachableItem) interaction.item;
 				if (bleachable.bleach(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory), this))
-					BasinTile.this.world.playSound((PlayerEntity) null, BasinTile.this.pos,
+					world.playSound((PlayerEntity) null, pos,
 							SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
 				return ActionResultType.SUCCESS;
 			}
