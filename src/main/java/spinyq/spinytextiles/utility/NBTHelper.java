@@ -56,12 +56,12 @@ public class NBTHelper {
 				return this;
 			}
 			
-			public Supplier<?> getSupplier(int id) {
-				return suppliers[id];
+			public Object createObject(int id) {
+				return suppliers[id].get();
 			}
 			
-			public int getId(Class<?> clazz) {
-				return idMap.get(clazz);
+			public int getId(Object object) {
+				return idMap.get(object.getClass());
 			}
 			
 			public Mapper copy() {
@@ -100,7 +100,7 @@ public class NBTHelper {
 			ClassSpace.Mapper mapper) {
 		// Create a new compound NBT and write type ID
 		CompoundNBT objectNBT = object.serializeNBT();
-		int id = mapper.getId(object.getClass());
+		int id = mapper.getId(object);
 		objectNBT.putInt(TYPE_TAG, id);
 		return objectNBT;
 	}
@@ -109,7 +109,7 @@ public class NBTHelper {
 	public static <T extends INBTSerializable<CompoundNBT>> T readPolymorphic(CompoundNBT objectNBT, ClassSpace.Mapper mapper) {
 		// Read the object's type and create a new object
 		int id = objectNBT.getInt(TYPE_TAG);
-		T object = (T) mapper.getSupplier(id).get();
+		T object = (T) mapper.createObject(id);
 		// Deserialize and return object
 		object.deserializeNBT(objectNBT);
 		return object;
