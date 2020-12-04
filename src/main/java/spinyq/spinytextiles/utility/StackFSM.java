@@ -51,9 +51,9 @@ public class StackFSM<T extends State<T>> implements INBTSerializable<ListNBT> {
 	}
 
 	private Stack<T> stack = new Stack<>();
-	private ClassMapper mapper;
+	private Mapper mapper;
 
-	public StackFSM(ClassMapper mapper) {
+	public StackFSM(Mapper mapper) {
 		this.mapper = mapper;
 	}
 	

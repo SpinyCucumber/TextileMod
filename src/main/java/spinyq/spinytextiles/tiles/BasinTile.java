@@ -382,7 +382,7 @@ public class BasinTile extends TileEntity {
 	public BasinTile() {
 		super(ModTiles.BASIN_TILE.get());
 		// Construct fsm and push some initial state
-		ClassMapper mapper = new ClassMapper().withClass(EmptyState.class, EmptyState::new)
+		Mapper mapper = new Mapper().withClass(EmptyState.class, EmptyState::new)
 				.withClass(FilledState.class, FilledState::new).withClass(DyeState.class, DyeState::new)
 				.withClass(BleachState.class, BleachState::new);
 		fsm = new StackFSM<>(mapper);
