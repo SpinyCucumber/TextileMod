@@ -1,10 +1,11 @@
 package spinyq.spinytextiles.utility;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+
+import com.google.common.collect.ImmutableMap;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -23,31 +24,52 @@ public class NBTHelper {
 
 	public static final String TYPE_TAG = "Type";
 	
-	/**
-	 * Defines a set of classes, as well as methods for creating them.
-	 * Used for serializing and deserializing polymorphic objects.
-	 * @author SpinyQ
-	 *
-	 */
-	public static class ClassMapper {
+	public static class ClassSpace {
 		
-		private Map<Class<?>, Integer> classToId = new HashMap<>();
-		private Map<Integer, Supplier<?>> idToSupplier = new HashMap<>();
+		private final ImmutableMap<Class<?>, Integer> idMap;
 		private int idCounter = 0;
-		
-		public <T> ClassMapper withClass(Class<T> clazz, Supplier<T> supplier) {
-			int id = idCounter++;
-			classToId.put(clazz, id);
-			idToSupplier.put(id, supplier);
-			return this;
+
+		public ClassSpace(Class<?>... classes) {
+			ImmutableMap.Builder<Class<?>, Integer> builder = new ImmutableMap.Builder<>();
+			for (Class<?> clazz : classes) {
+				builder.put(clazz, idCounter++);
+			}
+			idMap = builder.build();
 		}
 		
-		public int getId(Class<?> clazz) {
-			return classToId.get(clazz);
+		public Mapper createMapper() {
+			Mapper mapper = new Mapper();
+			mapper.suppliers = new Supplier[idCounter];
+			return mapper;
 		}
 		
-		public Supplier<?> getSupplier(int id) {
-			return idToSupplier.get(id);
+		public class Mapper {
+			
+			private Supplier<?>[] suppliers;
+			
+			private Mapper() { }
+			
+			public <T> Mapper with(Class<T> clazz, Supplier<T> supplier) {
+				// Get id and associate id with supplier
+				int id = idMap.get(clazz);
+				suppliers[id] = supplier;
+				return this;
+			}
+			
+			public Supplier<?> getSupplier(int id) {
+				return suppliers[id];
+			}
+			
+			public int getId(Class<?> clazz) {
+				return idMap.get(clazz);
+			}
+			
+			public Mapper copy() {
+				Mapper copy = new Mapper();
+				copy.suppliers = suppliers.clone();
+				return copy;
+			}
+			
 		}
 		
 	}
@@ -60,7 +82,7 @@ public class NBTHelper {
 	 * @param object The polymorphic NBT object
 	 */
 	public static <T extends INBTSerializable<CompoundNBT>> void putPolymorphic(CompoundNBT nbt, String key, T object,
-			ClassMapper mapper) {
+			ClassSpace.Mapper mapper) {
 		nbt.put(key, writePolymorphic(object, mapper));
 	}
 	
@@ -70,12 +92,12 @@ public class NBTHelper {
 	 * @param nbt The compound nbt
 	 * @param key The key containing the object
 	 */
-	public static <T extends INBTSerializable<CompoundNBT>> T getPolymorphic(CompoundNBT nbt, String key, ClassMapper mapper) {
+	public static <T extends INBTSerializable<CompoundNBT>> T getPolymorphic(CompoundNBT nbt, String key, ClassSpace.Mapper mapper) {
 		return readPolymorphic(nbt.getCompound(key), mapper);
 	}
 	
 	public static <T extends INBTSerializable<CompoundNBT>> CompoundNBT writePolymorphic(T object,
-			ClassMapper mapper) {
+			ClassSpace.Mapper mapper) {
 		// Create a new compound NBT and write type ID
 		CompoundNBT objectNBT = object.serializeNBT();
 		int id = mapper.getId(object.getClass());
@@ -84,7 +106,7 @@ public class NBTHelper {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T extends INBTSerializable<CompoundNBT>> T readPolymorphic(CompoundNBT objectNBT, ClassMapper mapper) {
+	public static <T extends INBTSerializable<CompoundNBT>> T readPolymorphic(CompoundNBT objectNBT, ClassSpace.Mapper mapper) {
 		// Read the object's type and create a new object
 		int id = objectNBT.getInt(TYPE_TAG);
 		T object = (T) mapper.getSupplier(id).get();
