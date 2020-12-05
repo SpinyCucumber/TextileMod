@@ -21,7 +21,7 @@ import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.SpinningWheelTile;
 import spinyq.spinytextiles.tiles.SpinningWheelTile.SpinningWheelStateVisitor;
-import spinyq.spinytextiles.tiles.SpinningWheelTile.ThreadState;
+import spinyq.spinytextiles.tiles.SpinningWheelTile.BaseState;
 import spinyq.spinytextiles.utility.FunctionHelper;
 import spinyq.spinytextiles.utility.FunctionHelper.Result;
 import spinyq.spinytextiles.utility.color.RGBAColor;
@@ -40,7 +40,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 	private static final SpinningWheelStateVisitor COLOR_CALCULATOR = new SpinningWheelStateVisitor() {
 
 		@Override
-		public void visit(ThreadState state) {
+		public void visit(BaseState state) {
 			FiberInfo thread = state.getCurrThread();
 
 			RGBColor rgb = thread.color.toRGB(new RGBColor(), null);
@@ -49,11 +49,11 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 		}
 
 		@Override
-		public void visit(ThreadState.SpinningState state) {
+		public void visit(BaseState.SpinningState state) {
 			// Interpolate both color and thread amount from previous and current thread information.
 			// Use the time supplied by the spinning state to interpolate
-			FiberInfo curr = ((ThreadState) state.getSuperState()).getCurrThread(),
-					prev = ((ThreadState) state.getSuperState()).getPrevThread();
+			FiberInfo curr = ((BaseState) state.getSuperState()).getCurrThread(),
+					prev = ((BaseState) state.getSuperState()).getPrevThread();
 			float p = Math.min(1.0f, (float) state.getTime() / (float) SpinningWheelTile.SPINNING_TIME);
 			RYBKColor threadColor = prev.color.interp(curr.color, p);
 			float threadAmount = MathHelper.lerp(p, (float) prev.amount, (float) curr.amount);
@@ -107,7 +107,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 		SpinningWheelStateVisitor spinningWheelRenderer = new SpinningWheelStateVisitor() {
 
 			@Override
-			public void visit(ThreadState state) {
+			public void visit(BaseState state) {
 				// Get thread color
 				RGBAColor color = FunctionHelper.getResult(() -> tileEntityIn.accept(COLOR_CALCULATOR));
 				// Rotate based on blockstate

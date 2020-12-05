@@ -16,6 +16,7 @@ import net.minecraftforge.common.util.INBTSerializable;
 import spinyq.spinytextiles.ModItems;
 import spinyq.spinytextiles.ModSounds;
 import spinyq.spinytextiles.ModTiles;
+import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.items.IFiberItem;
 import spinyq.spinytextiles.utility.BlockInteraction;
 import spinyq.spinytextiles.utility.NBTHelper;
@@ -26,37 +27,52 @@ import spinyq.spinytextiles.utility.textile.FiberInfo;
 
 public class SpinningWheelTile extends TileEntity implements ITickableTileEntity {
 
-	public static final int SPINNING_TIME = 60,
-			REQUIRED_THREAD = 4;
-	
-	private static final String STATE_TAG = "State",
-			FIBER_TAG = "Fiber",
-			PREV_THREAD_TAG = "Prev",
+	public static final int SPINNING_TIME = 60, REQUIRED_THREAD = 4;
+
+	private static final String STATE_TAG = "State", FIBER_TAG = "Fiber", PREV_THREAD_TAG = "Prev",
 			CURR_THREAD_TAG = "Curr";
-	
-	private static final ClassIdSpace CLASSES = new ClassIdSpace(ThreadState.IdleState.class,
-			ThreadState.FiberState.class, ThreadState.SpinningState.class, ThreadState.FinishedState.class);
-	
+
+	private static final ClassIdSpace CLASSES = new ClassIdSpace(BaseState.IdleState.class,
+			BaseState.FiberState.class, BaseState.SpinningState.class, BaseState.FinishedState.class);
+
 	public static interface SpinningWheelStateVisitor {
-		
-		default void visit(ThreadState state) { }
-		default void visit(ThreadState.IdleState state) { }
-		default void visit(ThreadState.FiberState state) { }
-		default void visit(ThreadState.SpinningState state) { }
-		default void visit(ThreadState.FinishedState state) { }
-		
+
+		default void visit(BaseState state) {
+		}
+
+		default void visit(BaseState.IdleState state) {
+		}
+
+		default void visit(BaseState.FiberState state) {
+		}
+
+		default void visit(BaseState.SpinningState state) {
+		}
+
+		default void visit(BaseState.FinishedState state) {
+		}
+
 	}
-	
+
 	/**
 	 * A state that a spinning wheel may occupy.
-	 * Handles player interactions.
+	 * Handles player interactions, ticks, and saving/loading data.
 	 */
 	public interface ISpinningWheelState extends INBTSerializable<CompoundNBT> {
-		
+
 		ActionResultType onInteract(BlockInteraction interaction);
-		default void tick() { }
+
 		void accept(SpinningWheelStateVisitor visitor);
-		
+
+		default void onTransitionTo() {
+		}
+
+		default void onTransitionFrom() {
+		}
+
+		default void tick() {
+		}
+
 		@Override
 		default CompoundNBT serializeNBT() {
 			return new CompoundNBT();
@@ -65,26 +81,25 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		@Override
 		default void deserializeNBT(CompoundNBT nbt) {
 		}
-		
+
 	}
 
-	
 	/**
-	 * TODO Write some doc here!
-	 *
+	 * The base state of the spinning wheel.
+	 * Keeps track of the thread being spun, and has a substate.
 	 */
-	public class ThreadState implements ISpinningWheelState {
+	public class BaseState implements ISpinningWheelState {
 
 		/**
 		 * Used when the spinning wheel is waiting for more fiber to be added.
 		 *
 		 */
 		public class IdleState implements ISpinningWheelState {
-		
-			public ThreadState getSuperState() {
-				return ThreadState.this;
+
+			public BaseState getSuperState() {
+				return BaseState.this;
 			}
-			
+
 			@Override
 			public ActionResultType onInteract(BlockInteraction interaction) {
 				if (interaction.item instanceof IFiberItem) {
@@ -93,22 +108,22 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 						// Split off one item and retrieve fiber info
 						FiberInfo info = fiberItem.getInfo(interaction.itemstack.split(1));
 						// Transition to FiberState
-						subState = new FiberState(info);
+						transition(new FiberState(info));
 						notifyChange();
 					}
 					// Play fun wool sound
-					world.playSound((PlayerEntity) null, pos, SoundEvents.BLOCK_WOOL_PLACE,
-							SoundCategory.BLOCKS, 1.0F, 1.0F);
+					world.playSound((PlayerEntity) null, pos, SoundEvents.BLOCK_WOOL_PLACE, SoundCategory.BLOCKS, 1.0F,
+							1.0F);
 					return ActionResultType.SUCCESS;
 				}
 				return ActionResultType.PASS;
 			}
-		
+
 			@Override
 			public void accept(SpinningWheelStateVisitor visitor) {
 				visitor.visit(this);
 			}
-			
+
 		}
 
 		/**
@@ -116,26 +131,27 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		 *
 		 */
 		public class FiberState implements ISpinningWheelState {
-			
+
 			private FiberInfo fiber;
-		
+
 			public FiberState(FiberInfo fiber) {
 				this.fiber = fiber;
 			}
-			
-			public FiberState() { }
-		
-			public ThreadState getSuperState() {
-				return ThreadState.this;
+
+			public FiberState() {
 			}
-			
+
+			public BaseState getSuperState() {
+				return BaseState.this;
+			}
+
 			@Override
 			public ActionResultType onInteract(BlockInteraction interaction) {
 				if (!world.isRemote) {
 					// Add fiber to thread and transition to spinning state
 					prevThread = currThread;
 					currThread = currThread.combine(fiber);
-					subState = new SpinningState();
+					transition(new SpinningState());
 					notifyChange();
 				}
 				// Play a fun spinning sound
@@ -143,37 +159,36 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 						SoundCategory.BLOCKS, 1.0F, 1.0F);
 				return ActionResultType.SUCCESS;
 			}
-		
+
 			@Override
 			public void accept(SpinningWheelStateVisitor visitor) {
 				visitor.visit(this);
 			}
-		
+
 			@Override
 			public CompoundNBT serializeNBT() {
 				CompoundNBT nbt = new CompoundNBT();
 				nbt.put(FIBER_TAG, fiber.serializeNBT());
 				return nbt;
 			}
-		
+
 			@Override
 			public void deserializeNBT(CompoundNBT nbt) {
 				fiber = new FiberInfo();
 				fiber.deserializeNBT(nbt.getCompound(FIBER_TAG));
 			}
-			
+
 		}
 
 		/**
 		 * Used when the spinning wheel is actually spinning.
-		 * TODO Set block state to animate wheel
 		 */
 		public class SpinningState implements ISpinningWheelState {
-			
+
 			private int timer = 0;
-		
-			public ThreadState getSuperState() {
-				return ThreadState.this;
+
+			public BaseState getSuperState() {
+				return BaseState.this;
 			}
 
 			public int getTime() {
@@ -188,33 +203,34 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 				// If we have enough fiber, transition to the finished state.
 				// If not, go back to an idle state.
 				if (timer == SPINNING_TIME) {
-					subState = (getCurrThread().amount >= REQUIRED_THREAD) ? new FinishedState() : new IdleState();
+					transition((getCurrThread().amount >= REQUIRED_THREAD) ? new FinishedState() : new IdleState());
 					notifyChange();
 				}
 			}
-		
+
 			@Override
 			public void accept(SpinningWheelStateVisitor visitor) {
 				visitor.visit(this);
 			}
-			
+
 			@Override
 			public ActionResultType onInteract(BlockInteraction interaction) {
 				return ActionResultType.PASS;
 			}
-		
-			/**
+
+			// When the spinning wheel transitions to this state, set the spinning property to true so that
+			// the block is animated.
 			@Override
-			public void onPush() {
+			public void onTransitionTo() {
 				world.setBlockState(getPos(), getBlockState().with(SpinningWheelBlock.SPINNING, Boolean.TRUE));
 			}
-		
+
+			// Make sure to set the spinning property to false when the spinning wheel transitions to another state.
 			@Override
-			public void onPop() {
+			public void onTransitionFrom() {
 				world.setBlockState(getPos(), getBlockState().with(SpinningWheelBlock.SPINNING, Boolean.FALSE));
 			}
-			*/
-			
+
 		}
 
 		/**
@@ -222,14 +238,15 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		 *
 		 */
 		public class FinishedState implements ISpinningWheelState {
-		
-			public ThreadState getSuperState() {
-				return ThreadState.this;
+
+			public BaseState getSuperState() {
+				return BaseState.this;
 			}
-			
+
 			@Override
 			public ActionResultType onInteract(BlockInteraction interaction) {
-				// If we are finished spinning thread, allow the player to put the thread on a spindle item.
+				// If we are finished spinning thread, allow the player to put the thread on a
+				// spindle item.
 				if (interaction.item == ModItems.SPINDLE_ITEM.get()) {
 					if (!world.isRemote) {
 						// Consume one spindle
@@ -242,36 +259,41 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 							interaction.player.dropItem(threadItem, false);
 						}
 						// Reset the spinning wheel's state
-						state = new ThreadState();
+						SpinningWheelTile.this.state = new BaseState();
 						notifyChange();
 					}
 					// Play a fun pop sound
-					world.playSound((PlayerEntity) null, pos, SoundEvents.ENTITY_ITEM_PICKUP,
-							SoundCategory.BLOCKS, 1.0F, 1.0F);
+					world.playSound((PlayerEntity) null, pos, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.BLOCKS,
+							1.0F, 1.0F);
 					return ActionResultType.SUCCESS;
 				}
 				return ActionResultType.PASS;
 			}
-		
+
 			@Override
 			public void accept(SpinningWheelStateVisitor visitor) {
 				visitor.visit(this);
 			}
-			
+
 		}
 
 		// Create an object mapper to serialize/deserialize the substate
-		ObjectMapper mapper = new ObjectMapper(CLASSES)
-				.withSupplier(IdleState.class, IdleState::new)
+		ObjectMapper mapper = new ObjectMapper(CLASSES).withSupplier(IdleState.class, IdleState::new)
 				.withSupplier(FiberState.class, FiberState::new)
 				.withSupplier(SpinningState.class, SpinningState::new)
 				.withSupplier(FinishedState.class, FinishedState::new);
-		
-		// Current thread is initiliaze to a "dummy" thread, so we can interpolate colors and such.
-		private FiberInfo prevThread, currThread = new FiberInfo(new RYBKColor(), 0);
-		// Start in the idle state
-		private ISpinningWheelState subState = new IdleState();
-		
+
+		private FiberInfo prevThread, currThread;
+		private ISpinningWheelState state;
+
+		public BaseState() {
+			// Current thread is initiliaze to a "dummy" thread, so we can interpolate
+			// colors and such.
+			currThread = new FiberInfo(new RYBKColor(), 0);
+			// Start in an idle state
+			transition(new IdleState());
+		}
+
 		public FiberInfo getPrevThread() {
 			return prevThread;
 		}
@@ -280,20 +302,28 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			return currThread;
 		}
 
+		public void transition(ISpinningWheelState state) {
+			// Trigger callbacks
+			if (state != null)
+				state.onTransitionFrom();
+			this.state = state;
+			state.onTransitionTo();
+		}
+
 		@Override
 		public void tick() {
-			subState.tick();
+			state.tick();
 		}
 
 		@Override
 		public ActionResultType onInteract(BlockInteraction interaction) {
-			return subState.onInteract(interaction);
+			return state.onInteract(interaction);
 		}
 
 		@Override
 		public void accept(SpinningWheelStateVisitor visitor) {
 			// Visit substate first
-			subState.accept(visitor);
+			state.accept(visitor);
 			visitor.visit(this);
 		}
 
@@ -302,7 +332,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			CompoundNBT nbt = new CompoundNBT();
 			nbt.put(PREV_THREAD_TAG, prevThread.serializeNBT());
 			nbt.put(CURR_THREAD_TAG, currThread.serializeNBT());
-			NBTHelper.putPolymorphic(nbt, STATE_TAG, subState, mapper);
+			NBTHelper.putPolymorphic(nbt, STATE_TAG, state, mapper);
 			return nbt;
 		}
 
@@ -312,17 +342,17 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			currThread = new FiberInfo();
 			prevThread.deserializeNBT(nbt.getCompound(PREV_THREAD_TAG));
 			currThread.deserializeNBT(nbt.getCompound(CURR_THREAD_TAG));
-			subState = NBTHelper.getPolymorphic(nbt, STATE_TAG, mapper);
+			state = NBTHelper.getPolymorphic(nbt, STATE_TAG, mapper);
 		}
-		
+
 	}
-	
-	private ThreadState state = new ThreadState();
-	
+
+	private BaseState state = new BaseState();
+
 	public SpinningWheelTile() {
 		super(ModTiles.SPINNING_WHEEL_TILE.get());
 	}
-	
+
 	/**
 	 * Syncs data with clients and marks this tile to be saved.
 	 */
@@ -331,7 +361,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		world.notifyBlockUpdate(pos, state, state, Constants.BlockFlags.BLOCK_UPDATE);
 		markDirty();
 	}
-	
+
 	public ActionResultType onInteract(BlockInteraction interaction) {
 		return state.onInteract(interaction);
 	}
@@ -339,7 +369,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 	public void accept(SpinningWheelStateVisitor visitor) {
 		state.accept(visitor);
 	}
-	
+
 	@Override
 	public void tick() {
 		state.tick();
