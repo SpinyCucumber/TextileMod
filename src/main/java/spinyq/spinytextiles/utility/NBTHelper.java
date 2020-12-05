@@ -24,56 +24,59 @@ public class NBTHelper {
 
 	public static final String TYPE_TAG = "Type";
 	
-	public static class ClassSpace {
+	public static class ClassIdSpace {
 		
-		private final ImmutableMap<Class<?>, Integer> idMap;
-		private int idCounter = 0;
+		private final ImmutableMap<Class<?>, Integer> map;
+		private int size;
 
-		public ClassSpace(Class<?>... classes) {
+		public ClassIdSpace(Class<?>... classes) {
+			int idCounter = 0;
 			ImmutableMap.Builder<Class<?>, Integer> builder = new ImmutableMap.Builder<>();
 			for (Class<?> clazz : classes) {
 				builder.put(clazz, idCounter++);
 			}
-			idMap = builder.build();
-		}
-		
-		public Mapper createMapper() {
-			Mapper mapper = new Mapper();
-			mapper.suppliers = new Supplier[idCounter];
-			return mapper;
-		}
-		
-		public class Mapper {
-			
-			private Supplier<?>[] suppliers;
-			
-			private Mapper() { }
-			
-			public <T> Mapper with(Class<T> clazz, Supplier<T> supplier) {
-				// Get id and associate id with supplier
-				int id = idMap.get(clazz);
-				suppliers[id] = supplier;
-				return this;
-			}
-			
-			public Object createObject(int id) {
-				return suppliers[id].get();
-			}
-			
-			public int getId(Object object) {
-				return idMap.get(object.getClass());
-			}
-			
-			public Mapper copy() {
-				Mapper copy = new Mapper();
-				copy.suppliers = suppliers.clone();
-				return copy;
-			}
-			
+			map = builder.build();
+			size = idCounter;
 		}
 		
 	}
 	
+	public static class ObjectMapper {
+		
+		private Supplier<?>[] suppliers;
+		private ClassIdSpace classIds;
+		
+		private ObjectMapper() { }
+		
+		public ObjectMapper(ClassIdSpace classIds) {
+			this.classIds = classIds;
+			this.suppliers = new Supplier<?>[classIds.size];
+		}
+		
+		public <T> ObjectMapper withSupplier(Class<T> clazz, Supplier<T> supplier) {
+			// Get id and associate id with supplier
+			int id = classIds.map.get(clazz);
+			suppliers[id] = supplier;
+			return this;
+		}
+		
+		public Object createObject(int id) {
+			return suppliers[id].get();
+		}
+		
+		public int getId(Object object) {
+			return classIds.map.get(object.getClass());
+		}
+		
+		public ObjectMapper copy() {
+			ObjectMapper copy = new ObjectMapper();
+			copy.classIds = classIds;
+			copy.suppliers = suppliers.clone();
+			return copy;
+		}
+		
+	}
+
 	/**
 	 * Writes a polymorphic object to a Compount NBT tag.
 	 * @param <T> The type of the polymorphic NBT object
@@ -82,7 +85,7 @@ public class NBTHelper {
 	 * @param object The polymorphic NBT object
 	 */
 	public static <T extends INBTSerializable<CompoundNBT>> void putPolymorphic(CompoundNBT nbt, String key, T object,
-			ClassSpace.Mapper mapper) {
+			ObjectMapper mapper) {
 		nbt.put(key, writePolymorphic(object, mapper));
 	}
 	
@@ -92,12 +95,12 @@ public class NBTHelper {
 	 * @param nbt The compound nbt
 	 * @param key The key containing the object
 	 */
-	public static <T extends INBTSerializable<CompoundNBT>> T getPolymorphic(CompoundNBT nbt, String key, ClassSpace.Mapper mapper) {
+	public static <T extends INBTSerializable<CompoundNBT>> T getPolymorphic(CompoundNBT nbt, String key, ObjectMapper mapper) {
 		return readPolymorphic(nbt.getCompound(key), mapper);
 	}
 	
 	public static <T extends INBTSerializable<CompoundNBT>> CompoundNBT writePolymorphic(T object,
-			ClassSpace.Mapper mapper) {
+			ObjectMapper mapper) {
 		// Create a new compound NBT and write type ID
 		CompoundNBT objectNBT = object.serializeNBT();
 		int id = mapper.getId(object);
@@ -106,7 +109,7 @@ public class NBTHelper {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T extends INBTSerializable<CompoundNBT>> T readPolymorphic(CompoundNBT objectNBT, ClassSpace.Mapper mapper) {
+	public static <T extends INBTSerializable<CompoundNBT>> T readPolymorphic(CompoundNBT objectNBT, ObjectMapper mapper) {
 		// Read the object's type and create a new object
 		int id = objectNBT.getInt(TYPE_TAG);
 		T object = (T) mapper.createObject(id);
