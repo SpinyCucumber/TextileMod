@@ -22,6 +22,7 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.INBTSerializable;
 import spinyq.spinytextiles.ModTags;
 import spinyq.spinytextiles.ModTiles;
+import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.IBleachableItem;
 import spinyq.spinytextiles.items.IDyeableItem;
 import spinyq.spinytextiles.utility.BlockInteraction;
@@ -121,9 +122,8 @@ public class BasinTile extends TileEntity {
 						interaction.player.setHeldItem(interaction.hand, new ItemStack(Items.BUCKET));
 					}
 					state = new FilledState();
-					world
-							.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
-									1.0F, 1.0F);
+					world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F,
+							1.0F);
 					notifyChange();
 				}
 
@@ -163,7 +163,7 @@ public class BasinTile extends TileEntity {
 				for (Supplier<IConsumerState> supplier : suppliers) {
 					IConsumerState consumer = supplier.get();
 					if (consumer.consumeInteraction(interaction)) {
-						subState = consumer;
+						state = consumer;
 						notifyChange();
 						return ActionResultType.SUCCESS;
 					}
@@ -174,8 +174,6 @@ public class BasinTile extends TileEntity {
 
 			@Override
 			public void accept(BasinStateVisitor visitor) {
-				// Visit substate
-				subState.accept(visitor);
 				visitor.visit(this);
 			}
 
@@ -227,9 +225,8 @@ public class BasinTile extends TileEntity {
 					}
 					// Change the color
 					color = newColor;
-					world
-							.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
-									1.0F, 1.0F);
+					world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F,
+							1.0F);
 					notifyChange();
 				}
 
@@ -244,11 +241,10 @@ public class BasinTile extends TileEntity {
 				// If item is dyeable, dye it
 				if (interaction.item instanceof IDyeableItem) {
 					IDyeableItem dyeable = (IDyeableItem) interaction.item;
-					if (dyeable
-							.dye(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory), this)) {
-						world
-								.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
-										SoundCategory.BLOCKS, 1.0F, 1.0F);
+					if (dyeable.dye(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory),
+							this)) {
+						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
+								1.0F, 1.0F);
 						return ActionResultType.SUCCESS;
 					}
 				}
@@ -320,9 +316,8 @@ public class BasinTile extends TileEntity {
 					}
 					// Change the bleach level
 					bleachLevel = newBleachLevel;
-					world
-							.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
-									1.0F, 1.0F);
+					world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F,
+							1.0F);
 					notifyChange();
 				}
 
@@ -337,12 +332,10 @@ public class BasinTile extends TileEntity {
 				// If item is bleachable, bleach it
 				if (interaction.item instanceof IDyeableItem) {
 					IBleachableItem bleachable = (IBleachableItem) interaction.item;
-					if (bleachable
-							.bleach(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory),
-									this)) {
-						world
-								.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
-										SoundCategory.BLOCKS, 1.0F, 1.0F);
+					if (bleachable.bleach(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory),
+							this)) {
+						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
+								1.0F, 1.0F);
 						return ActionResultType.SUCCESS;
 					}
 				}
@@ -372,9 +365,8 @@ public class BasinTile extends TileEntity {
 
 		// Water level starts out at maximum
 		private int waterLevel = MAX_WATER_LEVEL;
-		private IBasinState subState = new WaterState();
-		private ObjectMapper mapper = BasinTile.this.mapper
-				.copy()
+		private IBasinState state = new WaterState();
+		private ObjectMapper mapper = BasinTile.this.mapper.copy()
 				.withSupplier(WaterState.class, WaterState::new)
 				.withSupplier(DyeState.class, DyeState::new)
 				.withSupplier(BleachState.class, BleachState::new);
@@ -395,7 +387,7 @@ public class BasinTile extends TileEntity {
 			// If water level reaches zero, transition to empty state
 			waterLevel -= amount;
 			if (waterLevel == 0) {
-				state = new EmptyState();
+				BasinTile.this.state = new EmptyState();
 			}
 			notifyChange();
 			return true;
@@ -403,7 +395,7 @@ public class BasinTile extends TileEntity {
 
 		@Override
 		public ActionResultType onInteract(BlockInteraction interaction) {
-			return subState.onInteract(interaction);
+			return state.onInteract(interaction);
 		}
 
 		@Override
@@ -411,7 +403,7 @@ public class BasinTile extends TileEntity {
 			// Write water level
 			CompoundNBT result = new CompoundNBT();
 			result.putInt(WATER_LEVEL_TAG, waterLevel);
-			NBTHelper.putPolymorphic(result, STATE_TAG, subState, mapper);
+			NBTHelper.putPolymorphic(result, STATE_TAG, state, mapper);
 			return result;
 		}
 
@@ -419,19 +411,20 @@ public class BasinTile extends TileEntity {
 		public void deserializeNBT(CompoundNBT nbt) {
 			// Read water level
 			waterLevel = nbt.getInt(WATER_LEVEL_TAG);
-			subState = NBTHelper.getPolymorphic(nbt, STATE_TAG, mapper);
+			state = NBTHelper.getPolymorphic(nbt, STATE_TAG, mapper);
 		}
 
 		@Override
 		public void accept(BasinStateVisitor visitor) {
+			// Visit substate first
+			state.accept(visitor);
 			visitor.visit(this);
 		}
 
 	}
 
 	private IBasinState state = new EmptyState();
-	private ObjectMapper mapper = new ObjectMapper(CLASSES)
-			.withSupplier(EmptyState.class, EmptyState::new)
+	private ObjectMapper mapper = new ObjectMapper(CLASSES).withSupplier(EmptyState.class, EmptyState::new)
 			.withSupplier(FilledState.class, FilledState::new);
 
 	public BasinTile() {
@@ -457,6 +450,8 @@ public class BasinTile extends TileEntity {
 
 	@Override
 	public void read(CompoundNBT compound) {
+		// DEBUG
+		TextileMod.LOGGER.info("BasinTile read... compound: {}", compound);
 		super.read(compound);
 		// Read state
 		state = NBTHelper.getPolymorphic(compound, STATE_TAG, mapper);

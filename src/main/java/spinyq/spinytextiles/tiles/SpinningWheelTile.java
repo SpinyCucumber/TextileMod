@@ -16,6 +16,7 @@ import net.minecraftforge.common.util.INBTSerializable;
 import spinyq.spinytextiles.ModItems;
 import spinyq.spinytextiles.ModSounds;
 import spinyq.spinytextiles.ModTiles;
+import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.items.IFiberItem;
 import spinyq.spinytextiles.utility.BlockInteraction;
@@ -377,6 +378,8 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 
 	@Override
 	public void read(CompoundNBT compound) {
+		// DEBUG
+		TextileMod.LOGGER.info("SpinningWheelTile read... compound: {}", compound);
 		super.read(compound);
 		// Read the state
 		state.deserializeNBT(compound.getCompound(STATE_TAG));
