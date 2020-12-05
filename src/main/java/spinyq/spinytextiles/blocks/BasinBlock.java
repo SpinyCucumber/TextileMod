@@ -1,6 +1,5 @@
 package spinyq.spinytextiles.blocks;
 
-import java.util.Optional;
 import java.util.Random;
 
 import net.minecraft.block.Block;
@@ -56,10 +55,10 @@ public class BasinBlock extends Block {
 			BasinTile basin = (BasinTile) tile;
 
 			// Spawn particles if basin is bleaching some shi
-			BasinStateVisitor<Void> blockAnimator = new BasinStateVisitor<Void>() {
+			BasinStateVisitor blockAnimator = new BasinStateVisitor() {
 
 				@Override
-				public Optional<Void> visit(FilledState.BleachState state) {
+				public void visit(FilledState.BleachState state) {
 					double bubbleChance = state.getBleachLevel();
 					if (rand.nextDouble() < bubbleChance) {
 						double x = (double) pos.getX() + 2.0 / 16.0 + 12.0 / 16.0 * rand.nextDouble(),
@@ -67,7 +66,6 @@ public class BasinBlock extends Block {
 								z = (double) pos.getZ() + 2.0 / 16.0 + 12.0 / 16.0 * rand.nextDouble();
 						worldIn.addParticle(ParticleTypes.BUBBLE_POP, x, y, z, 0.0D, 0.0D, 0.0D);
 					}
-					return Optional.ofNullable(null);
 				}
 
 			};

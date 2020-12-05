@@ -1,7 +1,5 @@
 package spinyq.spinytextiles.client.render;
 
-import java.util.Optional;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
@@ -20,6 +18,8 @@ import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
 import spinyq.spinytextiles.tiles.BasinTile.FilledState;
+import spinyq.spinytextiles.utility.FunctionHelper;
+import spinyq.spinytextiles.utility.FunctionHelper.Result;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RGBColor;
 
@@ -29,17 +29,16 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	private static final RGBColor WATER_COLOR = new RGBColor().fromIntString("0x3F76E4");
 	private static final int STAGES = 200;
 
-	// TODO Fix this
-	private static final BasinStateVisitor<RGBColor> COLOR_CALCULATOR = new BasinStateVisitor<RGBColor>() {
+	private static final BasinStateVisitor COLOR_CALCULATOR = new BasinStateVisitor() {
 
 		@Override
-		public Optional<RGBColor> visit(FilledState state) {
-			return Optional.of(WATER_COLOR);
+		public void visit(FilledState state) {
+			throw new Result(WATER_COLOR);
 		}
 
 		@Override
-		public Optional<RGBColor> visit(FilledState.DyeState state) {
-			return Optional.of(state.getColor().toRGB(new RGBColor(), visit(state.getSuperState()).get()));
+		public void visit(FilledState.DyeState state) {
+			throw new Result(state.getColor().toRGB(new RGBColor(), WATER_COLOR));
 		}
 
 	};
@@ -85,21 +84,21 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	public void render(BasinTile basin, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer renderer,
 			int combinedLightIn, int combinedOverlayIn) {
 		
-		BasinStateVisitor<Void> blockRenderer = new BasinStateVisitor<Void>() {
+		BasinStateVisitor blockRenderer = new BasinStateVisitor() {
 
 			@Override
-			public Optional<Void> visit(FilledState state) {
+			public void visit(FilledState state) {
 				// Calculate stage and model
 				int stage = (int) Math
 						.floor((float) (STAGES - 1) * (float) state.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
 				CuboidModel model = fluidModels[stage];
 				// Calculate water color
-				RGBAColor color = new RGBAColor(basin.accept(COLOR_CALCULATOR).get(), 1.0f);
+				RGBColor color = FunctionHelper.getResult(() -> basin.accept(COLOR_CALCULATOR));
+				RGBAColor colorRGBA = new RGBAColor(color, 1.0f);
 				// Allocate buffer
 				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 				// Render model
-				CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
-				return Optional.empty();
+				CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, colorRGBA, combinedLightIn, combinedOverlayIn);
 			}
 			
 		};
