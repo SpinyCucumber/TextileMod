@@ -81,6 +81,10 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		 */
 		public class IdleState implements ISpinningWheelState {
 		
+			public ThreadState getSuperState() {
+				return ThreadState.this;
+			}
+			
 			@Override
 			public ActionResultType onInteract(BlockInteraction interaction) {
 				if (interaction.item instanceof IFiberItem) {
@@ -121,6 +125,10 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			
 			public FiberState() { }
 		
+			public ThreadState getSuperState() {
+				return ThreadState.this;
+			}
+			
 			@Override
 			public ActionResultType onInteract(BlockInteraction interaction) {
 				if (!world.isRemote) {
@@ -164,6 +172,14 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			
 			private int timer = 0;
 		
+			public ThreadState getSuperState() {
+				return ThreadState.this;
+			}
+
+			public int getTime() {
+				return timer;
+			}
+
 			@Override
 			public void tick() {
 				// Increment our timer
@@ -187,10 +203,6 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 				return ActionResultType.PASS;
 			}
 		
-			public int getTime() {
-				return timer;
-			}
-		
 			/**
 			@Override
 			public void onPush() {
@@ -211,6 +223,10 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		 */
 		public class FinishedState implements ISpinningWheelState {
 		
+			public ThreadState getSuperState() {
+				return ThreadState.this;
+			}
+			
 			@Override
 			public ActionResultType onInteract(BlockInteraction interaction) {
 				// If we are finished spinning thread, allow the player to put the thread on a spindle item.
