@@ -20,7 +20,6 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
-import spinyq.spinytextiles.tiles.BasinTile.BleachState;
 import spinyq.spinytextiles.tiles.BasinTile.FilledState;
 import spinyq.spinytextiles.utility.BlockInteraction;
 
@@ -59,11 +58,11 @@ public class BasinBlock extends Block {
 			BasinStateVisitor<Void> blockAnimator = new BasinStateVisitor<Void>() {
 
 				@Override
-				public Void visit(BleachState state) {
+				public Void visit(FilledState.BleachState state) {
 					double bubbleChance = state.getBleachLevel();
 					if (rand.nextDouble() < bubbleChance) {
 						double x = (double) pos.getX() + 2.0 / 16.0 + 12.0 / 16.0 * rand.nextDouble(),
-								y = (double) pos.getY() + ((FilledState) state.getSuperState()).getWaterHeight(),
+								y = (double) pos.getY() + state.getSuperState().getWaterHeight(),
 								z = (double) pos.getZ() + 2.0 / 16.0 + 12.0 / 16.0 * rand.nextDouble();
 						worldIn.addParticle(ParticleTypes.BUBBLE_POP, x, y, z, 0.0D, 0.0D, 0.0D);
 					}

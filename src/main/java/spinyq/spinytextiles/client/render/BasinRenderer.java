@@ -17,8 +17,6 @@ import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
-import spinyq.spinytextiles.tiles.BasinTile.BleachState;
-import spinyq.spinytextiles.tiles.BasinTile.DyeState;
 import spinyq.spinytextiles.tiles.BasinTile.FilledState;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RGBColor;
@@ -29,6 +27,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	private static final RGBColor WATER_COLOR = new RGBColor().fromIntString("0x3F76E4");
 	private static final int STAGES = 200;
 
+	// TODO Fix this
 	private static final BasinStateVisitor<RGBColor> COLOR_CALCULATOR = new BasinStateVisitor<RGBColor>() {
 
 		@Override
@@ -37,12 +36,12 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 		}
 
 		@Override
-		public RGBColor visit(DyeState state) {
+		public RGBColor visit(FilledState.DyeState state) {
 			return state.getColor().toRGB(new RGBColor(), state.getSuperState().accept(this));
 		}
 
 		@Override
-		public RGBColor visit(BleachState state) {
+		public RGBColor visit(FilledState.BleachState state) {
 			return state.getSuperState().accept(this);
 		}
 		
@@ -104,16 +103,6 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 				// Render model
 				CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
 				return null;
-			}
-
-			@Override
-			public Void visit(DyeState state) {
-				return state.getSuperState().accept(this);
-			}
-
-			@Override
-			public Void visit(BleachState state) {
-				return state.getSuperState().accept(this);
 			}
 			
 		};
