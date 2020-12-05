@@ -276,6 +276,8 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 
 		@Override
 		public void accept(SpinningWheelStateVisitor visitor) {
+			// Visit substate first
+			subState.accept(visitor);
 			visitor.visit(this);
 		}
 
@@ -318,15 +320,15 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		return state.onInteract(interaction);
 	}
 
-	@Override
-	public void tick() {
-		state.tick();
-	}
-	
 	public void accept(SpinningWheelStateVisitor visitor) {
 		state.accept(visitor);
 	}
 	
+	@Override
+	public void tick() {
+		state.tick();
+	}
+
 	@Override
 	public void read(CompoundNBT compound) {
 		super.read(compound);
