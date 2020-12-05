@@ -48,7 +48,7 @@ public class BasinTile extends TileEntity {
 	 * Allows users to define external operations on basin states, like rendering,
 	 * animating, etc.
 	 */
-	public static interface BasinStateVisitor {
+	public interface BasinStateVisitor {
 
 		default void visit(EmptyState state) {
 		}
@@ -443,7 +443,7 @@ public class BasinTile extends TileEntity {
 	 * 
 	 * @return
 	 */
-	public boolean isHeated() {
+	private boolean isHeated() {
 		return CampfireBlock.isLitCampfireInRange(world, pos, 2);
 	}
 
