@@ -2,7 +2,6 @@ package spinyq.spinytextiles.utility;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableMap;
@@ -160,34 +159,34 @@ public class NBTHelper {
 	}
 	
 	/**
-	 * Writes an Optional to a compound NBT
+	 * Writes a nullable value to a compound NBT
 	 * @param <T> The type the optional contains
 	 * @param <K> The type that the value deserializes to
 	 * @param nbt The compound NBT
-	 * @param key The key containing the Optional
+	 * @param key The key
 	 */
-	public static <T extends INBTSerializable<K>, K extends INBT> void putOptional(CompoundNBT nbt, String key, Optional<T> optional) {
-		if (optional.isPresent()) {
-			nbt.put(key, optional.get().serializeNBT());
+	public static <T extends INBTSerializable<K>, K extends INBT> void putNullable(CompoundNBT nbt, String key, T value) {
+		if (value != null) {
+			nbt.put(key, value.serializeNBT());
 		}
 	}
 	
 	/**
-	 * Reads an Optional type from a compound NBT
-	 * @param <T> The type the optional contains
+	 * Reads an nullable value from a compound NBT
+	 * @param <T> The nullable type
 	 * @param <K> The type that the value deserializes to
-	 * @param factory A factory to create a new object if the optional is present
+	 * @param factory A factory to create a new object if the value is present
 	 * @param nbt The compound NBT
-	 * @param key The key containing the Optional
+	 * @param key The key
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends INBTSerializable<K>, K extends INBT> Optional<T> getOptional(Supplier<T> factory, CompoundNBT nbt, String key) {
+	public static <T extends INBTSerializable<K>, K extends INBT> T getNullable(Supplier<T> factory, CompoundNBT nbt, String key) {
 		if (nbt.contains(key)) {
 			T newObject = factory.get();
 			newObject.deserializeNBT((K) nbt.get(key));
-			return Optional.of(newObject);
+			return newObject;
 		}
-		else return Optional.empty();
+		else return null;
 	}
 	
 	/**
