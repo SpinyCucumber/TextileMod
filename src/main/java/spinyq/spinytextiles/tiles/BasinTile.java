@@ -1,7 +1,6 @@
 package spinyq.spinytextiles.tiles;
 
 import java.util.Collection;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableList;
@@ -46,6 +45,29 @@ public class BasinTile extends TileEntity {
 			FilledState.WaterState.class, FilledState.DyeState.class, FilledState.BleachState.class);
 
 	/**
+	 * Allows users to define external operations on basin states, like rendering,
+	 * animating, etc.
+	 */
+	public static interface BasinStateVisitor {
+
+		default void visit(EmptyState state) {
+		}
+
+		default void visit(FilledState state) {
+		}
+
+		default void visit(FilledState.WaterState state) {
+		}
+
+		default void visit(FilledState.DyeState state) {
+		}
+
+		default void visit(FilledState.BleachState state) {
+		}
+
+	}
+
+	/**
 	 * A state that a basin can occupy. Handles player interactions.
 	 * 
 	 * @author SpinyQ
@@ -55,7 +77,7 @@ public class BasinTile extends TileEntity {
 
 		ActionResultType onInteract(BlockInteraction interaction);
 
-		<T> Optional<T> accept(BasinStateVisitor<T> visitor);
+		void accept(BasinStateVisitor visitor);
 
 		@Override
 		default CompoundNBT serializeNBT() {
@@ -81,34 +103,6 @@ public class BasinTile extends TileEntity {
 	}
 
 	/**
-	 * Allows users to define external operations on basin states, like rendering,
-	 * animating, etc.
-	 */
-	public static interface BasinStateVisitor<T> {
-
-		default Optional<T> visit(EmptyState state) {
-			return Optional.empty();
-		}
-
-		default Optional<T> visit(FilledState state) {
-			return Optional.empty();
-		}
-
-		default Optional<T> visit(FilledState.WaterState state) {
-			return Optional.empty();
-		}
-
-		default Optional<T> visit(FilledState.DyeState state) {
-			return Optional.empty();
-		}
-
-		default Optional<T> visit(FilledState.BleachState state) {
-			return Optional.empty();
-		}
-
-	}
-
-	/**
 	 * Used when the basin contains no water. By default, basins start in this
 	 * state.
 	 * 
@@ -127,8 +121,9 @@ public class BasinTile extends TileEntity {
 						interaction.player.setHeldItem(interaction.hand, new ItemStack(Items.BUCKET));
 					}
 					state = new FilledState();
-					world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F,
-							1.0F);
+					world
+							.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
+									1.0F, 1.0F);
 					notifyChange();
 				}
 
@@ -139,8 +134,8 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public <T> Optional<T> accept(BasinStateVisitor<T> visitor) {
-			return visitor.visit(this);
+		public void accept(BasinStateVisitor visitor) {
+			visitor.visit(this);
 		}
 
 	}
@@ -160,7 +155,7 @@ public class BasinTile extends TileEntity {
 			public FilledState getSuperState() {
 				return FilledState.this;
 			}
-			
+
 			@Override
 			public ActionResultType onInteract(BlockInteraction interaction) {
 				// Check to see if any other states can handle the interaction
@@ -178,11 +173,10 @@ public class BasinTile extends TileEntity {
 			}
 
 			@Override
-			public <T> Optional<T> accept(BasinStateVisitor<T> visitor) {
-				// Allow substate to override
-				Optional<T> override = subState.accept(visitor);
-				if (override.isPresent()) return override;
-				return visitor.visit(this);
+			public void accept(BasinStateVisitor visitor) {
+				// Visit substate
+				subState.accept(visitor);
+				visitor.visit(this);
 			}
 
 		}
@@ -200,7 +194,7 @@ public class BasinTile extends TileEntity {
 			public FilledState getSuperState() {
 				return FilledState.this;
 			}
-			
+
 			@Override
 			public RYBKColor getColor() {
 				return color;
@@ -233,8 +227,9 @@ public class BasinTile extends TileEntity {
 					}
 					// Change the color
 					color = newColor;
-					world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F,
-							1.0F);
+					world
+							.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
+									1.0F, 1.0F);
 					notifyChange();
 				}
 
@@ -249,10 +244,11 @@ public class BasinTile extends TileEntity {
 				// If item is dyeable, dye it
 				if (interaction.item instanceof IDyeableItem) {
 					IDyeableItem dyeable = (IDyeableItem) interaction.item;
-					if (dyeable.dye(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory),
-							this)) {
-						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
-								1.0F, 1.0F);
+					if (dyeable
+							.dye(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory), this)) {
+						world
+								.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
+										SoundCategory.BLOCKS, 1.0F, 1.0F);
 						return ActionResultType.SUCCESS;
 					}
 				}
@@ -275,8 +271,8 @@ public class BasinTile extends TileEntity {
 			}
 
 			@Override
-			public <T> Optional<T> accept(BasinStateVisitor<T> visitor) {
-				return visitor.visit(this);
+			public void accept(BasinStateVisitor visitor) {
+				visitor.visit(this);
 			}
 
 		}
@@ -294,7 +290,7 @@ public class BasinTile extends TileEntity {
 			public FilledState getSuperState() {
 				return FilledState.this;
 			}
-			
+
 			@Override
 			public float getBleachLevel() {
 				return bleachLevel;
@@ -324,8 +320,9 @@ public class BasinTile extends TileEntity {
 					}
 					// Change the bleach level
 					bleachLevel = newBleachLevel;
-					world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F,
-							1.0F);
+					world
+							.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
+									1.0F, 1.0F);
 					notifyChange();
 				}
 
@@ -340,10 +337,12 @@ public class BasinTile extends TileEntity {
 				// If item is bleachable, bleach it
 				if (interaction.item instanceof IDyeableItem) {
 					IBleachableItem bleachable = (IBleachableItem) interaction.item;
-					if (bleachable.bleach(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory),
-							this)) {
-						world.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS,
-								1.0F, 1.0F);
+					if (bleachable
+							.bleach(new ContainedItemStack<>(interaction.itemstack, interaction.player.inventory),
+									this)) {
+						world
+								.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_BUCKET_EMPTY,
+										SoundCategory.BLOCKS, 1.0F, 1.0F);
 						return ActionResultType.SUCCESS;
 					}
 				}
@@ -365,8 +364,8 @@ public class BasinTile extends TileEntity {
 			}
 
 			@Override
-			public <T> Optional<T> accept(BasinStateVisitor<T> visitor) {
-				return visitor.visit(this);
+			public void accept(BasinStateVisitor visitor) {
+				visitor.visit(this);
 			}
 
 		}
@@ -374,8 +373,11 @@ public class BasinTile extends TileEntity {
 		// Water level starts out at maximum
 		private int waterLevel = MAX_WATER_LEVEL;
 		private IBasinState subState = new WaterState();
-		private ObjectMapper mapper = BasinTile.this.mapper.copy().withSupplier(WaterState.class, WaterState::new)
-				.withSupplier(DyeState.class, DyeState::new).withSupplier(BleachState.class, BleachState::new);
+		private ObjectMapper mapper = BasinTile.this.mapper
+				.copy()
+				.withSupplier(WaterState.class, WaterState::new)
+				.withSupplier(DyeState.class, DyeState::new)
+				.withSupplier(BleachState.class, BleachState::new);
 
 		public double getWaterHeight() {
 			return 0.2 + ((double) waterLevel / (double) MAX_WATER_LEVEL) * 0.875;
@@ -421,14 +423,15 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public <T> Optional<T> accept(BasinStateVisitor<T> visitor) {
-			return visitor.visit(this);
+		public void accept(BasinStateVisitor visitor) {
+			visitor.visit(this);
 		}
 
 	}
 
 	private IBasinState state = new EmptyState();
-	private ObjectMapper mapper = new ObjectMapper(CLASSES).withSupplier(EmptyState.class, EmptyState::new)
+	private ObjectMapper mapper = new ObjectMapper(CLASSES)
+			.withSupplier(EmptyState.class, EmptyState::new)
 			.withSupplier(FilledState.class, FilledState::new);
 
 	public BasinTile() {
@@ -444,8 +447,8 @@ public class BasinTile extends TileEntity {
 		return CampfireBlock.isLitCampfireInRange(world, pos, 2);
 	}
 
-	public <T> Optional<T> accept(BasinStateVisitor<T> visitor) {
-		return state.accept(visitor);
+	public void accept(BasinStateVisitor visitor) {
+		state.accept(visitor);
 	}
 
 	public ActionResultType onInteract(BlockInteraction interaction) {
