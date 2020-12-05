@@ -1,6 +1,7 @@
 package spinyq.spinytextiles.tiles;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableList;
@@ -54,7 +55,7 @@ public class BasinTile extends TileEntity {
 
 		ActionResultType onInteract(BlockInteraction interaction);
 
-		<T> T accept(BasinStateVisitor<T> visitor);
+		<T> Optional<T> accept(BasinStateVisitor<T> visitor);
 
 		@Override
 		default CompoundNBT serializeNBT() {
@@ -85,24 +86,24 @@ public class BasinTile extends TileEntity {
 	 */
 	public static interface BasinStateVisitor<T> {
 
-		default T visit(EmptyState state) {
-			return null;
+		default Optional<T> visit(EmptyState state) {
+			return Optional.empty();
 		}
 
-		default T visit(FilledState state) {
-			return null;
+		default Optional<T> visit(FilledState state) {
+			return Optional.empty();
 		}
 
-		default T visit(FilledState.WaterState state) {
-			return null;
+		default Optional<T> visit(FilledState.WaterState state) {
+			return Optional.empty();
 		}
 
-		default T visit(FilledState.DyeState state) {
-			return null;
+		default Optional<T> visit(FilledState.DyeState state) {
+			return Optional.empty();
 		}
 
-		default T visit(FilledState.BleachState state) {
-			return null;
+		default Optional<T> visit(FilledState.BleachState state) {
+			return Optional.empty();
 		}
 
 	}
@@ -138,7 +139,7 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public <T> T accept(BasinStateVisitor<T> visitor) {
+		public <T> Optional<T> accept(BasinStateVisitor<T> visitor) {
 			return visitor.visit(this);
 		}
 
@@ -177,7 +178,10 @@ public class BasinTile extends TileEntity {
 			}
 
 			@Override
-			public <T> T accept(BasinStateVisitor<T> visitor) {
+			public <T> Optional<T> accept(BasinStateVisitor<T> visitor) {
+				// Allow substate to override
+				Optional<T> override = subState.accept(visitor);
+				if (override.isPresent()) return override;
 				return visitor.visit(this);
 			}
 
@@ -271,7 +275,7 @@ public class BasinTile extends TileEntity {
 			}
 
 			@Override
-			public <T> T accept(BasinStateVisitor<T> visitor) {
+			public <T> Optional<T> accept(BasinStateVisitor<T> visitor) {
 				return visitor.visit(this);
 			}
 
@@ -361,7 +365,7 @@ public class BasinTile extends TileEntity {
 			}
 
 			@Override
-			public <T> T accept(BasinStateVisitor<T> visitor) {
+			public <T> Optional<T> accept(BasinStateVisitor<T> visitor) {
 				return visitor.visit(this);
 			}
 
@@ -417,7 +421,7 @@ public class BasinTile extends TileEntity {
 		}
 
 		@Override
-		public <T> T accept(BasinStateVisitor<T> visitor) {
+		public <T> Optional<T> accept(BasinStateVisitor<T> visitor) {
 			return visitor.visit(this);
 		}
 
@@ -440,7 +444,7 @@ public class BasinTile extends TileEntity {
 		return CampfireBlock.isLitCampfireInRange(world, pos, 2);
 	}
 
-	public <T> T accept(BasinStateVisitor<T> visitor) {
+	public <T> Optional<T> accept(BasinStateVisitor<T> visitor) {
 		return state.accept(visitor);
 	}
 

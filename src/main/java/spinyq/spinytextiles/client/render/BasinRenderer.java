@@ -1,5 +1,7 @@
 package spinyq.spinytextiles.client.render;
 
+import java.util.Optional;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
@@ -31,20 +33,15 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	private static final BasinStateVisitor<RGBColor> COLOR_CALCULATOR = new BasinStateVisitor<RGBColor>() {
 
 		@Override
-		public RGBColor visit(FilledState state) {
-			return WATER_COLOR;
+		public Optional<RGBColor> visit(FilledState state) {
+			return Optional.of(WATER_COLOR);
 		}
 
 		@Override
-		public RGBColor visit(FilledState.DyeState state) {
-			return state.getColor().toRGB(new RGBColor(), state.getSuperState().accept(this));
+		public Optional<RGBColor> visit(FilledState.DyeState state) {
+			return Optional.of(state.getColor().toRGB(new RGBColor(), visit(state.getSuperState()).get()));
 		}
 
-		@Override
-		public RGBColor visit(FilledState.BleachState state) {
-			return state.getSuperState().accept(this);
-		}
-		
 	};
 	
 	private final CuboidModel[] fluidModels = new CuboidModel[STAGES];
@@ -91,18 +88,18 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 		BasinStateVisitor<Void> blockRenderer = new BasinStateVisitor<Void>() {
 
 			@Override
-			public Void visit(FilledState state) {
+			public Optional<Void> visit(FilledState state) {
 				// Calculate stage and model
 				int stage = (int) Math
 						.floor((float) (STAGES - 1) * (float) state.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
 				CuboidModel model = fluidModels[stage];
 				// Calculate water color
-				RGBAColor color = new RGBAColor(basin.accept(COLOR_CALCULATOR), 1.0f);
+				RGBAColor color = new RGBAColor(basin.accept(COLOR_CALCULATOR).get(), 1.0f);
 				// Allocate buffer
 				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 				// Render model
 				CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
-				return null;
+				return Optional.empty();
 			}
 			
 		};
