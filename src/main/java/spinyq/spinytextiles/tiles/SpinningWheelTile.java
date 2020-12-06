@@ -16,7 +16,6 @@ import net.minecraftforge.common.util.INBTSerializable;
 import spinyq.spinytextiles.ModItems;
 import spinyq.spinytextiles.ModSounds;
 import spinyq.spinytextiles.ModTiles;
-import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.items.IFiberItem;
 import spinyq.spinytextiles.utility.BlockInteraction;
@@ -288,8 +287,6 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		private ISpinningWheelState state;
 
 		public BaseState() {
-			// DEBUG
-			System.out.println("SpinningWheelTile BaseState constructor...");
 			// Current thread is initiliaze to a "dummy" thread, so we can interpolate
 			// colors and such.
 			currThread = new FiberInfo(new RYBKColor(), 0);
@@ -401,8 +398,6 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 
 	@Override
 	public void read(CompoundNBT compound) {
-		// DEBUG
-		TextileMod.LOGGER.info("SpinningWheelTile read... compound: {}", compound);
 		super.read(compound);
 		// Read the new state and transition to it
 		BaseState state = new BaseState();

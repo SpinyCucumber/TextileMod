@@ -22,7 +22,6 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.INBTSerializable;
 import spinyq.spinytextiles.ModTags;
 import spinyq.spinytextiles.ModTiles;
-import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.IBleachableItem;
 import spinyq.spinytextiles.items.IDyeableItem;
 import spinyq.spinytextiles.utility.BlockInteraction;
@@ -450,8 +449,6 @@ public class BasinTile extends TileEntity {
 
 	@Override
 	public void read(CompoundNBT compound) {
-		// DEBUG
-		TextileMod.LOGGER.info("BasinTile read... compound: {}", compound);
 		super.read(compound);
 		// Read state
 		state = NBTHelper.getPolymorphic(compound, STATE_TAG, mapper);
