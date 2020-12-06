@@ -4,12 +4,12 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import spinyq.spinytextiles.client.render.ItemColorHelper;
 import spinyq.spinytextiles.utility.ContainedItemStack;
+import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.color.ColorWord;
 import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
@@ -24,38 +24,78 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 	 * @author SpinyQ
 	 *
 	 */
-	public static class StorageHandler {
-	
-		private static final String KEY_COLOR = "Color";
-	
+	public class StorageHandler {
+
+		private static final String KEY_COLOR = "Color", KEY_OLD_COLOR = "OldColor",
+				KEY_TRANSLATION_KEY = "TranslationKey";
+
 		/**
-		 * Writes a color to an itemstack and returns the stack for chaining
+		 * Writes a color to an itemstack
 		 * 
-		 * @param stack
-		 * @return
+		 * @param stack The itemstack
 		 */
-		public ItemStack withColor(ItemStack stack, RYBKColor color) {
-			// Create tag if it does not exist
-			if (!stack.hasTag())
-				stack.setTag(new CompoundNBT());
+		public void setColor(ItemStack stack, RYBKColor color) {
 			// Set color
-			stack.getTag().putInt(KEY_COLOR, color.toInt());
-			return stack;
+			NBTHelper.put(stack.getOrCreateTag(), KEY_COLOR, color);
 		}
-	
+
 		/**
 		 * @param stack
 		 * @return The color of the thread itemstack, or null if no color is attached.
 		 *         (This should not happen.)
 		 */
 		public RYBKColor getColor(ItemStack stack) {
-			if (!stack.hasTag())
-				return null;
-			if (!stack.getTag().contains(KEY_COLOR))
-				return null;
-			return new RYBKColor().fromInt(stack.getTag().getInt(KEY_COLOR));
+			return NBTHelper.getNullable(RYBKColor::new, stack.getOrCreateTag(), KEY_COLOR);
 		}
-	
+
+		/**
+		 * Retrieves the translation key of a given thread item stack. Since looking up
+		 * the closest color word is a somewhat complex operation, we cache the
+		 * translation key in the NBT data of the itemstack. We also store the color
+		 * that was used to calculate the translation key, so that we know if the
+		 * translation key is outdated.
+		 * 
+		 * @param stack The itemstack.
+		 * @return The translation key.
+		 */
+		// TODO Improvement: We could abstract this using the notion of an "Attribute"
+		// and a
+		// "CalculatedAttribute." This doesn't feel necessary right now but if we have
+		// items with
+		// larger calculated attributes it might be worthwhile.
+		public String getTranslationKey(ItemStack stack) {
+			// Check to see if our current translation key is out-of-date or not
+			// If it is current, simply return it
+			// If not, we have to calculate and store it so we can use it later
+			String result;
+			if (isTranslationKeyCurrent(stack)) {
+				result = stack.getTag().getString(KEY_TRANSLATION_KEY);
+			} else {
+				RYBKColor color = getColor(stack);
+				result = calculateTranslationKey(color);
+				// Also store the color used to calculate the translation key so
+				// we know when it becomes outdated
+				NBTHelper.put(stack.getOrCreateTag(), KEY_OLD_COLOR, color);
+				stack.getOrCreateTag().putString(KEY_TRANSLATION_KEY, result);
+			}
+			return result;
+		}
+
+		private boolean isTranslationKeyCurrent(ItemStack stack) {
+			// Retrieve the old color used to calculate the translation key
+			RYBKColor oldColor = NBTHelper.getNullable(RYBKColor::new, stack.getOrCreateTag(), KEY_OLD_COLOR);
+			// Check to see if oldColor equals current color
+			// If it does, the translation key is current
+			return oldColor.equals(getColor(stack));
+		}
+
+		private String calculateTranslationKey(RYBKColor color) {
+			// Retrieve the closest color word to the given color and stitch together a
+			// translation key
+			String colorName = ColorWord.getClosest(color).getName();
+			return ThreadItem.super.getTranslationKey() + '.' + colorName;
+		}
+
 	}
 
 	private StorageHandler storageHandler = new StorageHandler();
@@ -87,17 +127,6 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 	}
 
 	@Override
-	public String getTranslationKey(ItemStack stack) {
-		// If the stack has a color (it should), get the closest "word" color and use
-		// that
-		String colorName = "null";
-		RYBKColor color = getColor(stack);
-		if (color != null)
-			colorName = ColorWord.getClosest(color).getName();
-		return super.getTranslationKey() + '.' + colorName;
-	}
-
-	@Override
 	public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
 		if (this.isInGroup(group)) {
 			for (ColorWord colorWord : ColorWord.values()) {
@@ -109,10 +138,15 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		}
 	}
 
-	public void setColor(ItemStack stack, RYBKColor color) {
-		storageHandler.withColor(stack, color);
+	@Override
+	public String getTranslationKey(ItemStack stack) {
+		return storageHandler.getTranslationKey(stack);
 	}
-	
+
+	public void setColor(ItemStack stack, RYBKColor color) {
+		storageHandler.setColor(stack, color);
+	}
+
 	public RYBKColor getColor(ItemStack stack) {
 		return storageHandler.getColor(stack);
 	}
@@ -123,7 +157,8 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		RYBKColor oldColor = getColor(stack.getStack());
 		RYBKColor newColor = provider.getColor().plus(oldColor).clamp();
 		// If the new color didn't change, don't dye the object
-		if (oldColor.equals(newColor)) return false;
+		if (oldColor.equals(newColor))
+			return false;
 		// "Pay" for dye
 		// If the dye provider has enough dye, proceed to dye the object
 		if (provider.drain(dyeCost)) {
@@ -133,8 +168,7 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 			// Add dyed stack to inventory
 			stack.getInventory().addItemStackToInventory(dyedStack);
 			return true;
-		}
-		else {
+		} else {
 			return false;
 		}
 	}
@@ -145,7 +179,8 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		RYBKColor oldColor = getColor(stack.getStack());
 		RYBKColor newColor = oldColor.minus(new RYBKColor(provider.getBleachLevel())).clamp();
 		// If the new color didn't change, don't bleach the object
-		if (oldColor.equals(newColor)) return false;
+		if (oldColor.equals(newColor))
+			return false;
 		// "Pay" for bleach
 		// If the bleach provider has enough bleach, proceed to bleach the object
 		if (provider.drain(bleachCost)) {
@@ -156,8 +191,7 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 			// Add bleached stack to inventory
 			stack.getInventory().addItemStackToInventory(bleachedStack);
 			return true;
-		}
-		else {
+		} else {
 			return false;
 		}
 	}
