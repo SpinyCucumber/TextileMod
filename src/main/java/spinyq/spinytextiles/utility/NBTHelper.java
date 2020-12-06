@@ -75,6 +75,17 @@ public class NBTHelper {
 		}
 		
 	}
+	
+	public static <T extends INBTSerializable<K>, K extends INBT> void put(CompoundNBT nbt, String key, T object) {
+		nbt.put(key, object.serializeNBT());
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T extends INBTSerializable<K>, K extends INBT> T get(Supplier<T> supplier, CompoundNBT nbt, String key) {
+		T object = supplier.get();
+		object.deserializeNBT((K) nbt.get(key));
+		return object;
+	}
 
 	/**
 	 * Writes a polymorphic object to a Compount NBT tag.
