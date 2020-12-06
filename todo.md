@@ -17,3 +17,4 @@
 - [x] Pattern Registry
 - [ ] Module System
 - [ ] More efficient nearest-neighbor search for ColorWord
+- [x] Make ThreadItem cache its translation key
