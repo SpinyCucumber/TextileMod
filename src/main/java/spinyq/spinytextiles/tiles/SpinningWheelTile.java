@@ -288,6 +288,8 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		private ISpinningWheelState state;
 
 		public BaseState() {
+			// DEBUG
+			System.out.println("SpinningWheelTile BaseState constructor...");
 			// Current thread is initiliaze to a "dummy" thread, so we can interpolate
 			// colors and such.
 			currThread = new FiberInfo(new RYBKColor(), 0);
@@ -305,10 +307,20 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 
 		public void transition(ISpinningWheelState state) {
 			// Trigger callbacks
-			if (state != null)
-				state.onTransitionFrom();
+			if (this.state != null)
+				this.state.onTransitionFrom();
 			this.state = state;
+			this.state.onTransitionTo();
+		}
+
+		@Override
+		public void onTransitionTo() {
 			state.onTransitionTo();
+		}
+
+		@Override
+		public void onTransitionFrom() {
+			state.onTransitionFrom();
 		}
 
 		@Override
@@ -330,8 +342,9 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 
 		@Override
 		public CompoundNBT serializeNBT() {
+			// Write the previous thread info, which may be null
 			CompoundNBT nbt = new CompoundNBT();
-			nbt.put(PREV_THREAD_TAG, prevThread.serializeNBT());
+			NBTHelper.putNullable(nbt, PREV_THREAD_TAG, prevThread);
 			nbt.put(CURR_THREAD_TAG, currThread.serializeNBT());
 			NBTHelper.putPolymorphic(nbt, STATE_TAG, state, mapper);
 			return nbt;
@@ -339,19 +352,21 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 
 		@Override
 		public void deserializeNBT(CompoundNBT nbt) {
-			prevThread = new FiberInfo();
-			currThread = new FiberInfo();
-			prevThread.deserializeNBT(nbt.getCompound(PREV_THREAD_TAG));
+			// First, read previous thread info, which may be null
+			prevThread = NBTHelper.getNullable(FiberInfo::new, nbt, PREV_THREAD_TAG);
+			// Then read the current thread info and the state
+			// Transition to the new state
 			currThread.deserializeNBT(nbt.getCompound(CURR_THREAD_TAG));
-			state = NBTHelper.getPolymorphic(nbt, STATE_TAG, mapper);
+			transition(NBTHelper.getPolymorphic(nbt, STATE_TAG, mapper));
 		}
 
 	}
 
-	private BaseState state = new BaseState();
+	private BaseState state;
 
 	public SpinningWheelTile() {
 		super(ModTiles.SPINNING_WHEEL_TILE.get());
+		transition(new BaseState());
 	}
 
 	/**
@@ -361,6 +376,14 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		BlockState state = getBlockState();
 		world.notifyBlockUpdate(pos, state, state, Constants.BlockFlags.BLOCK_UPDATE);
 		markDirty();
+	}
+	
+	public void transition(BaseState state) {
+		// Trigger callbacks
+		if (this.state != null)
+			this.state.onTransitionFrom();
+		this.state = state;
+		this.state.onTransitionTo();
 	}
 
 	public ActionResultType onInteract(BlockInteraction interaction) {
@@ -381,8 +404,10 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		// DEBUG
 		TextileMod.LOGGER.info("SpinningWheelTile read... compound: {}", compound);
 		super.read(compound);
-		// Read the state
+		// Read the new state and transition to it
+		BaseState state = new BaseState();
 		state.deserializeNBT(compound.getCompound(STATE_TAG));
+		transition(state);
 	}
 
 	@Override
