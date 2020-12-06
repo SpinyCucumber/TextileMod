@@ -16,3 +16,4 @@
 - [x] Fix Brush Recipe
 - [x] Pattern Registry
 - [ ] Module System
+- [ ] More efficient nearest-neighbor search for ColorWord
