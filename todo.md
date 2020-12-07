@@ -18,3 +18,4 @@
 - [ ] Module System
 - [ ] More efficient nearest-neighbor search for ColorWord
 - [x] Make ThreadItem cache its translation key
+- [ ] IMPROVEMENT Also make ThreadItem cache its RGBColor for rendering.

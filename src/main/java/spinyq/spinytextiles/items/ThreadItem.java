@@ -66,6 +66,7 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		// "CalculatedValue." This doesn't feel necessary right now but if we have
 		// items with
 		// larger calculated attributes it might be worthwhile.
+		// TODO Improvement: We could also cache an RGBColor for rendering.
 		public String getTranslationKey(ItemStack stack) {
 			// Check to see if our current translation key is out-of-date or not
 			// If it is current, simply return it
