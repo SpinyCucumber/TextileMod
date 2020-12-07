@@ -26,8 +26,8 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 	 */
 	public class StorageHandler {
 
-		private static final String KEY_COLOR = "Color", KEY_OLD_COLOR = "OldColor",
-				KEY_TRANSLATION_KEY = "TranslationKey";
+		private static final String TAG_COLOR = "Color", OLD_COLOR_TAG = "OldColor",
+				TRANSLATION_KEY_TAG = "TranslationKey";
 
 		/**
 		 * Writes a color to an itemstack
@@ -36,7 +36,7 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		 */
 		public void setColor(ItemStack stack, RYBKColor color) {
 			// Set color
-			NBTHelper.put(stack.getOrCreateTag(), KEY_COLOR, color);
+			NBTHelper.put(stack.getOrCreateTag(), TAG_COLOR, color);
 		}
 
 		/**
@@ -45,7 +45,7 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		 *         (This should not happen.)
 		 */
 		public RYBKColor getColor(ItemStack stack) {
-			return NBTHelper.getNullable(RYBKColor::new, stack.getOrCreateTag(), KEY_COLOR);
+			return NBTHelper.getNullable(RYBKColor::new, stack.getOrCreateTag(), TAG_COLOR);
 		}
 
 		/**
@@ -58,9 +58,9 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		 * @param stack The itemstack.
 		 * @return The translation key.
 		 */
-		// TODO Improvement: We could abstract this using the notion of an "Attribute"
+		// TODO Improvement: We could abstract this using notions of a "Value," "Attribute,"
 		// and a
-		// "CalculatedAttribute." This doesn't feel necessary right now but if we have
+		// "CalculatedValue." This doesn't feel necessary right now but if we have
 		// items with
 		// larger calculated attributes it might be worthwhile.
 		public String getTranslationKey(ItemStack stack) {
@@ -69,21 +69,21 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 			// If not, we have to calculate and store it so we can use it later
 			String result;
 			if (isTranslationKeyCurrent(stack)) {
-				result = stack.getTag().getString(KEY_TRANSLATION_KEY);
+				result = stack.getTag().getString(TRANSLATION_KEY_TAG);
 			} else {
 				RYBKColor color = getColor(stack);
 				result = calculateTranslationKey(color);
 				// Also store the color used to calculate the translation key so
 				// we know when it becomes outdated
-				NBTHelper.put(stack.getOrCreateTag(), KEY_OLD_COLOR, color);
-				stack.getOrCreateTag().putString(KEY_TRANSLATION_KEY, result);
+				NBTHelper.put(stack.getOrCreateTag(), OLD_COLOR_TAG, color);
+				stack.getOrCreateTag().putString(TRANSLATION_KEY_TAG, result);
 			}
 			return result;
 		}
 
 		private boolean isTranslationKeyCurrent(ItemStack stack) {
 			// Retrieve the old color used to calculate the translation key
-			RYBKColor oldColor = NBTHelper.getNullable(RYBKColor::new, stack.getOrCreateTag(), KEY_OLD_COLOR);
+			RYBKColor oldColor = NBTHelper.getNullable(RYBKColor::new, stack.getOrCreateTag(), OLD_COLOR_TAG);
 			// Check to see if oldColor equals current color
 			// If it does, the translation key is current
 			return oldColor.equals(getColor(stack));
