@@ -47,7 +47,7 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		 * @return The color of the thread itemstack, or null if no color is attached.
 		 */
 		public RYBKColor getColor(ItemStack stack) {
-			return NBTHelper.getNullable(RYBKColor::new, stack.getOrCreateTag(), TAG_COLOR);
+			return NBTHelper.getOrNull(RYBKColor::new, stack.getOrCreateTag(), TAG_COLOR);
 		}
 
 		/**

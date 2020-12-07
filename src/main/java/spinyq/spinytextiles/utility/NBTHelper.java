@@ -21,7 +21,7 @@ import net.minecraftforge.registries.IForgeRegistryEntry;
  */
 public class NBTHelper {
 
-	public static final String TYPE_TAG = "Type";
+	public static final String TYPE_TAG = "Type", VALUE_TAG = "Value";
 	
 	public static class ClassIdSpace {
 		
@@ -177,9 +177,9 @@ public class NBTHelper {
 	 * @param key The key
 	 */
 	public static <T extends INBTSerializable<K>, K extends INBT> void putNullable(CompoundNBT nbt, String key, T value) {
-		if (value != null) {
-			nbt.put(key, value.serializeNBT());
-		}
+		CompoundNBT compound = new CompoundNBT();
+		if (value != null) compound.put(VALUE_TAG, value.serializeNBT());
+		nbt.put(key, compound);
 	}
 	
 	/**
@@ -192,6 +192,27 @@ public class NBTHelper {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends INBTSerializable<K>, K extends INBT> T getNullable(Supplier<T> factory, CompoundNBT nbt, String key) {
+		CompoundNBT compound = nbt.getCompound(key);
+		if (compound.contains(VALUE_TAG)) {
+			T newObject = factory.get();
+			newObject.deserializeNBT((K) compound.get(VALUE_TAG));
+			return newObject;
+		}
+		else return null;
+	}
+	
+	/**
+	 * Reads a value from a compound NBT, or returns null if the value is not present.
+	 * This should be distinguished from getNullable, where null represents a "valid state"
+	 * such as the absence of a value.
+	 * @param <T> The object type
+	 * @param <K> The type that the value deserializes to
+	 * @param factory A factory to create a new object if the value is present
+	 * @param nbt The compound NBT
+	 * @param key The key
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T extends INBTSerializable<K>, K extends INBT> T getOrNull(Supplier<T> factory, CompoundNBT nbt, String key) {
 		if (nbt.contains(key)) {
 			T newObject = factory.get();
 			newObject.deserializeNBT((K) nbt.get(key));
