@@ -178,12 +178,12 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 	/**
 	 * Sets this color using an integer of format 0xRRGGBBKK
 	 */
-	public RYBKColor fromInt(int i)
+	public RYBKColor fromInt(int n)
 	{
-		r = (float) (i >> 24 & 255) / 255.0F;
-        y = (float) (i >> 16 & 255) / 255.0F;
-        b = (float) (i >> 8 & 255) / 255.0F;
-        k = (float) (i & 255) / 255.0F;
+		r = (float) (n >> 24 & 255) / 255.0F;
+        y = (float) (n >> 16 & 255) / 255.0F;
+        b = (float) (n >> 8 & 255) / 255.0F;
+        k = (float) (n & 255) / 255.0F;
         return this;
 	} 
 	
