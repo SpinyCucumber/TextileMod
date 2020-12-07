@@ -2,7 +2,7 @@ package spinyq.spinytextiles.utility.textile;
 
 import java.util.SortedMap;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.model.Material;
 
 /**
  * A pattern used to make fabric in the loom.
@@ -20,9 +20,9 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 	 */
 	public static class Builder {
 		
-		private SortedMap<String, ResourceLocation> layers;
+		private SortedMap<String, Material> layers;
 		
-		public Builder withLayer(String layerName, ResourceLocation texture) {
+		public Builder withLayer(String layerName, Material texture) {
 			layers.put(layerName, texture);
 			return this;
 		}
@@ -33,15 +33,15 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 		
 	}
 	
-	// A mapping between a string parameter that represents a layer with a color, and a texture.
+	// A mapping between a string id and a texture.
 	// Preserves order so textures are displayed correctly.
-	private SortedMap<String, ResourceLocation> layers;
+	private final SortedMap<String, Material> layers;
 
-	public FabricPattern(SortedMap<String, ResourceLocation> layers) {
+	public FabricPattern(SortedMap<String, Material> layers) {
 		this.layers = layers;
 	}
 
-	public SortedMap<String, ResourceLocation> getLayers() {
+	public SortedMap<String, Material> getLayers() {
 		return layers;
 	}
 

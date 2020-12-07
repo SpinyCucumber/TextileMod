@@ -12,7 +12,8 @@
 - [x] Fiber Items
 - [x] Brush Item
 - [x] Item Color Helper
-- [ ] Fabric Item: Looks like ItemOverrideList can be used to override an Item's model dynamically. Will probably have to create a custom Model and ModelLoader class. Consult DynamicBucketModel. Might create a new Atlas for patterns and such. Color different layers using Item Color. Note: Item Models don't generate their texture locations. I was being silly.
+- [ ] Fabric Item: Looks like ItemOverrideList can be used to override an Item's model dynamically. Will probably have to create a custom Model and ModelLoader class. Consult DynamicBucketModel. Might create a new Atlas for patterns and such. Color different layers using Item Color. Note: Item Models don't generate their texture locations. I was being silly. We will also have to register the ModelLoader. This can be done using ModelLoaderRegistry, and should be performed during the ModelRegistryEvent. The fabric item also needs to be hooked up to the ModelLoader, which is accomplished in the item's JSON model file. https://github.com/MinecraftForge/MinecraftForge/blob/1.15.x/src/main/resources/assets/forge/models/item/bucket.json
+https://github.com/MinecraftForge/MinecraftForge/blob/fed7beab89031a4ca3786dcda4d4c21f702f6dfb/src/test/java/net/minecraftforge/debug/client/model/NewModelLoaderTest.java
 - [x] Fix Brush Recipe
 - [x] Pattern Registry
 - [ ] Module System
