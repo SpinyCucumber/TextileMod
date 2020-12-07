@@ -1,6 +1,7 @@
 package spinyq.spinytextiles.utility.textile;
 
 import net.minecraft.nbt.CompoundNBT;
+import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 
 /**
@@ -11,7 +12,7 @@ import spinyq.spinytextiles.utility.color.RYBKColor;
  */
 public class FiberInfo implements IGarmentComponent {
 	
-	private static final String TAG_COLOR = "Color", TAG_AMOUNT = "Amount";
+	private static final String COLOR_TAG = "Color", AMOUNT_TAG = "Amount";
 	
 	public RYBKColor color;
 	public int amount; // Non-zero
@@ -53,15 +54,15 @@ public class FiberInfo implements IGarmentComponent {
 	@Override
 	public CompoundNBT serializeNBT() {
 		CompoundNBT nbt = new CompoundNBT();
-		nbt.putInt(TAG_COLOR, color.toInt());
-		nbt.putInt(TAG_AMOUNT, amount);
+		NBTHelper.put(nbt, COLOR_TAG, color);
+		nbt.putInt(AMOUNT_TAG, amount);
 		return nbt;
 	}
 
 	@Override
 	public void deserializeNBT(CompoundNBT nbt) {
-		color = new RYBKColor().fromInt(nbt.getInt(TAG_COLOR));
-		amount = nbt.getInt(TAG_AMOUNT);
+		color = NBTHelper.get(RYBKColor::new, nbt, COLOR_TAG);
+		amount = nbt.getInt(AMOUNT_TAG);
 	}
 	
 }

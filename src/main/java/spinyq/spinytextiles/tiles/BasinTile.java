@@ -254,15 +254,15 @@ public class BasinTile extends TileEntity {
 			@Override
 			public CompoundNBT serializeNBT() {
 				// Write color
-				CompoundNBT result = new CompoundNBT();
-				result.putInt(COLOR_TAG, color.toInt());
-				return result;
+				CompoundNBT nbt = new CompoundNBT();
+				NBTHelper.put(nbt, COLOR_TAG, color);
+				return nbt;
 			}
 
 			@Override
 			public void deserializeNBT(CompoundNBT nbt) {
 				// Read color
-				color = new RYBKColor().fromInt(nbt.getInt(COLOR_TAG));
+				color = NBTHelper.get(RYBKColor::new, nbt, COLOR_TAG);
 			}
 
 			@Override
