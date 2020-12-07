@@ -26,8 +26,7 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 	 */
 	public class StorageHandler {
 
-		private static final String TAG_COLOR = "Color", OLD_COLOR_TAG = "OldColor",
-				TRANSLATION_KEY_TAG = "TranslationKey";
+		private static final String TAG_COLOR = "Color", TRANSLATION_KEY_TAG = "TranslationKey", TAG_DIRTY = "Dirty";
 
 		/**
 		 * Writes a color to an itemstack
@@ -35,7 +34,10 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		 * @param stack The itemstack
 		 */
 		public void setColor(ItemStack stack, RYBKColor color) {
-			// Set color
+			// If the new color is different than the itemstacks old color,
+			// mark the translatio key as being dirty is it is recalculated.
+			if (!getColor(stack).equals(color))
+				markTranslationKeyDirty(stack);
 			NBTHelper.put(stack.getOrCreateTag(), TAG_COLOR, color);
 		}
 
@@ -58,7 +60,8 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		 * @param stack The itemstack.
 		 * @return The translation key.
 		 */
-		// TODO Improvement: We could abstract this using notions of a "Value," "Attribute,"
+		// TODO Improvement: We could abstract this using notions of a "Value,"
+		// "Attribute,"
 		// and a
 		// "CalculatedValue." This doesn't feel necessary right now but if we have
 		// items with
@@ -68,25 +71,25 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 			// If it is current, simply return it
 			// If not, we have to calculate and store it so we can use it later
 			String result;
-			if (isTranslationKeyCurrent(stack)) {
-				result = stack.getTag().getString(TRANSLATION_KEY_TAG);
-			} else {
+			if (isTranslationKeyDirty(stack)) {
 				RYBKColor color = getColor(stack);
 				result = calculateTranslationKey(color);
-				// Also store the color used to calculate the translation key so
-				// we know when it becomes outdated
-				NBTHelper.put(stack.getOrCreateTag(), OLD_COLOR_TAG, color);
+				// Remove the dirty flag and cache the translation key
+				stack.getOrCreateTag().putBoolean(TAG_DIRTY, false);
 				stack.getOrCreateTag().putString(TRANSLATION_KEY_TAG, result);
+			} else {
+				result = stack.getTag().getString(TRANSLATION_KEY_TAG);
 			}
 			return result;
 		}
 
-		private boolean isTranslationKeyCurrent(ItemStack stack) {
-			// Retrieve the old color used to calculate the translation key
-			RYBKColor oldColor = NBTHelper.getNullable(RYBKColor::new, stack.getOrCreateTag(), OLD_COLOR_TAG);
-			// Check to see if oldColor equals current color
-			// If it does, the translation key is current
-			return oldColor.equals(getColor(stack));
+		private boolean isTranslationKeyDirty(ItemStack stack) {
+			// Check dirty flag
+			return stack.getOrCreateTag().getBoolean(TAG_DIRTY);
+		}
+
+		private void markTranslationKeyDirty(ItemStack stack) {
+			stack.getOrCreateTag().putBoolean(TAG_DIRTY, true);
 		}
 
 		private String calculateTranslationKey(RYBKColor color) {
