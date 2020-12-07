@@ -36,7 +36,8 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		public void setColor(ItemStack stack, RYBKColor color) {
 			// If the new color is different than the itemstacks old color,
 			// mark the translatio key as being dirty is it is recalculated.
-			if (!getColor(stack).equals(color))
+			// getColor(...) may return null, so pass it as the argument
+			if (!color.equals(getColor(stack)))
 				markTranslationKeyDirty(stack);
 			NBTHelper.put(stack.getOrCreateTag(), TAG_COLOR, color);
 		}
@@ -44,7 +45,6 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		/**
 		 * @param stack
 		 * @return The color of the thread itemstack, or null if no color is attached.
-		 *         (This should not happen.)
 		 */
 		public RYBKColor getColor(ItemStack stack) {
 			return NBTHelper.getNullable(RYBKColor::new, stack.getOrCreateTag(), TAG_COLOR);
