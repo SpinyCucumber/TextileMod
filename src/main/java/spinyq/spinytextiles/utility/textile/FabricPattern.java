@@ -1,5 +1,6 @@
 package spinyq.spinytextiles.utility.textile;
 
+import java.util.Collection;
 import java.util.SortedMap;
 
 import net.minecraft.client.renderer.model.Material;
@@ -40,9 +41,17 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 	public FabricPattern(SortedMap<String, Material> layers) {
 		this.layers = layers;
 	}
+	
+	public Material getTexture(String layerId) {
+		return layers.get(layerId);
+	}
 
-	public SortedMap<String, Material> getLayers() {
-		return layers;
+	public Collection<Material> getTextures() {
+		return layers.values();
+	}
+	
+	public Collection<String> getLayerIds() {
+		return layers.keySet();
 	}
 
 }
