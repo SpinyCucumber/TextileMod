@@ -2,7 +2,8 @@
 - [x] Spinning Wheel Block: Interacted w/ through right clicks. A spindle must be added first, then a certain amount of fiber. Afer this, right clicking spins the wheel. After a certain amount of spinning, the spindle becomes full and a thread item can be extracted. Multi-models and blockstates can be used to render varying levels of fiber and a spindle.
 - [x] Color Word Localization
 - [x] Better Mixing Algorithm
-- [ ] Add Feature to boost Basin color saturation. Player can add one glowstone dust which boosts the basin's color saturation.
+- [ ] Add Feature to boost Basin color saturation
+	- Player can add one glowstone dust which boosts the basin's color saturation.
 - [ ] Drafting Table
 - [ ] Embroidery Table?
 - [ ] Ability to dye fabric
@@ -12,8 +13,14 @@
 - [x] Fiber Items
 - [x] Brush Item
 - [x] Item Color Helper
-- [ ] Fabric Item: Looks like ItemOverrideList can be used to override an Item's model dynamically. Will probably have to create a custom Model and ModelLoader class. Consult DynamicBucketModel. Might create a new Atlas for patterns and such. Color different layers using Item Color. Note: Item Models don't generate their texture locations. I was being silly. We will also have to register the ModelLoader. This can be done using ModelLoaderRegistry, and should be performed during the ModelRegistryEvent. The fabric item also needs to be hooked up to the ModelLoader, which is accomplished in the item's JSON model file. https://github.com/MinecraftForge/MinecraftForge/blob/1.15.x/src/main/resources/assets/forge/models/item/bucket.json
-https://github.com/MinecraftForge/MinecraftForge/blob/fed7beab89031a4ca3786dcda4d4c21f702f6dfb/src/test/java/net/minecraftforge/debug/client/model/NewModelLoaderTest.java
+- [ ] Fabric Item
+	- Looks like ItemOverrideList can be used to override an Item's model dynamically. Will probably have to create a custom Model and ModelLoader class. Might create a new Atlas for patterns and such. Color different layers using Item Color. Note: Item Models don't generate their texture locations. I was being silly.
+	- We will also have to register the ModelLoader. This can be done using ModelLoaderRegistry, and should be performed during the ModelRegistryEvent. The fabric item also needs to be hooked up to the ModelLoader, which is accomplished in the item's JSON model file.
+	- Dynamic Bucket Model is a good source for creating custom item models.
+	- "NewModelLoaderTest" included in Forge 1.16 is also a good source.
+	- There are several methods for displaying fabrics. One method, discussed above, is creating a custom item model that creates quads for each layer of the fabric. This would mean more quads. Another possible issue would be z-fighting between quads of different layers, since they all use the same mask. This could be resolved by creating a more specialized quad generator. Another method of displaying fabric would be to combine each layer into an individual texture, and this this texture to render the item. This has the advantage of using less quads, and the textures could also be used for models. Since a texture has to be created for each fabric, however, it could slow down the GPU. It also isn't clear how exactly this would be accomplished. Seeing how Minecraft generates atlas textures would be a good place to start.
+	- https://github.com/MinecraftForge/MinecraftForge/blob/1.15.x/src/main/resources/assets/forge/models/item/bucket.json
+	- https://github.com/MinecraftForge/MinecraftForge/src/test/java/net/minecraftforge/debug/client/model/NewModelLoaderTest.java
 - [x] Fix Brush Recipe
 - [x] Pattern Registry
 - [ ] Module System
