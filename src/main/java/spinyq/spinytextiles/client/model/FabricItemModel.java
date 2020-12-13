@@ -48,7 +48,7 @@ import spinyq.spinytextiles.client.model.ModelHelper.Layer;
 import spinyq.spinytextiles.items.FabricItem;
 import spinyq.spinytextiles.utility.textile.FabricInfo;
 
-public final class FabricModel implements IModelGeometry<FabricModel> {
+public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 	// minimal Z offset to prevent depth-fighting
 	private static final float Z_OFFSET = 0.02f;
@@ -56,7 +56,7 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 	@Nonnull
 	private final FabricInfo info;
 
-	public FabricModel(FabricInfo info) {
+	public FabricItemModel(FabricInfo info) {
 		this.info = info;
 	}
 
@@ -108,7 +108,7 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 		return texs;
 	}
 
-	public enum Loader implements IModelLoader<FabricModel> {
+	public enum Loader implements IModelLoader<FabricItemModel> {
 		INSTANCE;
 
 		@Override
@@ -128,7 +128,7 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 		}
 
 		@Override
-		public FabricModel read(JsonDeserializationContext deserializationContext, JsonObject modelContents) {
+		public FabricItemModel read(JsonDeserializationContext deserializationContext, JsonObject modelContents) {
 			// Construct a new model with a default fabric info
 
 		}
@@ -159,7 +159,7 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 					return model.cache.get(info);
 				} else {
 					// Create a new unbaked model with the fabric info then bake it
-					IBakedModel bakedModel = new FabricModel(info).bake(model.owner, bakery,
+					IBakedModel bakedModel = new FabricItemModel(info).bake(model.owner, bakery,
 							ModelLoader.defaultTextureGetter(), model.originalTransform, model.getOverrides(),
 							new ResourceLocation(TextileMod.MODID, "fabric_item_override"));
 					model.cache.put(info, bakedModel);
