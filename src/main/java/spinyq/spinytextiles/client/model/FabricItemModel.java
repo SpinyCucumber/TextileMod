@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
@@ -48,12 +47,14 @@ import spinyq.spinytextiles.client.model.ModelHelper.Layer;
 import spinyq.spinytextiles.items.FabricItem;
 import spinyq.spinytextiles.utility.textile.FabricInfo;
 
+// ItemCameraTransform is deprecated but is still being used by BakedItemModel, so we are forced to
+// use it as well.
+@SuppressWarnings("deprecation")
 public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 	// minimal Z offset to prevent depth-fighting
 	private static final float Z_OFFSET = 0.02f;
 
-	@Nonnull
 	private final FabricInfo info;
 
 	public FabricItemModel(FabricInfo info) {
@@ -80,17 +81,19 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		TransformationMatrix transform = modelTransform.getRotation();
 
 		ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
-		// Create the quads
+		// If our fabric info is non-null, convert it into quads
 		// Get a list of layers and generate quads for each
-		float z = 0.0f;
-		TextureAtlasSprite maskSprite = spriteGetter.apply(maskLocation);
-		for (Layer layer : info.getLayers()) {
-			TextureAtlasSprite sprite = spriteGetter.apply(layer.texture);
-			// Add the quads
-			builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.NORTH,
-					layer.color.toIntARGB(), 1));
-			// Increase the depth for each layer
-			z += Z_OFFSET;
+		if (info != null) {
+			float z = 0.0f;
+			TextureAtlasSprite maskSprite = spriteGetter.apply(maskLocation);
+			for (Layer layer : info.getLayers()) {
+				TextureAtlasSprite sprite = spriteGetter.apply(layer.texture);
+				// Add the quads
+				builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.NORTH,
+						layer.color.toIntARGB(), 1));
+				// Increase the depth for each layer
+				z += Z_OFFSET;
+			}
 		}
 
 		return new BakedModel(bakery, owner, builder.build(), null, Maps.immutableEnumMap(transformMap),
@@ -129,8 +132,8 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 		@Override
 		public FabricItemModel read(JsonDeserializationContext deserializationContext, JsonObject modelContents) {
-			// Construct a new model with a default fabric info
-
+			// Construct a new, empty fabric item model
+			return new FabricItemModel(null);
 		}
 	}
 
