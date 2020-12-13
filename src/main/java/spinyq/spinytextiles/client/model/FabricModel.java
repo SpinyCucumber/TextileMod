@@ -28,14 +28,12 @@ import net.minecraft.client.renderer.model.Material;
 import net.minecraft.client.renderer.model.ModelBakery;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemStack;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.BakedItemModel;
-import net.minecraftforge.client.model.DynamicBucketModel;
 import net.minecraftforge.client.model.IModelConfiguration;
 import net.minecraftforge.client.model.IModelLoader;
 import net.minecraftforge.client.model.ItemTextureQuadConverter;
@@ -43,10 +41,11 @@ import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelTransformComposition;
 import net.minecraftforge.client.model.PerspectiveMapWrapper;
 import net.minecraftforge.client.model.geometry.IModelGeometry;
-import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.resource.IResourceType;
 import net.minecraftforge.resource.VanillaResourceType;
+import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.client.model.ModelHelper.Layer;
+import spinyq.spinytextiles.items.FabricItem;
 import spinyq.spinytextiles.utility.textile.FabricInfo;
 
 public final class FabricModel implements IModelGeometry<FabricModel> {
@@ -94,7 +93,7 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 			z += Z_OFFSET;
 		}
 
-		return new BakedModel(bakery, owner, this, builder.build(), null, Maps.immutableEnumMap(transformMap),
+		return new BakedModel(bakery, owner, builder.build(), null, Maps.immutableEnumMap(transformMap),
 				Maps.newHashMap(), transform.isIdentity(), modelTransform, owner.isSideLit());
 	}
 
@@ -135,56 +134,58 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 		}
 	}
 
-	private static final class ContainedFluidOverrideHandler extends ItemOverrideList {
+	private static final class OverrideHandler extends ItemOverrideList {
+		
 		private final ModelBakery bakery;
 
-		private ContainedFluidOverrideHandler(ModelBakery bakery) {
+		private OverrideHandler(ModelBakery bakery) {
 			this.bakery = bakery;
 		}
 
 		@Override
 		public IBakedModel getModelWithOverrides(IBakedModel originalModel, ItemStack stack, @Nullable World world,
 				@Nullable LivingEntity entity) {
-			return FluidUtil.getFluidContained(stack).map(fluidStack -> {
+			// Check if the item is a fabric item
+			// If it is, get the model corresponding to the fabric info.
+			// We cache models so that we don't have to bake them each time.
+			if (stack.getItem() instanceof FabricItem) {
+				FabricItem item = (FabricItem) stack.getItem();
 				BakedModel model = (BakedModel) originalModel;
-
-				Fluid fluid = fluidStack.getFluid();
-				String name = fluid.getRegistryName().toString();
-
-				if (!model.cache.containsKey(name)) {
-					DynamicBucketModel parent = model.parent.withFluid(fluid);
-					IBakedModel bakedModel = parent.bake(model.owner, bakery, ModelLoader.defaultTextureGetter(),
-							model.originalTransform, model.getOverrides(),
-							new ResourceLocation("forge:bucket_override"));
-					model.cache.put(name, bakedModel);
+				// Get the fabric info
+				FabricInfo info = item.getInfo(stack);
+				// Check if info is in cache
+				// If it isn't, we have to create it
+				if (model.cache.containsKey(info)) {
+					return model.cache.get(info);
+				} else {
+					// Create a new unbaked model with the fabric info then bake it
+					IBakedModel bakedModel = new FabricModel(info).bake(model.owner, bakery,
+							ModelLoader.defaultTextureGetter(), model.originalTransform, model.getOverrides(),
+							new ResourceLocation(TextileMod.MODID, "fabric_item_override"));
+					model.cache.put(info, bakedModel);
 					return bakedModel;
 				}
-
-				return model.cache.get(name);
-			})
-					// not a fluid item apparently
-					.orElse(originalModel); // empty bucket
+			}
+			// If the item is not a fabric item simply return the original model
+			return originalModel;
 		}
 	}
 
 	// the dynamic bucket is based on the empty bucket
 	private static final class BakedModel extends BakedItemModel {
+		
 		private final IModelConfiguration owner;
-		private final FabricModel parent;
-		private final Map<String, IBakedModel> cache; // contains all the baked models since they'll never change
+		private final Map<FabricInfo, IBakedModel> cache; // contains all the baked models since they'll never change
 		private final IModelTransform originalTransform;
-		private final boolean isSideLit;
 
-		BakedModel(ModelBakery bakery, IModelConfiguration owner, FabricModel parent, ImmutableList<BakedQuad> quads,
+		BakedModel(ModelBakery bakery, IModelConfiguration owner, ImmutableList<BakedQuad> quads,
 				TextureAtlasSprite particle, ImmutableMap<TransformType, TransformationMatrix> transforms,
-				Map<String, IBakedModel> cache, boolean untransformed, IModelTransform originalTransform,
+				Map<FabricInfo, IBakedModel> cache, boolean untransformed, IModelTransform originalTransform,
 				boolean isSideLit) {
-			super(quads, particle, transforms, new ContainedFluidOverrideHandler(bakery), untransformed, isSideLit);
+			super(quads, particle, transforms, new OverrideHandler(bakery), untransformed, isSideLit);
 			this.owner = owner;
-			this.parent = parent;
 			this.cache = cache;
 			this.originalTransform = originalTransform;
-			this.isSideLit = isSideLit;
 		}
 	}
 
