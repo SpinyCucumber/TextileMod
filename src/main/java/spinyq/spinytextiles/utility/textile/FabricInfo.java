@@ -1,10 +1,12 @@
 package spinyq.spinytextiles.utility.textile;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import net.minecraft.client.renderer.model.Material;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -32,6 +34,10 @@ public class FabricInfo implements IGarmentComponent {
 			RGBAColor color = colors.get(layer).toRGBA(new RGBAColor(), null);
 			return new Layer(pattern.textures.get(layer), color);
 		}).collect(Collectors.toList());
+	}
+	
+	public Collection<Material> getTextures() {
+		return pattern.textures.values();
 	}
 
 	@Override

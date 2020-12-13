@@ -55,7 +55,6 @@ import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.textile.FabricInfo;
 
 public final class FabricModel implements IModelGeometry<FabricModel> {
-	private static final Logger LOGGER = LogManager.getLogger();
 
 	// minimal Z offset to prevent depth-fighting
 	private static final float Z_OFFSET = 0.02f;
