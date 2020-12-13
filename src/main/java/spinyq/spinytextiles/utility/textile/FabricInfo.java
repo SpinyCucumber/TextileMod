@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import net.minecraft.client.renderer.model.Material;
@@ -59,6 +60,23 @@ public class FabricInfo implements IGarmentComponent {
 		pattern = NBTHelper.getRegistryEntry(nbt, TAG_PATTERN, REGISTRY);
 		// Retrieve the colors
 		colors = NBTHelper.getMap(HashMap::new, RYBKColor::new, nbt, TAG_COLORS);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(colors, pattern);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		FabricInfo other = (FabricInfo) obj;
+		return Objects.equals(colors, other.colors) && Objects.equals(pattern, other.pattern);
 	}
 
 }

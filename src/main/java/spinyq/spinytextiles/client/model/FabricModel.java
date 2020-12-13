@@ -1,6 +1,7 @@
 package spinyq.spinytextiles.client.model;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -9,13 +10,9 @@ import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
@@ -50,8 +47,6 @@ import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.resource.IResourceType;
 import net.minecraftforge.resource.VanillaResourceType;
 import spinyq.spinytextiles.client.model.ModelHelper.Layer;
-import spinyq.spinytextiles.utility.color.RGBAColor;
-import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.textile.FabricInfo;
 
 public final class FabricModel implements IModelGeometry<FabricModel> {
@@ -106,7 +101,7 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 	@Override
 	public Collection<Material> getTextures(IModelConfiguration owner,
 			Function<ResourceLocation, IUnbakedModel> modelGetter, Set<Pair<String, String>> missingTextureErrors) {
-		Set<Material> texs = Sets.newHashSet();
+		Set<Material> texs = new HashSet<>();
 
 		texs.add(owner.resolveTexture("mask"));
 		texs.addAll(info.getTextures());
