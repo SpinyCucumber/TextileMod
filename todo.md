@@ -18,9 +18,12 @@
 	- We will also have to register the ModelLoader. This can be done using ModelLoaderRegistry, and should be performed during the ModelRegistryEvent. The fabric item also needs to be hooked up to the ModelLoader, which is accomplished in the item's JSON model file.
 	- Dynamic Bucket Model is a good source for creating custom item models.
 	- "NewModelLoaderTest" included in Forge 1.16 is also a good source.
-	- There are several methods for displaying fabrics. One method, discussed above, is creating a custom item model that creates quads for each layer of the fabric. This would mean more quads. Another possible issue would be z-fighting between quads of different layers, since they all use the same mask. This could be resolved by creating a more specialized quad generator. Another method of displaying fabric would be to combine each layer into an individual texture, and this this texture to render the item. This has the advantage of using less quads, and the textures could also be used for models. Since a texture has to be created for each fabric, however, it could slow down the GPU. It also isn't clear how exactly this would be accomplished. Seeing how Minecraft generates atlas textures would be a good place to start.
+	- There are several methods for displaying fabrics. One method, discussed above, is creating a custom item model that creates quads for each layer of the fabric. This would mean more quads. Another possible issue would be z-fighting between quads of different layers, since they all use the same mask. This could be resolved by creating a more specialized quad generator. Another method of displaying fabric would be to combine each layer into an individual texture, and this this texture to render the item. This has the advantage of using less quads, and it would also really simplify armor rendering. Since a texture has to be created for each fabric, however, it could slow down the GPU. It also isn't clear how exactly this would be accomplished. Seeing how Minecraft generates atlas textures would be a good place to start.
 	- https://github.com/MinecraftForge/MinecraftForge/blob/1.15.x/src/main/resources/assets/forge/models/item/bucket.json
 	- https://github.com/MinecraftForge/MinecraftForge/src/test/java/net/minecraftforge/debug/client/model/NewModelLoaderTest.java
+- [ ] Clothing
+	- ArmorLayer might be a good place to start.
+	- Forge provides a method in Item called getArmorModel, which allows items to handle their own armor rendering. This could allow a "clothing" item to define its own model. Armor is rendered using a BipedModel. BipedModel defines its own geometry, but it could probably be subclassed.
 - [x] Fix Brush Recipe
 - [x] Pattern Registry
 - [ ] Module System
