@@ -1,4 +1,4 @@
-package net.minecraftforge.client.model;
+package spinyq.spinytextiles.client.model;
 
 import java.util.Collection;
 import java.util.Map;
