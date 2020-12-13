@@ -1,9 +1,7 @@
 package spinyq.spinytextiles.utility.textile;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import net.minecraft.client.renderer.model.Material;
 
@@ -23,27 +21,27 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 	 */
 	public static class Builder {
 
-		private List<String> layers = new LinkedList<>();
-		private Map<String, Material> textures = new HashMap<>();
+		private ImmutableList.Builder<String> layerBuilder;
+		private ImmutableMap.Builder<String, Material> textureBuilder;
 		
 		public Builder withLayer(String layer, Material texture) {
-			layers.add(layer);
-			textures.put(layer, texture);
+			layerBuilder.add(layer);
+			textureBuilder.put(layer, texture);
 			return this;
 		}
 		
 		public FabricPattern build() {
-			return new FabricPattern(layers, textures);
+			return new FabricPattern(layerBuilder.build(), textureBuilder.build());
 		}
 		
 	}
 	
 	// An ordered list of the different layers
-	final List<String> layers;
+	final ImmutableList<String> layers;
 	// A mapping between a layer id and a texture.
-	final Map<String, Material> textures;
+	final ImmutableMap<String, Material> textures;
 
-	private FabricPattern(List<String> layers, Map<String, Material> textures) {
+	private FabricPattern(ImmutableList<String> layers, ImmutableMap<String, Material> textures) {
 		this.layers = layers;
 		this.textures = textures;
 	}

@@ -95,7 +95,6 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 		float z = 0.0f;
 		TextureAtlasSprite maskSprite = spriteGetter.apply(maskLocation);
 		for (Layer layer : info.getLayers()) {
-			// Calculate the color
 			TextureAtlasSprite sprite = spriteGetter.apply(layer.texture);
 			// Add the quads
 			builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.NORTH,
