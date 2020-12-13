@@ -174,7 +174,6 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		}
 	}
 
-	// the dynamic bucket is based on the empty bucket
 	private static final class BakedModel extends BakedItemModel {
 		
 		private final IModelConfiguration owner;
