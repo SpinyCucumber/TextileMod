@@ -17,7 +17,7 @@ import spinyq.spinytextiles.ModItems;
 import spinyq.spinytextiles.ModSounds;
 import spinyq.spinytextiles.ModTiles;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
-import spinyq.spinytextiles.items.IFiberItem;
+import spinyq.spinytextiles.items.FiberItem;
 import spinyq.spinytextiles.utility.BlockInteraction;
 import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.NBTHelper.ClassIdSpace;
@@ -102,9 +102,9 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 
 			@Override
 			public ActionResultType onInteract(BlockInteraction interaction) {
-				if (interaction.item instanceof IFiberItem) {
+				if (interaction.item instanceof FiberItem) {
 					if (!world.isRemote) {
-						IFiberItem fiberItem = (IFiberItem) interaction.item;
+						FiberItem fiberItem = (FiberItem) interaction.item;
 						// Split off one item and retrieve fiber info
 						FiberInfo info = fiberItem.getInfo(interaction.itemstack.split(1));
 						// Transition to FiberState

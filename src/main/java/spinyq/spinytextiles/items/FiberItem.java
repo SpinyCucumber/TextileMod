@@ -5,7 +5,7 @@ import net.minecraft.item.ItemStack;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 import spinyq.spinytextiles.utility.textile.FiberInfo;
 
-public class FiberItem extends Item implements IFiberItem {
+public class FiberItem extends Item {
 
 	private RYBKColor color;
 	private int amountPerItem;
@@ -16,7 +16,6 @@ public class FiberItem extends Item implements IFiberItem {
 		this.amountPerItem = amountPerItem;
 	}
 
-	@Override
 	public FiberInfo getInfo(ItemStack stack) {
 		return new FiberInfo(color, stack.getCount() * amountPerItem);
 	}
