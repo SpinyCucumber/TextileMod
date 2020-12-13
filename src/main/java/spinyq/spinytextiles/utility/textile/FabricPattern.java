@@ -1,7 +1,9 @@
 package spinyq.spinytextiles.utility.textile;
 
-import java.util.Collection;
-import java.util.SortedMap;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import net.minecraft.client.renderer.model.Material;
 
@@ -20,38 +22,30 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 	 *
 	 */
 	public static class Builder {
+
+		private List<String> layers = new LinkedList<>();
+		private Map<String, Material> textures = new HashMap<>();
 		
-		private SortedMap<String, Material> layers;
-		
-		public Builder withLayer(String layerName, Material texture) {
-			layers.put(layerName, texture);
+		public Builder withLayer(String layer, Material texture) {
+			layers.add(layer);
+			textures.put(layer, texture);
 			return this;
 		}
 		
 		public FabricPattern build() {
-			return new FabricPattern(layers);
+			return new FabricPattern(layers, textures);
 		}
 		
 	}
 	
-	// A mapping between a string id and a texture.
-	// Preserves order so textures are displayed correctly.
-	private final SortedMap<String, Material> layers;
+	// An ordered list of the different layers
+	final List<String> layers;
+	// A mapping between a layer id and a texture.
+	final Map<String, Material> textures;
 
-	public FabricPattern(SortedMap<String, Material> layers) {
+	private FabricPattern(List<String> layers, Map<String, Material> textures) {
 		this.layers = layers;
-	}
-	
-	public Material getTexture(String layerId) {
-		return layers.get(layerId);
-	}
-
-	public Collection<Material> getTextures() {
-		return layers.values();
-	}
-	
-	public Collection<String> getLayerIds() {
-		return layers.keySet();
+		this.textures = textures;
 	}
 
 }

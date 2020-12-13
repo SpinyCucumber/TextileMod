@@ -1,14 +1,16 @@
 package spinyq.spinytextiles.utility.textile;
 
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-import net.minecraft.client.renderer.model.Material;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
+import spinyq.spinytextiles.client.model.ModelHelper.Layer;
 import spinyq.spinytextiles.utility.NBTHelper;
+import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 
 public class FabricInfo implements IGarmentComponent {
@@ -20,22 +22,16 @@ public class FabricInfo implements IGarmentComponent {
 	private FabricPattern pattern;
 	private Map<String, RYBKColor> colors;
 	
+	// Needed for deserialization
 	public FabricInfo() { }
 
-	public Material getTexture(String layerId) {
-		return pattern.getTexture(layerId);
-	}
-
-	public Collection<Material> getTextures() {
-		return pattern.getTextures();
-	}
-
-	public Collection<String> getLayerIds() {
-		return pattern.getLayerIds();
-	}
-
-	public RYBKColor getColor(String layerId) {
-		return colors.get(layerId);
+	public List<Layer> getLayers() {
+		// Create new list using streams
+		return pattern.layers.stream().map((layer) -> {
+			// Convert RYBKColor to RGBA then construct layer
+			RGBAColor color = colors.get(layer).toRGBA(new RGBAColor(), null);
+			return new Layer(pattern.textures.get(layer), color);
+		}).collect(Collectors.toList());
 	}
 
 	@Override

@@ -47,9 +47,9 @@ import net.minecraftforge.client.model.ModelTransformComposition;
 import net.minecraftforge.client.model.PerspectiveMapWrapper;
 import net.minecraftforge.client.model.geometry.IModelGeometry;
 import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.resource.IResourceType;
 import net.minecraftforge.resource.VanillaResourceType;
+import spinyq.spinytextiles.client.model.ModelHelper.Layer;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.textile.FabricInfo;
@@ -90,18 +90,18 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 
 		ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
 
-		// Create the quads here
-		// Get sprites using materials
+		// Create the quads
+		// Get a list of layers and generate quads for each
 		float z = 0.0f;
 		TextureAtlasSprite maskSprite = spriteGetter.apply(maskLocation);
-		for (String layerId : info.getLayerIds()) {
+		for (Layer layer : info.getLayers()) {
 			// Calculate the color
-			TextureAtlasSprite sprite = spriteGetter.apply(info.getTexture(layerId));
-			int color = new RGBAColor(info.getColor(layerId).toRGB(new RGBColor(), null), 1.0f).toIntARGB();
+			TextureAtlasSprite sprite = spriteGetter.apply(layer.texture);
 			// Add the quads
-            builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.NORTH, color, 1));
-            // Increase the depth for each layer
-            z += Z_OFFSET;
+			builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.NORTH,
+					layer.color.toIntARGB(), 1));
+			// Increase the depth for each layer
+			z += Z_OFFSET;
 		}
 
 		return new BakedModel(bakery, owner, this, builder.build(), null, Maps.immutableEnumMap(transformMap),
@@ -142,7 +142,7 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 		@Override
 		public FabricModel read(JsonDeserializationContext deserializationContext, JsonObject modelContents) {
 			// Construct a new model with a default fabric info
-			
+
 		}
 	}
 
