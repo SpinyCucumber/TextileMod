@@ -76,11 +76,9 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 		// Can we use null for the particle texture?
 
 		// Retrieve the particle and mask textures
-		Material particleLocation = owner.resolveTexture("particle");
 		Material maskLocation = owner.resolveTexture("mask");
 
 		IModelTransform transformsFromModel = owner.getCombinedTransform();
-
 		ImmutableMap<TransformType, TransformationMatrix> transformMap = transformsFromModel != null
 				? PerspectiveMapWrapper
 						.getTransforms(new ModelTransformComposition(transformsFromModel, modelTransform))
@@ -88,7 +86,6 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 		TransformationMatrix transform = modelTransform.getRotation();
 
 		ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
-
 		// Create the quads
 		// Get a list of layers and generate quads for each
 		float z = 0.0f;
@@ -111,7 +108,6 @@ public final class FabricModel implements IModelGeometry<FabricModel> {
 			Function<ResourceLocation, IUnbakedModel> modelGetter, Set<Pair<String, String>> missingTextureErrors) {
 		Set<Material> texs = Sets.newHashSet();
 
-		texs.add(owner.resolveTexture("particle"));
 		texs.add(owner.resolveTexture("mask"));
 		texs.addAll(info.getTextures());
 
