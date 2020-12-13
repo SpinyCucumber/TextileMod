@@ -7,7 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import spinyq.spinytextiles.client.render.ItemColorHelper;
+import spinyq.spinytextiles.client.render.ItemColorManager;
 import spinyq.spinytextiles.utility.ContainedItemStack;
 import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.color.ColorWord;
@@ -109,7 +109,7 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		super(properties);
 		// Set our color handler
 		DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
-			ItemColorHelper.setItemColorHandler(this, (stack, tintIndex) -> {
+			ItemColorManager.setItemColorHandler(this, (stack, tintIndex) -> {
 				// For the overlay layer, return the color of the thread
 				RGBColor rgb = getColor(stack).toRGB(new RGBColor(), null);
 				if (tintIndex == 1)

@@ -19,7 +19,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
  */
 @OnlyIn(Dist.CLIENT)
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
-public class ItemColorHelper {
+public class ItemColorManager {
 
 	private static Map<Item, IItemColor> mappings = new HashMap<>();
 	

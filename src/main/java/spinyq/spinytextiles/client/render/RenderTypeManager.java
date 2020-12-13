@@ -20,7 +20,7 @@ import spinyq.spinytextiles.TextileMod;
  *
  */
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
-public class RenderTypeHelper {
+public class RenderTypeManager {
 
 	public static enum BlockRenderMode {
 		
