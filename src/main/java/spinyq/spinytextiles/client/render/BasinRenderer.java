@@ -38,7 +38,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 		@Override
 		public void visit(FilledState.DyeState state) {
-			throw new Result(state.getColor().toRGB(new RGBColor(), WATER_COLOR));
+			throw new Result(state.getColor().toRGBA(new RGBAColor(), WATER_COLOR));
 		}
 
 	};
@@ -93,12 +93,11 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 						.floor((float) (STAGES - 1) * (float) state.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
 				CuboidModel model = fluidModels[stage];
 				// Calculate water color
-				RGBColor color = FunctionHelper.getResult(() -> basin.accept(COLOR_CALCULATOR));
-				RGBAColor colorRGBA = new RGBAColor(color, 1.0f);
+				RGBAColor color = FunctionHelper.getResult(() -> basin.accept(COLOR_CALCULATOR));
 				// Allocate buffer
 				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 				// Render model
-				CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, colorRGBA, combinedLightIn, combinedOverlayIn);
+				CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
 			}
 			
 		};

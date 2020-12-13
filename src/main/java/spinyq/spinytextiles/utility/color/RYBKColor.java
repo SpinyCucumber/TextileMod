@@ -224,6 +224,15 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 		color.setAll(c);
 		return color;
 	}
+	
+	/**
+	 * Convenience method that writes this RYBKColor to an RGBAColor. Sets the alpha to 1.0.
+	 */
+	public RGBAColor toRGBA(RGBAColor color, RGBColor base) {
+		color.setAll(toRGB(new RGBColor(), base));
+		color.a = 1.0f;
+		return color;
+	}
 
 	@Deprecated
 	public RYBKColor fromRGB(RGBColor rgb, RGBColor base) {
