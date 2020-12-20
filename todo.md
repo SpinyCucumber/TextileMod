@@ -32,7 +32,7 @@
 - [x] Pattern Registry
 - [ ] Module System
 - [ ] More efficient nearest-neighbor search for ColorWord
-- [ ] Delete ItemColorManager?
+- [x] Delete ItemColorManager?
 - [x] Make ThreadItem cache its translation key
 - [ ] IMPROVEMENT Also make ThreadItem cache its RGBColor for rendering.
 - [ ] IMPROVEMENT Move ColorWord definitions to a JSON file

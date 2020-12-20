@@ -5,9 +5,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import spinyq.spinytextiles.client.render.ItemColorManager;
+import net.minecraftforge.client.event.ColorHandlerEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import spinyq.spinytextiles.utility.ContainedItemStack;
 import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.color.ColorWord;
@@ -107,17 +107,23 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 
 	public ThreadItem(Properties properties) {
 		super(properties);
-		// Set our color handler
-		DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
-			ItemColorManager.setItemColorHandler(this, (stack, tintIndex) -> {
-				// For the overlay layer, return the color of the thread
+		// Make sure we can receive events so we can register our color handler
+		MinecraftForge.EVENT_BUS.register(this);
+	}
+	
+	@SubscribeEvent
+	public void onItemColorHandler(ColorHandlerEvent.Item event) {
+		// Register a color handler for all thread items.
+		// This ensures that the thread layer of each item is rendered with the actual color
+		// of the thread.
+		event.getItemColors().register((stack, tintIndex) -> {
+				// For the thread layer, return the color of the thread
 				RGBColor rgb = getColor(stack).toRGB(new RGBColor(), null);
 				if (tintIndex == 1)
 					return rgb.toInt();
 				// For all other layers, return -1 (white)
 				return -1;
-			});
-		});
+			}, this);
 	}
 
 	/**
