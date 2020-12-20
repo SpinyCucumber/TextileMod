@@ -8,6 +8,8 @@ import com.google.common.collect.ImmutableMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HorizontalBlock;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.pathfinding.PathType;
@@ -28,8 +30,11 @@ import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
-import spinyq.spinytextiles.client.render.RenderTypeManager;
-import spinyq.spinytextiles.client.render.RenderTypeManager.BlockRenderMode;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.tiles.SpinningWheelTile;
 import spinyq.spinytextiles.utility.BlockInteraction;
 
@@ -53,8 +58,14 @@ public class SpinningWheelBlock extends Block {
 	public SpinningWheelBlock(Properties properties) {
 		super(properties);
 		this.setDefaultState(this.stateContainer.getBaseState().with(FACING, Direction.NORTH).with(SPINNING, Boolean.valueOf(false)));
-		// Use a cutout render type
-		RenderTypeManager.setRenderMode(this, BlockRenderMode.CUTOUT);
+		// Make sure we receive events so we can set our render type
+		FMLJavaModLoadingContext.get().getModEventBus().register(this);
+	}
+	
+	@OnlyIn(Dist.CLIENT)
+	@SubscribeEvent
+	public void onModelRegistry(ModelRegistryEvent event) {
+		RenderTypeLookup.setRenderLayer(this, RenderType.getCutout());
 	}
 
 	public boolean isNormalCube(BlockState state, IBlockReader worldIn, BlockPos pos) {
