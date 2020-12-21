@@ -16,6 +16,8 @@ import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -30,6 +32,7 @@ import net.minecraft.resources.IFutureReloadListener;
 import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
+import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -40,6 +43,7 @@ import spinyq.spinytextiles.utility.textile.FabricPattern;
 
 /**
  * Assigns fabric patterns textures for each of their layers.
+ * 
  * @author SpinyQ
  *
  */
@@ -48,17 +52,22 @@ public class FabricTextureManager implements IFutureReloadListener {
 
 	public static final FabricTextureManager INSTANCE = new FabricTextureManager();
 	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
-	// TODO Will need to change this
+	private static final Gson SERIALIZER = new GsonBuilder()
+			.registerTypeAdapter(FabricTextures.class, new FabricTextures.Deserializer()).create();
+
+	// TODO Will need to change this.
+	// We should probably use our own atlas.
 	@SuppressWarnings("deprecation")
 	private static final ResourceLocation ATLAS_LOCATION = AtlasTexture.LOCATION_BLOCKS_TEXTURE;
-	
+
 	/**
 	 * Provides textures for each layer of a fabric pattern.
+	 * 
 	 * @author SpinyQ
 	 *
 	 */
 	private static class FabricTextures {
-		
+
 		private static class Deserializer implements JsonDeserializer<FabricTextures> {
 
 			@Override
@@ -79,8 +88,7 @@ public class FabricTextureManager implements IFutureReloadListener {
 					// Otherwise, construct a new material and put the entry in the map
 					if (textureLocation == null) {
 						throw new JsonParseException(textureStr + " is not valid resource location");
-					}
-					else {
+					} else {
 						String layer = entry.getKey();
 						Material texture = new Material(ATLAS_LOCATION, textureLocation);
 						builder.put(layer, texture);
@@ -89,31 +97,32 @@ public class FabricTextureManager implements IFutureReloadListener {
 				// Build the map and construct a new FabricTextures
 				return new FabricTextures(builder.build());
 			}
-			
+
 		}
-		
+
 		private final ImmutableMap<String, Material> map;
 
 		private FabricTextures(ImmutableMap<String, Material> textures) {
 			this.map = textures;
 		}
-		
+
 		private Material get(String layer) {
 			return map.get(layer);
 		}
-		
+
 		private Collection<Material> values() {
 			return map.values();
 		}
-		
+
 	}
-	
+
 	// The internal map between fabric patterns and textures
 	private Map<FabricPattern, FabricTextures> map = new HashMap<>();
-	
+
 	/**
-	 * Returns a list of the corresponding texture for each layer in the fabric pattern.
-	 * The list is in order of layers and is unmodifiable.
+	 * Returns a list of the corresponding texture for each layer in the fabric
+	 * pattern. The list is in order of layers and is unmodifiable.
+	 * 
 	 * @param pattern The fabric pattern
 	 * @return The list
 	 */
@@ -122,13 +131,15 @@ public class FabricTextureManager implements IFutureReloadListener {
 		// We use the pattern's list to ensure that the textures are in the right order
 		// First, look up the fabric textures
 		FabricTextures textures = map.get(pattern);
-		return Collections.unmodifiableList(pattern.getLayers().stream().map(textures::get).collect(Collectors.toList()));
+		return Collections
+				.unmodifiableList(pattern.getLayers().stream().map(textures::get).collect(Collectors.toList()));
 	}
-	
+
 	/**
-	 * Returns of collection of textures that the fabric pattern uses.
-	 * The collection has no order is unmodifiable. If the user wants a list of textures
+	 * Returns of collection of textures that the fabric pattern uses. The
+	 * collection has no order is unmodifiable. If the user wants a list of textures
 	 * ordered by layer, they should use getTextureList.
+	 * 
 	 * @param pattern The fabric pattern
 	 * @return The collection
 	 */
@@ -137,40 +148,45 @@ public class FabricTextureManager implements IFutureReloadListener {
 		FabricTextures textures = map.get(pattern);
 		return Collections.unmodifiableCollection(textures.values());
 	}
-	
-	// The following are convenience methods that retrieve the textures for a fabric.
-	
+
+	// The following are convenience methods that retrieve the textures for a
+	// fabric.
+
 	public List<Material> getTextureList(Fabric fabric) {
 		return getTextureList(fabric.getPattern());
 	}
-	
+
 	public Collection<Material> getTextures(Fabric fabric) {
 		return getTextures(fabric.getPattern());
 	}
-	
+
 	@Override
 	public CompletableFuture<Void> reload(IStage stage, IResourceManager resourceManager,
 			IProfiler preparationsProfiler, IProfiler reloadProfiler, Executor backgroundExecutor,
 			Executor gameExecutor) {
-		// TODO Load fabric textures.
-		// For each fabric pattern in the registry, load the list of textures from a JSON file.
+		// Load fabric textures.
+		// For each fabric pattern in the registry, load the list of textures from a
+		// JSON file.
 		for (FabricPattern pattern : PATTERN_REGISTRY.getValues()) {
 			// Get the location of the textures file
 			ResourceLocation texturesLocation = getTexturesLocation(pattern);
 			// Get the resource at the location and create a reader to load it
 			try {
 				IResource resource = resourceManager.getResource(texturesLocation);
-	            Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
-	            // Parse JSON
+				Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
+				// Parse JSON and put textures into the map
+				FabricTextures textures = JSONUtils.fromJson(SERIALIZER, reader, FabricTextures.class);
+				map.put(pattern, textures);
 			} catch (IOException e) {
 				throw new RuntimeException("Failed to load textures file.", e);
 			}
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Gets the location of a fabric pattern's textures file.
+	 * 
 	 * @param pattern The fabric pattern
 	 * @return The location of the textures file
 	 */
@@ -182,7 +198,7 @@ public class FabricTextureManager implements IFutureReloadListener {
 	// Called when the mod is first constructed
 	public void onModConstructed() {
 		// Let Minecraft know we manage resources
-	    ((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(this);
+		((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(this);
 	}
-	
+
 }
