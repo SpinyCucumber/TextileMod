@@ -4,6 +4,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -16,6 +17,11 @@ import spinyq.spinytextiles.utility.textile.GarmentPattern;
 @EventBusSubscriber(bus = Bus.MOD)
 public class ModPatterns {
 	
+	public static final DeferredRegister<FabricPattern> FABRIC_PATTERNS = new DeferredRegister<>(LazyForgeRegistry.of(FabricPattern.class), TextileMod.MODID);
+	public static final DeferredRegister<GarmentPattern> GARMENT_PATTERNS = new DeferredRegister<>(LazyForgeRegistry.of(GarmentPattern.class), TextileMod.MODID);
+	
+	public static final RegistryObject<FabricPattern> SOLID_FABRIC = FABRIC_PATTERNS.register("solid", () -> new FabricPattern("base"));
+	
 	@SubscribeEvent
 	public static void createRegistries(RegistryEvent.NewRegistry event) {
 		// TODO Create general pattern registry?
@@ -26,8 +32,5 @@ public class ModPatterns {
 		FABRIC_PATTERNS.register(bus);
 		GARMENT_PATTERNS.register(bus);
 	}
-	
-	public static final DeferredRegister<FabricPattern> FABRIC_PATTERNS = new DeferredRegister<>(LazyForgeRegistry.of(FabricPattern.class), TextileMod.MODID);
-	public static final DeferredRegister<GarmentPattern> GARMENT_PATTERNS = new DeferredRegister<>(LazyForgeRegistry.of(GarmentPattern.class), TextileMod.MODID);
 	
 }
