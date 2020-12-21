@@ -12,7 +12,7 @@ import com.google.common.collect.ImmutableMap;
 import net.minecraft.client.renderer.model.Material;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import spinyq.spinytextiles.utility.textile.FabricInfo;
+import spinyq.spinytextiles.utility.textile.Fabric;
 import spinyq.spinytextiles.utility.textile.FabricPattern;
 
 @OnlyIn(Dist.CLIENT)
@@ -73,11 +73,11 @@ public class FabricTextureManager {
 	
 	// The following are convenience methods that retrieve the textures for a fabric.
 	
-	public static List<Material> getTextureList(FabricInfo fabric) {
+	public static List<Material> getTextureList(Fabric fabric) {
 		return getTextureList(fabric.getPattern());
 	}
 	
-	public static Collection<Material> getTextures(FabricInfo fabric) {
+	public static Collection<Material> getTextures(Fabric fabric) {
 		return getTextures(fabric.getPattern());
 	}
 	

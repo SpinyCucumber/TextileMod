@@ -44,7 +44,7 @@ import net.minecraftforge.resource.IResourceType;
 import net.minecraftforge.resource.VanillaResourceType;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.FabricItem;
-import spinyq.spinytextiles.utility.textile.FabricInfo;
+import spinyq.spinytextiles.utility.textile.Fabric;
 
 // ItemCameraTransform is deprecated but is still being used by BakedItemModel, so we are forced to
 // use it as well.
@@ -54,10 +54,10 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 	// minimal Z offset to prevent depth-fighting
 	private static final float Z_OFFSET = 0.02f;
 
-	private final FabricInfo info;
+	private final Fabric fabric;
 
-	public FabricItemModel(FabricInfo info) {
-		this.info = info;
+	public FabricItemModel(Fabric fabric) {
+		this.fabric = fabric;
 	}
 
 	@Override
@@ -82,10 +82,10 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
 		// If our fabric info is non-null, convert it into quads
 		// Get a list of layers and generate quads for each
-		if (info != null) {
+		if (fabric != null) {
 			float z = 0.0f;
 			TextureAtlasSprite maskSprite = spriteGetter.apply(maskLocation);
-			for (Material texture : FabricTextureManager.getTextureList(info)) {
+			for (Material texture : FabricTextureManager.getTextureList(fabric)) {
 				TextureAtlasSprite sprite = spriteGetter.apply(texture);
 				// Add the quads
 				// Use white color
@@ -106,7 +106,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		Set<Material> texs = new HashSet<>();
 
 		texs.add(owner.resolveTexture("mask"));
-		texs.addAll(FabricTextureManager.getTextures(info));
+		texs.addAll(FabricTextureManager.getTextures(fabric));
 
 		return texs;
 	}
@@ -149,23 +149,23 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		public IBakedModel getModelWithOverrides(IBakedModel originalModel, ItemStack stack, @Nullable World world,
 				@Nullable LivingEntity entity) {
 			// Check if the item is a fabric item
-			// If it is, get the model corresponding to the fabric info.
+			// If it is, get the model corresponding to the fabric.
 			// We cache models so that we don't have to bake them each time.
 			if (stack.getItem() instanceof FabricItem) {
 				FabricItem item = (FabricItem) stack.getItem();
 				BakedModel model = (BakedModel) originalModel;
-				// Get the fabric info
-				FabricInfo info = item.getInfo(stack);
-				// Check if info is in cache
+				// Get the fabric
+				Fabric fabric = item.getFabric(stack);
+				// Check if fabric is in cache
 				// If it isn't, we have to create it
-				if (model.cache.containsKey(info)) {
-					return model.cache.get(info);
+				if (model.cache.containsKey(fabric)) {
+					return model.cache.get(fabric);
 				} else {
-					// Create a new unbaked model with the fabric info then bake it
-					IBakedModel bakedModel = new FabricItemModel(info).bake(model.owner, bakery,
+					// Create a new unbaked model with the fabric then bake it
+					IBakedModel bakedModel = new FabricItemModel(fabric).bake(model.owner, bakery,
 							ModelLoader.defaultTextureGetter(), model.originalTransform, model.getOverrides(),
 							new ResourceLocation(TextileMod.MODID, "fabric_item_override"));
-					model.cache.put(info, bakedModel);
+					model.cache.put(fabric, bakedModel);
 					return bakedModel;
 				}
 			}
@@ -177,12 +177,12 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 	private static final class BakedModel extends BakedItemModel {
 		
 		private final IModelConfiguration owner;
-		private final Map<FabricInfo, IBakedModel> cache; // contains all the baked models since they'll never change
+		private final Map<Fabric, IBakedModel> cache; // contains all the baked models since they'll never change
 		private final IModelTransform originalTransform;
 
 		BakedModel(ModelBakery bakery, IModelConfiguration owner, ImmutableList<BakedQuad> quads,
 				TextureAtlasSprite particle, ImmutableMap<TransformType, TransformationMatrix> transforms,
-				Map<FabricInfo, IBakedModel> cache, boolean untransformed, IModelTransform originalTransform,
+				Map<Fabric, IBakedModel> cache, boolean untransformed, IModelTransform originalTransform,
 				boolean isSideLit) {
 			super(quads, particle, transforms, new OverrideHandler(bakery), untransformed, isSideLit);
 			this.owner = owner;

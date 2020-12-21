@@ -10,7 +10,7 @@ import net.minecraftforge.registries.IForgeRegistry;
 import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 
-public class FabricInfo implements IGarmentComponent {
+public class Fabric implements IGarmentComponent {
 
 	private static final String TAG_PATTERN = "Pattern", TAG_COLORS = "Colors";
 	
@@ -20,20 +20,7 @@ public class FabricInfo implements IGarmentComponent {
 	private Map<String, RYBKColor> colors;
 	
 	// Needed for deserialization
-	public FabricInfo() { }
-
-	/* TODO Should move this to FabricTextureManager
-	 * public List<Layer> getLayers() { // Create new list using streams return
-	 * pattern.layers.stream().map((layer) -> { // Convert RYBKColor to RGBA then
-	 * construct layer RGBAColor color = colors.get(layer).toRGBA(new RGBAColor(),
-	 * null); return new Layer(pattern.textures.get(layer), color);
-	 * }).collect(Collectors.toList()); }
-	 */
-	
-	/* TODO Move this as well
-	 * public Collection<Material> getTextures() { return pattern.textures.values();
-	 * }
-	 */
+	public Fabric() { }
 
 	@Override
 	public CompoundNBT serializeNBT() {
@@ -73,7 +60,7 @@ public class FabricInfo implements IGarmentComponent {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		FabricInfo other = (FabricInfo) obj;
+		Fabric other = (Fabric) obj;
 		return Objects.equals(colors, other.colors) && Objects.equals(pattern, other.pattern);
 	}
 
