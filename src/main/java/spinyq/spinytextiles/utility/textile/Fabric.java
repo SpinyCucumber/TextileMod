@@ -15,11 +15,24 @@ public class Fabric implements IGarmentComponent {
 	private static final String TAG_PATTERN = "Pattern", TAG_COLORS = "Colors";
 	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
 	
+	// Pattern cannot be changed by users
 	private FabricPattern pattern;
-	private Map<String, RYBKColor> colors;
+	private Map<String, RYBKColor> colors = new HashMap<>();
 	
 	// Needed for deserialization
 	public Fabric() { }
+	
+	public Fabric(FabricPattern pattern) {
+		this.pattern = pattern;
+	}
+	
+	public void setColor(String layer, RYBKColor color) {
+		colors.put(layer, color);
+	}
+	
+	public RYBKColor getColor(String layer) {
+		return colors.get(layer);
+	}
 
 	@Override
 	public CompoundNBT serializeNBT() {

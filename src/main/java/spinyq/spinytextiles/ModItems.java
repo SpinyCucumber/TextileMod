@@ -10,6 +10,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import spinyq.spinytextiles.items.FabricItem;
 import spinyq.spinytextiles.items.FiberItem;
 import spinyq.spinytextiles.items.ThreadItem;
 import spinyq.spinytextiles.utility.color.RYBKColor;
@@ -28,6 +29,9 @@ public class ModItems {
 	public static final RegistryObject<ThreadItem> THREAD_ITEM = ITEMS.register("thread",
 			() -> new ThreadItem(new Item.Properties().group(ItemGroupTextiles.instance)));
 
+	public static final RegistryObject<FabricItem> FABRIC_ITEM = ITEMS.register("fabric",
+			() -> new FabricItem(new Item.Properties().group(ItemGroupTextiles.instance)));
+	
 	public static final RegistryObject<FiberItem> WHITE_WOOL_FIBER_ITEM = ITEMS.register("white_wool_fiber",
 			() -> new FiberItem(new Item.Properties().group(ItemGroupTextiles.instance),
 					new RYBKColor().fromDye(DyeColor.WHITE), 1)),
