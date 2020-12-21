@@ -56,6 +56,10 @@ public class FabricInfo implements IGarmentComponent {
 		colors = NBTHelper.getMap(HashMap::new, RYBKColor::new, nbt, TAG_COLORS);
 	}
 
+	public FabricPattern getPattern() {
+		return pattern;
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(colors, pattern);

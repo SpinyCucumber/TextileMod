@@ -43,7 +43,6 @@ import net.minecraftforge.client.model.geometry.IModelGeometry;
 import net.minecraftforge.resource.IResourceType;
 import net.minecraftforge.resource.VanillaResourceType;
 import spinyq.spinytextiles.TextileMod;
-import spinyq.spinytextiles.client.model.ModelHelper.Layer;
 import spinyq.spinytextiles.items.FabricItem;
 import spinyq.spinytextiles.utility.textile.FabricInfo;
 
@@ -86,7 +85,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		if (info != null) {
 			float z = 0.0f;
 			TextureAtlasSprite maskSprite = spriteGetter.apply(maskLocation);
-			for (Material texture : info.getLayers()) {
+			for (Material texture : FabricTextureManager.getTextureList(info)) {
 				TextureAtlasSprite sprite = spriteGetter.apply(texture);
 				// Add the quads
 				// Use white color
@@ -107,7 +106,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		Set<Material> texs = new HashSet<>();
 
 		texs.add(owner.resolveTexture("mask"));
-		texs.addAll(info.getTextures());
+		texs.addAll(FabricTextureManager.getTextures(info));
 
 		return texs;
 	}
