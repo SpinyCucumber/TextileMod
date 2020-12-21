@@ -37,7 +37,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 		@Override
 		public void visit(FilledState state) {
-			throw new Result(WATER_COLOR);
+			throw new Result(new RGBAColor(WATER_COLOR));
 		}
 
 		@Override

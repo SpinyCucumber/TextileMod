@@ -17,6 +17,10 @@ public class RGBAColor extends RGBColor {
 		this(rgb.r, rgb.g, rgb.b, a);
 	}
 	
+	public RGBAColor(RGBColor rgb) {
+		this(rgb, 1.0f);
+	}
+	
 	public int toIntARGB() {
 		int n = 0;
 		n += ((int) (a * 255)) << 24;
