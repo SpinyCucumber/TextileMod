@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -24,7 +27,6 @@ import net.minecraftforge.common.util.RecipeMatcher;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 import spinyq.spinytextiles.ModRecipes;
 import spinyq.spinytextiles.ModTags;
-import spinyq.spinytextiles.TextileMod;
 
 /**
  * Decent amount of code adapted from shapeless recipe. Specifies a shapeless
@@ -35,6 +37,8 @@ import spinyq.spinytextiles.TextileMod;
  */
 public class BrushRecipe implements ICraftingRecipe {
 
+	private static final Logger LOGGER = LogManager.getLogger();
+	
 	/**
 	 * Represents possible inputs to a brush crafting recipe.
 	 * @author Elijah Hilty
@@ -123,7 +127,7 @@ public class BrushRecipe implements ICraftingRecipe {
 		// Next compare the other inputs with the recipe's inputs
 		boolean matches = (inputs.ingredients.size() == this.recipeItems.size() && RecipeMatcher.findMatches(inputs.ingredients, this.recipeItems) != null);
 
-		TextileMod.LOGGER.trace("inputs: {} recipeItems: {} matches: {}", inputs, recipeItems, matches);
+		LOGGER.trace("inputs: {} recipeItems: {} matches: {}", inputs, recipeItems, matches);
 		return matches;
 
 	}
@@ -140,21 +144,21 @@ public class BrushRecipe implements ICraftingRecipe {
 			// Damage it here
 			boolean broken = stack.attemptDamageItem(1, random, null);
 			// If the stack isn't broken, add it as a remaining item.
-			TextileMod.LOGGER.trace("stack: {} broken: {} empty: {}", stack, broken, stack.isEmpty());
+			LOGGER.trace("stack: {} broken: {} empty: {}", stack, broken, stack.isEmpty());
 			if (!broken) {
 				ItemStack newStack = stack.copy();
 				newStack.setCount(1);
 				result.set(inputs.brushPos, newStack);
 			}
 		}
-		TextileMod.LOGGER.trace("result: {}", result);
+		LOGGER.trace("result: {}", result);
 		// Return list
 		return result;
 	}
 
 	@Override
 	public ItemStack getCraftingResult(CraftingInventory inv) {
-		TextileMod.LOGGER.trace("BrushRecipe getCraftingResult....");
+		LOGGER.trace("getCraftingResult....");
 		return recipeOutput.copy();
 	}
 
@@ -162,7 +166,7 @@ public class BrushRecipe implements ICraftingRecipe {
 	 * Used to determine if this recipe can fit in a grid of the given width/height
 	 */
 	public boolean canFit(int width, int height) {
-		TextileMod.LOGGER.trace("BrushRecipe canFit....");
+		LOGGER.trace("canFit....");
 		return width * height >= (this.recipeItems.size() + 1);
 	}
 

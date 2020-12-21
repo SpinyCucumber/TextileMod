@@ -1,5 +1,8 @@
 package spinyq.spinytextiles.client.render;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
@@ -13,7 +16,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
@@ -26,6 +28,8 @@ import spinyq.spinytextiles.utility.color.RGBColor;
 @OnlyIn(Dist.CLIENT)
 public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
+	private static final Logger LOGGER = LogManager.getLogger();
+	
 	private static final RGBColor WATER_COLOR = new RGBColor().fromIntString("0x3F76E4");
 	private static final int STAGES = 200;
 
@@ -76,7 +80,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	@SuppressWarnings("deprecation")
 	@SubscribeEvent
 	public void onModelBake(ModelBakeEvent event) {
-		TextileMod.LOGGER.info("Generating Fluid Models...");
+		LOGGER.info("Generating Fluid Models...");
 		generateFluidModels(event.getModelManager().getAtlasTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE));
 	}
 

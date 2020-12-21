@@ -1,5 +1,8 @@
 package spinyq.spinytextiles.client.render;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
@@ -16,7 +19,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
 import spinyq.spinytextiles.tiles.SpinningWheelTile;
@@ -32,6 +34,8 @@ import spinyq.spinytextiles.utility.textile.Fiber;
 @OnlyIn(Dist.CLIENT)
 public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile> {
 
+	private static final Logger LOGGER = LogManager.getLogger();
+	
 	private CuboidModel threadModel;
 
 	// If the wheel is spinning, interpolate between previous and current threads to get a smooth animation.
@@ -95,7 +99,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 	@SuppressWarnings("deprecation")
 	@SubscribeEvent
 	public void onModelBake(ModelBakeEvent event) {
-		TextileMod.LOGGER.info("Generating Spinning Wheel Model...");
+		LOGGER.info("Generating Spinning Wheel Model...");
 		generateModel(event.getModelManager().getAtlasTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE));
 	}
 
