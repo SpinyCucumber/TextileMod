@@ -74,4 +74,9 @@ public class Fabric implements IGarmentComponent {
 		return Objects.equals(colors, other.colors) && Objects.equals(pattern, other.pattern);
 	}
 
+	@Override
+	public String toString() {
+		return "Fabric [pattern=" + pattern.getRegistryName() + ", colors=" + colors + "]";
+	}
+
 }

@@ -2,12 +2,16 @@ package spinyq.spinytextiles.client.model;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -59,6 +63,8 @@ import spinyq.spinytextiles.utility.textile.Fabric;
 @OnlyIn(Dist.CLIENT)
 public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
+	private static final Logger LOGGER = LogManager.getLogger();
+	
 	// minimal Z offset to prevent depth-fighting
 	private static final float Z_OFFSET = 0.02f;
 	private static final String MASK_TEXTURE = "mask";
@@ -88,17 +94,21 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 				: PerspectiveMapWrapper.getTransforms(modelTransform);
 		TransformationMatrix transform = modelTransform.getRotation();
 
+		LOGGER.info("Baking a FabricItemModel for fabric: {} with mask texture: {}", fabric, maskLocation);
+		
 		ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
 		// If our fabric info is non-null, convert it into quads
 		// Get a list of layers and generate quads for each
 		if (fabric != null) {
+			List<Material> textures = FabricTextureManager.INSTANCE.getTextureList(fabric);
+			LOGGER.info("Textures: {}", textures);
 			float z = 0.0f;
 			TextureAtlasSprite maskSprite = spriteGetter.apply(maskLocation);
-			for (Material texture : FabricTextureManager.INSTANCE.getTextureList(fabric)) {
+			for (Material texture : textures) {
 				TextureAtlasSprite sprite = spriteGetter.apply(texture);
 				// Add the quads
 				// Use white color
-				builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.NORTH,
+				builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.SOUTH,
 						0xffffffff, 1));
 				// Increase the depth for each layer
 				z += Z_OFFSET;
