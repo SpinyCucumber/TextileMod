@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -33,6 +34,7 @@ import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.JSONUtils;
+import net.minecraft.util.LazyValue;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -53,12 +55,10 @@ public class FabricTextureManager implements IFutureReloadListener {
 	public static final FabricTextureManager INSTANCE = new FabricTextureManager();
 	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
 	private static final Gson SERIALIZER = new GsonBuilder()
-			.registerTypeAdapter(FabricTextures.class, new FabricTextures.Deserializer()).create();
+			.registerTypeAdapter(FabricTextures.class, new FabricTextures.Deserializer())
+			.create();
 
-	// TODO Will need to change this.
-	// We should probably use our own atlas.
-	@SuppressWarnings("deprecation")
-	private static final ResourceLocation ATLAS_LOCATION = AtlasTexture.LOCATION_BLOCKS_TEXTURE;
+	public static final ResourceLocation ATLAS_LOCATION = new ResourceLocation("textures/atlas/fabrics.png");
 
 	/**
 	 * Provides textures for each layer of a fabric pattern.
@@ -118,7 +118,9 @@ public class FabricTextureManager implements IFutureReloadListener {
 
 	// The internal map between fabric patterns and textures
 	private Map<FabricPattern, FabricTextures> map = new HashMap<>();
-
+	// Our atlas texture
+	private LazyValue<AtlasTexture> atlas = new LazyValue<>(() -> new AtlasTexture(ATLAS_LOCATION));
+	
 	/**
 	 * Returns a list of the corresponding texture for each layer in the fabric
 	 * pattern. The list is in order of layers and is unmodifiable.
@@ -164,6 +166,8 @@ public class FabricTextureManager implements IFutureReloadListener {
 	public CompletableFuture<Void> reload(IStage stage, IResourceManager resourceManager,
 			IProfiler preparationsProfiler, IProfiler reloadProfiler, Executor backgroundExecutor,
 			Executor gameExecutor) {
+		// First, we have use the fabric textures files to determine where the textures
+		// are.
 		// File IO can run off-thread, so this can be ran asynchronously.
 		return CompletableFuture.runAsync(() -> {
 			// Load fabric textures.
@@ -183,8 +187,23 @@ public class FabricTextureManager implements IFutureReloadListener {
 					throw new RuntimeException("Failed to load textures file.", e);
 				}
 			}
-			
-		}, backgroundExecutor).thenCompose(stage::markCompleteAwaitingOthers);
+
+		}, backgroundExecutor)
+		// Next, we stitch the atlas texture together. This can also be ran in the
+		// background.
+		// ApplyAsync expects input but since we don't really have any the "input"
+		// variable is just arbitrary.
+		.thenApplyAsync((input) -> {
+			return atlas.getValue().stitch(resourceManager,
+					getAllTextureLocations().stream(), preparationsProfiler, 0);
+		}, backgroundExecutor)
+		// Mark that we are finished with our background tasks
+		.thenCompose(stage::markCompleteAwaitingOthers)
+		// Finally, we upload the atlas texture
+		// This has to be done on the main thread since it is graphics related
+		.thenAcceptAsync((sheetData) -> {
+			atlas.getValue().upload(sheetData);
+		}, gameExecutor);
 	}
 
 	/**
@@ -196,6 +215,20 @@ public class FabricTextureManager implements IFutureReloadListener {
 	private ResourceLocation getTexturesLocation(FabricPattern pattern) {
 		ResourceLocation id = pattern.getRegistryName();
 		return new ResourceLocation(id.getNamespace(), "fabrics/" + id.getPath() + ".json");
+	}
+
+	/**
+	 * Gets a set containing all texture locations used by fabric patterns. This is
+	 * used to avoid sending duplicate textures to the stitcher. Not entirely sure
+	 * if this is necessary, but better safe than sorry.
+	 */
+	private Set<ResourceLocation> getAllTextureLocations() {
+		return map.values()
+				.stream()
+				.map(FabricTextures::values)
+				.flatMap(Collection::stream)
+				.map(Material::getTextureLocation)
+				.collect(Collectors.toSet());
 	}
 
 	// Called when the mod is first constructed
