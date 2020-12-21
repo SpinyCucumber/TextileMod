@@ -164,24 +164,26 @@ public class FabricTextureManager implements IFutureReloadListener {
 	public CompletableFuture<Void> reload(IStage stage, IResourceManager resourceManager,
 			IProfiler preparationsProfiler, IProfiler reloadProfiler, Executor backgroundExecutor,
 			Executor gameExecutor) {
-		// Load fabric textures.
-		// For each fabric pattern in the registry, load the list of textures from a
-		// JSON file.
-		for (FabricPattern pattern : PATTERN_REGISTRY.getValues()) {
-			// Get the location of the textures file
-			ResourceLocation texturesLocation = getTexturesLocation(pattern);
-			// Get the resource at the location and create a reader to load it
-			try {
-				IResource resource = resourceManager.getResource(texturesLocation);
-				Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
-				// Parse JSON and put textures into the map
-				FabricTextures textures = JSONUtils.fromJson(SERIALIZER, reader, FabricTextures.class);
-				map.put(pattern, textures);
-			} catch (IOException e) {
-				throw new RuntimeException("Failed to load textures file.", e);
+		// File IO can run off-thread, so this can be ran asynchronously.
+		return CompletableFuture.runAsync(() -> {
+			// Load fabric textures.
+			// For each fabric pattern in the registry, load the list of textures from a
+			// JSON file.
+			for (FabricPattern pattern : PATTERN_REGISTRY.getValues()) {
+				// Get the location of the textures file
+				ResourceLocation texturesLocation = getTexturesLocation(pattern);
+				// Get the resource at the location and create a reader to load it
+				try {
+					IResource resource = resourceManager.getResource(texturesLocation);
+					Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
+					// Parse JSON and put textures into the map
+					FabricTextures textures = JSONUtils.fromJson(SERIALIZER, reader, FabricTextures.class);
+					map.put(pattern, textures);
+				} catch (IOException e) {
+					throw new RuntimeException("Failed to load textures file.", e);
+				}
 			}
-		}
-		return null;
+		}, backgroundExecutor);
 	}
 
 	/**
