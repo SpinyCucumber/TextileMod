@@ -32,7 +32,8 @@ import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.model.BakedItemModel;
 import net.minecraftforge.client.model.IModelConfiguration;
 import net.minecraftforge.client.model.IModelLoader;
@@ -43,7 +44,9 @@ import net.minecraftforge.client.model.ModelTransformComposition;
 import net.minecraftforge.client.model.PerspectiveMapWrapper;
 import net.minecraftforge.client.model.geometry.IModelGeometry;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.resource.IResourceType;
 import net.minecraftforge.resource.VanillaResourceType;
 import spinyq.spinytextiles.TextileMod;
@@ -53,6 +56,7 @@ import spinyq.spinytextiles.utility.textile.Fabric;
 // ItemCameraTransform is deprecated but is still being used by BakedItemModel, so we are forced to
 // use it as well.
 @SuppressWarnings("deprecation")
+@OnlyIn(Dist.CLIENT)
 public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 	// minimal Z offset to prevent depth-fighting
@@ -111,25 +115,20 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		Set<Material> texs = new HashSet<>();
 
 		texs.add(owner.resolveTexture(MASK_TEXTURE));
-		texs.addAll(FabricTextureManager.INSTANCE.getTextures(fabric));
+		if (fabric != null) texs.addAll(FabricTextureManager.INSTANCE.getTextures(fabric));
 
 		return texs;
 	}
 	
+	@EventBusSubscriber(bus = Bus.MOD)
 	public static class Loader implements IModelLoader<FabricItemModel> {
 		
-		public static final Loader INSTANCE = new Loader();
 		public static final ResourceLocation ID = new ResourceLocation(TextileMod.MODID, "fabric_item_model");
 		
-		public Loader() {
-			// Make sure we can receive events
-			FMLJavaModLoadingContext.get().getModEventBus().register(this);
-		}
-		
 		@SubscribeEvent
-		public void onRegisterModels(ModelRegistryEvent event) {
+		public static void onClientSetup(FMLClientSetupEvent event) {
 			// Register ourselves as a model loader
-			ModelLoaderRegistry.registerLoader(ID, this);
+			ModelLoaderRegistry.registerLoader(ID, new Loader());
 		}
 
 		@Override
