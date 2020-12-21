@@ -60,7 +60,7 @@ public class FabricTextureManager {
 		// We use the pattern's list to ensure that the textures are in the right order
 		// First, look up the fabric textures
 		FabricTextures textures = map.get(pattern);
-		return pattern.getLayers().stream().map(textures::get).collect(Collectors.toUnmodifiableList());
+		return Collections.unmodifiableList(pattern.getLayers().stream().map(textures::get).collect(Collectors.toList()));
 	}
 	
 	/**
