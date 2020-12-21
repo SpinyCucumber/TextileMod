@@ -16,7 +16,7 @@ public class TextileMod
     
     public TextileMod() {
     	// Send message to other classes when the mod has been constructed
-    	FabricTextureManager.onModConstructed();
+    	FabricTextureManager.INSTANCE.onModConstructed();
     }
     
 }

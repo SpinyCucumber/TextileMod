@@ -105,9 +105,9 @@ public class FabricTextureManager implements IFutureReloadListener {
 	}
 
 	// Called when the mod is first constructed
-	public static void onModConstructed() {
+	public void onModConstructed() {
 		// Let Minecraft know we manage resources
-	    ((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(INSTANCE);
+	    ((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(this);
 	}
 	
 	// TODO Loading

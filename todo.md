@@ -35,6 +35,7 @@
 - [x] Pattern Registry
 - [ ] Module System
 - [ ] More efficient nearest-neighbor search for ColorWord
+- [ ] Better localization support
 - [x] Delete ItemColorManager?
 - [x] Make ThreadItem cache its translation key
 - [ ] IMPROVEMENT Also make ThreadItem cache its RGBColor for rendering.
