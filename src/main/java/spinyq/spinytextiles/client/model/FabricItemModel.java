@@ -85,7 +85,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		if (fabric != null) {
 			float z = 0.0f;
 			TextureAtlasSprite maskSprite = spriteGetter.apply(maskLocation);
-			for (Material texture : FabricTextureManager.getTextureList(fabric)) {
+			for (Material texture : FabricTextureManager.INSTANCE.getTextureList(fabric)) {
 				TextureAtlasSprite sprite = spriteGetter.apply(texture);
 				// Add the quads
 				// Use white color
@@ -106,7 +106,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		Set<Material> texs = new HashSet<>();
 
 		texs.add(owner.resolveTexture("mask"));
-		texs.addAll(FabricTextureManager.getTextures(fabric));
+		texs.addAll(FabricTextureManager.INSTANCE.getTextures(fabric));
 
 		return texs;
 	}

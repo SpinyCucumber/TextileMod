@@ -5,11 +5,18 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableMap;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.model.Material;
+import net.minecraft.profiler.IProfiler;
+import net.minecraft.resources.IFutureReloadListener;
+import net.minecraft.resources.IReloadableResourceManager;
+import net.minecraft.resources.IResourceManager;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import spinyq.spinytextiles.utility.textile.Fabric;
@@ -21,8 +28,10 @@ import spinyq.spinytextiles.utility.textile.FabricPattern;
  *
  */
 @OnlyIn(Dist.CLIENT)
-public class FabricTextureManager {
+public class FabricTextureManager implements IFutureReloadListener {
 
+	public static final FabricTextureManager INSTANCE = new FabricTextureManager();
+	
 	/**
 	 * Provides textures for each layer of a fabric pattern.
 	 * @author SpinyQ
@@ -47,7 +56,7 @@ public class FabricTextureManager {
 	}
 	
 	// The internal map between fabric patterns and textures
-	private static Map<FabricPattern, FabricTextures> map = new HashMap<>();
+	private Map<FabricPattern, FabricTextures> map = new HashMap<>();
 	
 	/**
 	 * Returns a list of the corresponding texture for each layer in the fabric pattern.
@@ -55,7 +64,7 @@ public class FabricTextureManager {
 	 * @param pattern The fabric pattern
 	 * @return The list
 	 */
-	public static List<Material> getTextureList(FabricPattern pattern) {
+	public List<Material> getTextureList(FabricPattern pattern) {
 		// Use streams to create a new list
 		// We use the pattern's list to ensure that the textures are in the right order
 		// First, look up the fabric textures
@@ -70,7 +79,7 @@ public class FabricTextureManager {
 	 * @param pattern The fabric pattern
 	 * @return The collection
 	 */
-	public static Collection<Material> getTextures(FabricPattern pattern) {
+	public Collection<Material> getTextures(FabricPattern pattern) {
 		// Lookup textures and return values
 		FabricTextures textures = map.get(pattern);
 		return Collections.unmodifiableCollection(textures.values());
@@ -78,12 +87,27 @@ public class FabricTextureManager {
 	
 	// The following are convenience methods that retrieve the textures for a fabric.
 	
-	public static List<Material> getTextureList(Fabric fabric) {
+	public List<Material> getTextureList(Fabric fabric) {
 		return getTextureList(fabric.getPattern());
 	}
 	
-	public static Collection<Material> getTextures(Fabric fabric) {
+	public Collection<Material> getTextures(Fabric fabric) {
 		return getTextures(fabric.getPattern());
+	}
+	
+	@Override
+	public CompletableFuture<Void> reload(IStage stage, IResourceManager resourceManager,
+			IProfiler preparationsProfiler, IProfiler reloadProfiler, Executor backgroundExecutor,
+			Executor gameExecutor) {
+		// TODO Load fabric textures.
+		// For each fabric pattern in the registry, load the list of textures from a JSON file.
+		return null;
+	}
+
+	// Called when the mod is first constructed
+	public static void onModConstructed() {
+		// Let Minecraft know we manage resources
+	    ((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(INSTANCE);
 	}
 	
 	// TODO Loading
