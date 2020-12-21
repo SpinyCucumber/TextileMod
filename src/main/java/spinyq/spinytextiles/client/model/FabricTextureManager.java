@@ -19,6 +19,8 @@ import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.resources.IResourceManager;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.registries.IForgeRegistry;
+import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 import spinyq.spinytextiles.utility.textile.Fabric;
 import spinyq.spinytextiles.utility.textile.FabricPattern;
 
@@ -31,6 +33,7 @@ import spinyq.spinytextiles.utility.textile.FabricPattern;
 public class FabricTextureManager implements IFutureReloadListener {
 
 	public static final FabricTextureManager INSTANCE = new FabricTextureManager();
+	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
 	
 	/**
 	 * Provides textures for each layer of a fabric pattern.

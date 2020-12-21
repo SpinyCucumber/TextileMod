@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraftforge.registries.IForgeRegistry;
 import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
@@ -12,8 +13,7 @@ import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 public class Fabric implements IGarmentComponent {
 
 	private static final String TAG_PATTERN = "Pattern", TAG_COLORS = "Colors";
-	
-	private static final LazyForgeRegistry<FabricPattern> REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
+	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
 	
 	private FabricPattern pattern;
 	private Map<String, RYBKColor> colors;
@@ -35,7 +35,7 @@ public class Fabric implements IGarmentComponent {
 	@Override
 	public void deserializeNBT(CompoundNBT nbt) {
 		// Retrieve the fabric's pattern by looking up registry name
-		pattern = NBTHelper.getRegistryEntry(nbt, TAG_PATTERN, REGISTRY);
+		pattern = NBTHelper.getRegistryEntry(nbt, TAG_PATTERN, PATTERN_REGISTRY);
 		// Retrieve the colors
 		colors = NBTHelper.getMap(HashMap::new, RYBKColor::new, nbt, TAG_COLORS);
 	}
