@@ -1,3 +1,6 @@
 {
-	"loader": "spinytextiles:fabric_item_model"
+	"loader": "spinytextiles:fabric_item_model",
+	"textures": {
+		"mask": "spinytextiles:item/fabric_mask"
+	}
 }
