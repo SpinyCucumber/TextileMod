@@ -1,10 +1,13 @@
 package spinyq.spinytextiles.client.model;
 
+import java.util.List;
+
 import com.google.common.collect.ImmutableMap;
 
 import net.minecraft.client.renderer.model.Material;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import spinyq.spinytextiles.client.model.ModelHelper.Layer;
 
 @OnlyIn(Dist.CLIENT)
 public class FabricTextureManager {
@@ -25,6 +28,10 @@ public class FabricTextureManager {
 		public Material getTexture(String layer) {
 			return textures.get(layer);
 		}
+		
+	}
+	
+	public static List<Layer> getLayers() {
 		
 	}
 	

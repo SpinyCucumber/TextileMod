@@ -86,11 +86,12 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		if (info != null) {
 			float z = 0.0f;
 			TextureAtlasSprite maskSprite = spriteGetter.apply(maskLocation);
-			for (Layer layer : info.getLayers()) {
-				TextureAtlasSprite sprite = spriteGetter.apply(layer.texture);
+			for (Material texture : info.getLayers()) {
+				TextureAtlasSprite sprite = spriteGetter.apply(texture);
 				// Add the quads
+				// Use white color
 				builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.NORTH,
-						layer.color.toIntARGB(), 1));
+						0xffffffff, 1));
 				// Increase the depth for each layer
 				z += Z_OFFSET;
 			}
