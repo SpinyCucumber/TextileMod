@@ -32,14 +32,18 @@ import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.BakedItemModel;
 import net.minecraftforge.client.model.IModelConfiguration;
 import net.minecraftforge.client.model.IModelLoader;
 import net.minecraftforge.client.model.ItemTextureQuadConverter;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.client.model.ModelTransformComposition;
 import net.minecraftforge.client.model.PerspectiveMapWrapper;
 import net.minecraftforge.client.model.geometry.IModelGeometry;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.resource.IResourceType;
 import net.minecraftforge.resource.VanillaResourceType;
 import spinyq.spinytextiles.TextileMod;
@@ -53,6 +57,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 	// minimal Z offset to prevent depth-fighting
 	private static final float Z_OFFSET = 0.02f;
+	private static final String MASK_TEXTURE = "mask";
 
 	private final Fabric fabric;
 
@@ -70,7 +75,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		// Can we use null for the particle texture?
 
 		// Retrieve the particle and mask textures
-		Material maskLocation = owner.resolveTexture("mask");
+		Material maskLocation = owner.resolveTexture(MASK_TEXTURE);
 
 		IModelTransform transformsFromModel = owner.getCombinedTransform();
 		ImmutableMap<TransformType, TransformationMatrix> transformMap = transformsFromModel != null
@@ -105,14 +110,27 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			Function<ResourceLocation, IUnbakedModel> modelGetter, Set<Pair<String, String>> missingTextureErrors) {
 		Set<Material> texs = new HashSet<>();
 
-		texs.add(owner.resolveTexture("mask"));
+		texs.add(owner.resolveTexture(MASK_TEXTURE));
 		texs.addAll(FabricTextureManager.INSTANCE.getTextures(fabric));
 
 		return texs;
 	}
-
-	public enum Loader implements IModelLoader<FabricItemModel> {
-		INSTANCE;
+	
+	public static class Loader implements IModelLoader<FabricItemModel> {
+		
+		public static final Loader INSTANCE = new Loader();
+		public static final ResourceLocation ID = new ResourceLocation(TextileMod.MODID, "fabric_item_model");
+		
+		public Loader() {
+			// Make sure we can receive events
+			FMLJavaModLoadingContext.get().getModEventBus().register(this);
+		}
+		
+		@SubscribeEvent
+		public void onRegisterModels(ModelRegistryEvent event) {
+			// Register ourselves as a model loader
+			ModelLoaderRegistry.registerLoader(ID, this);
+		}
 
 		@Override
 		public IResourceType getResourceType() {
@@ -162,6 +180,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 					return model.cache.get(fabric);
 				} else {
 					// Create a new unbaked model with the fabric then bake it
+					// Override id is arbitrary
 					IBakedModel bakedModel = new FabricItemModel(fabric).bake(model.owner, bakery,
 							ModelLoader.defaultTextureGetter(), model.originalTransform, model.getOverrides(),
 							new ResourceLocation(TextileMod.MODID, "fabric_item_override"));
