@@ -183,7 +183,8 @@ public class FabricTextureManager implements IFutureReloadListener {
 					throw new RuntimeException("Failed to load textures file.", e);
 				}
 			}
-		}, backgroundExecutor);
+			
+		}, backgroundExecutor).thenCompose(stage::markCompleteAwaitingOthers);
 	}
 
 	/**
