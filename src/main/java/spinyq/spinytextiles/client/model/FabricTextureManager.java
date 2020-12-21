@@ -15,6 +15,11 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import spinyq.spinytextiles.utility.textile.Fabric;
 import spinyq.spinytextiles.utility.textile.FabricPattern;
 
+/**
+ * Assigns fabric patterns textures for each of their layers.
+ * @author SpinyQ
+ *
+ */
 @OnlyIn(Dist.CLIENT)
 public class FabricTextureManager {
 
