@@ -23,7 +23,7 @@ import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.NBTHelper.ClassIdSpace;
 import spinyq.spinytextiles.utility.NBTHelper.ObjectMapper;
 import spinyq.spinytextiles.utility.color.RYBKColor;
-import spinyq.spinytextiles.utility.textile.FiberInfo;
+import spinyq.spinytextiles.utility.textile.Fiber;
 
 public class SpinningWheelTile extends TileEntity implements ITickableTileEntity {
 
@@ -105,10 +105,10 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 				if (interaction.item instanceof FiberItem) {
 					if (!world.isRemote) {
 						FiberItem fiberItem = (FiberItem) interaction.item;
-						// Split off one item and retrieve fiber info
-						FiberInfo info = fiberItem.getInfo(interaction.itemstack.split(1));
+						// Split off one item and retrieve fiber
+						Fiber fiber = fiberItem.getFiber(interaction.itemstack.split(1));
 						// Transition to FiberState
-						transition(new FiberState(info));
+						transition(new FiberState(fiber));
 						notifyChange();
 					}
 					// Play fun wool sound
@@ -132,9 +132,9 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 		 */
 		public class FiberState implements ISpinningWheelState {
 
-			private FiberInfo fiber;
+			private Fiber fiber;
 
-			public FiberState(FiberInfo fiber) {
+			public FiberState(Fiber fiber) {
 				this.fiber = fiber;
 			}
 
@@ -174,7 +174,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 
 			@Override
 			public void deserializeNBT(CompoundNBT nbt) {
-				fiber = new FiberInfo();
+				fiber = new Fiber();
 				fiber.deserializeNBT(nbt.getCompound(FIBER_TAG));
 			}
 
@@ -283,22 +283,22 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 				.withSupplier(SpinningState.class, SpinningState::new)
 				.withSupplier(FinishedState.class, FinishedState::new);
 
-		private FiberInfo prevThread, currThread;
+		private Fiber prevThread, currThread;
 		private ISpinningWheelState state;
 
 		public BaseState() {
 			// Current thread is initiliaze to a "dummy" thread, so we can interpolate
 			// colors and such.
-			currThread = new FiberInfo(new RYBKColor(), 0);
+			currThread = new Fiber(new RYBKColor(), 0);
 			// Start in an idle state
 			transition(new IdleState());
 		}
 
-		public FiberInfo getPrevThread() {
+		public Fiber getPrevThread() {
 			return prevThread;
 		}
 
-		public FiberInfo getCurrThread() {
+		public Fiber getCurrThread() {
 			return currThread;
 		}
 
@@ -339,7 +339,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 
 		@Override
 		public CompoundNBT serializeNBT() {
-			// Write the previous thread info, which may be null
+			// Write the previous thread, which may be null
 			CompoundNBT nbt = new CompoundNBT();
 			NBTHelper.putNullable(nbt, PREV_THREAD_TAG, prevThread);
 			nbt.put(CURR_THREAD_TAG, currThread.serializeNBT());
@@ -349,9 +349,9 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 
 		@Override
 		public void deserializeNBT(CompoundNBT nbt) {
-			// First, read previous thread info, which may be null
-			prevThread = NBTHelper.getNullable(FiberInfo::new, nbt, PREV_THREAD_TAG);
-			// Then read the current thread info and the state
+			// First, read previous thread, which may be null
+			prevThread = NBTHelper.getNullable(Fiber::new, nbt, PREV_THREAD_TAG);
+			// Then read the current thread and the state
 			// Transition to the new state
 			currThread.deserializeNBT(nbt.getCompound(CURR_THREAD_TAG));
 			transition(NBTHelper.getPolymorphic(nbt, STATE_TAG, mapper));

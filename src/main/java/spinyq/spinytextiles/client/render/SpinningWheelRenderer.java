@@ -27,21 +27,20 @@ import spinyq.spinytextiles.utility.FunctionHelper.Result;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
-import spinyq.spinytextiles.utility.textile.FiberInfo;
+import spinyq.spinytextiles.utility.textile.Fiber;
 
 @OnlyIn(Dist.CLIENT)
 public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile> {
 
 	private CuboidModel threadModel;
 
-	// If the wheel is spinning, interpolate between previous and current thread
-	// infos to get a smooth animation.
+	// If the wheel is spinning, interpolate between previous and current threads to get a smooth animation.
 	// Otherwise, simply use the most current thread info.
 	private static final SpinningWheelStateVisitor COLOR_CALCULATOR = new SpinningWheelStateVisitor() {
 
 		@Override
 		public void visit(BaseState state) {
-			FiberInfo thread = state.getCurrThread();
+			Fiber thread = state.getCurrThread();
 
 			RGBColor rgb = thread.color.toRGB(new RGBColor(), null);
 			float alpha = (float) thread.amount / (float) SpinningWheelTile.REQUIRED_THREAD;
@@ -50,9 +49,9 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 
 		@Override
 		public void visit(BaseState.SpinningState state) {
-			// Interpolate both color and thread amount from previous and current thread information.
+			// Interpolate both color and thread amount from previous and current thread.
 			// Use the time supplied by the spinning state to interpolate
-			FiberInfo curr = ((BaseState) state.getSuperState()).getCurrThread(),
+			Fiber curr = ((BaseState) state.getSuperState()).getCurrThread(),
 					prev = ((BaseState) state.getSuperState()).getPrevThread();
 			float p = Math.min(1.0f, (float) state.getTime() / (float) SpinningWheelTile.SPINNING_TIME);
 			RYBKColor threadColor = prev.color.interp(curr.color, p);

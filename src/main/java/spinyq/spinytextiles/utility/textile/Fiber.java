@@ -10,18 +10,18 @@ import spinyq.spinytextiles.utility.color.RYBKColor;
  * @author Elijah Hilty
  *
  */
-public class FiberInfo implements IGarmentComponent {
+public class Fiber implements IGarmentComponent {
 	
 	private static final String COLOR_TAG = "Color", AMOUNT_TAG = "Amount";
 	
 	public RYBKColor color;
 	public int amount; // Non-zero
 	
-	public FiberInfo() {
+	public Fiber() {
 		
 	}
 	
-	public FiberInfo(RYBKColor color, int amount) {
+	public Fiber(RYBKColor color, int amount) {
 		super();
 		this.color = color;
 		this.amount = amount;
@@ -30,8 +30,8 @@ public class FiberInfo implements IGarmentComponent {
 	/**
 	 * Copy method
 	 */
-	public FiberInfo copy() {
-		return new FiberInfo(color.copy(), amount);
+	public Fiber copy() {
+		return new Fiber(color.copy(), amount);
 	}
 	
 	/**
@@ -39,11 +39,11 @@ public class FiberInfo implements IGarmentComponent {
 	 * Mixes color based on amounts.
 	 * @param other
 	 */
-	public FiberInfo combine(FiberInfo other) {
+	public Fiber combine(Fiber other) {
 		int totalAmount = amount + other.amount;
 		// Mix color
 		RYBKColor newColor = color.interp(other.color, (float) other.amount / (float) totalAmount);
-		return new FiberInfo(newColor, totalAmount);
+		return new Fiber(newColor, totalAmount);
 	}
 
 	@Override
