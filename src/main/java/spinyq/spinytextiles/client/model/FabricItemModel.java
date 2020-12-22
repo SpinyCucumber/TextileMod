@@ -38,6 +38,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.BakedItemModel;
 import net.minecraftforge.client.model.IModelConfiguration;
 import net.minecraftforge.client.model.IModelLoader;
@@ -50,7 +51,6 @@ import net.minecraftforge.client.model.geometry.IModelGeometry;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.resource.IResourceType;
 import net.minecraftforge.resource.VanillaResourceType;
 import spinyq.spinytextiles.TextileMod;
@@ -125,7 +125,9 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		Set<Material> texs = new HashSet<>();
 
 		texs.add(owner.resolveTexture(MASK_TEXTURE));
-		if (fabric != null) texs.addAll(FabricTextureManager.INSTANCE.getTextures(fabric));
+		// TODO This is a temporary fix just to see if things work.
+		// We should probably maintain a map of models, then return all of their textures.
+		texs.addAll(FabricTextureManager.INSTANCE.getAllTextureLocations());
 
 		return texs;
 	}
@@ -136,7 +138,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		public static final ResourceLocation ID = new ResourceLocation(TextileMod.MODID, "fabric_item_model");
 		
 		@SubscribeEvent
-		public static void onClientSetup(FMLClientSetupEvent event) {
+		public static void onRegisterModels(ModelRegistryEvent event) {
 			// Register ourselves as a model loader
 			ModelLoaderRegistry.registerLoader(ID, new Loader());
 		}
