@@ -1,0 +1,6 @@
+{
+	"textures": {
+		"base": "spinytextiles:fabric/solid",
+		"stripes": "spinytextiles:fabric/horizontal_stripes"
+	}
+}

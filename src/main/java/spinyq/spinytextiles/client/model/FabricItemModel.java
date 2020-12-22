@@ -122,7 +122,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 	public class SubModel implements IModelGeometry<SubModel> {
 
 		// Minimal Z offset to prevent depth-fighting
-		private static final float Z_OFFSET = 0.02f;
+		private static final float Z_OFFSET = 0.01f;
 		private static final String MASK_TEXTURE = "mask";
 
 		private FabricPattern pattern;

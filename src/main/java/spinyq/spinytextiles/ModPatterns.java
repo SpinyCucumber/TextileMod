@@ -16,21 +16,34 @@ import spinyq.spinytextiles.utility.textile.GarmentPattern;
 
 @EventBusSubscriber(bus = Bus.MOD)
 public class ModPatterns {
-	
-	public static final DeferredRegister<FabricPattern> FABRIC_PATTERNS = new DeferredRegister<>(LazyForgeRegistry.of(FabricPattern.class), TextileMod.MODID);
-	public static final DeferredRegister<GarmentPattern> GARMENT_PATTERNS = new DeferredRegister<>(LazyForgeRegistry.of(GarmentPattern.class), TextileMod.MODID);
-	
-	public static final RegistryObject<FabricPattern> SOLID_FABRIC = FABRIC_PATTERNS.register("solid", () -> new FabricPattern("base"));
-	
+
+	public static final DeferredRegister<FabricPattern> FABRIC_PATTERNS = new DeferredRegister<>(
+			LazyForgeRegistry.of(FabricPattern.class), TextileMod.MODID);
+	public static final DeferredRegister<GarmentPattern> GARMENT_PATTERNS = new DeferredRegister<>(
+			LazyForgeRegistry.of(GarmentPattern.class), TextileMod.MODID);
+
+	public static final RegistryObject<FabricPattern> SOLID = FABRIC_PATTERNS.register("solid",
+			() -> new FabricPattern("base")),
+			HORIZONTAL_STRIPES = FABRIC_PATTERNS.register("horizontal_stripes",
+					() -> new FabricPattern("base", "stripes")),
+			VERTICAL_STRIPES = FABRIC_PATTERNS.register("vertical_stripes",
+					() -> new FabricPattern("base", "stripes")),
+			DIAGONAL_STRIPES = FABRIC_PATTERNS.register("diagonal_stripes",
+					() -> new FabricPattern("base", "stripes"));
+
 	@SubscribeEvent
 	public static void createRegistries(RegistryEvent.NewRegistry event) {
 		// TODO Create general pattern registry?
-		new RegistryBuilder<FabricPattern>().setType(FabricPattern.class).setName(new ResourceLocation(TextileMod.MODID, "fabric_pattern")).create();
-		new RegistryBuilder<GarmentPattern>().setType(GarmentPattern.class).setName(new ResourceLocation(TextileMod.MODID, "garment_pattern")).create();
+		new RegistryBuilder<FabricPattern>().setType(FabricPattern.class)
+				.setName(new ResourceLocation(TextileMod.MODID, "fabric_pattern"))
+				.create();
+		new RegistryBuilder<GarmentPattern>().setType(GarmentPattern.class)
+				.setName(new ResourceLocation(TextileMod.MODID, "garment_pattern"))
+				.create();
 		// Hook up deferred registers
 		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
 		FABRIC_PATTERNS.register(bus);
 		GARMENT_PATTERNS.register(bus);
 	}
-	
+
 }
