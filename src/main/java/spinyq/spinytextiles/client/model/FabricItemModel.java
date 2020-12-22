@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -68,31 +69,31 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 	@EventBusSubscriber(bus = Bus.MOD)
 	public static class Loader implements IModelLoader<FabricItemModel> {
-	
+
 		public static final ResourceLocation ID = new ResourceLocation(TextileMod.MODID, "fabric_item_model");
-	
+
 		@SubscribeEvent
 		public static void onRegisterModels(ModelRegistryEvent event) {
 			// Register ourselves as a model loader
 			ModelLoaderRegistry.registerLoader(ID, new Loader());
 		}
-	
+
 		@Override
 		public IResourceType getResourceType() {
 			return VanillaResourceType.MODELS;
 		}
-	
+
 		@Override
 		public void onResourceManagerReload(IResourceManager resourceManager) {
 			// no need to clear cache since we create a new model instance
 		}
-	
+
 		@Override
 		public void onResourceManagerReload(IResourceManager resourceManager,
 				Predicate<IResourceType> resourcePredicate) {
 			// no need to clear cache since we create a new model instance
 		}
-	
+
 		@Override
 		public FabricItemModel read(JsonDeserializationContext deserializationContext, JsonObject modelContents) {
 			// Construct a new fabric item model
@@ -101,7 +102,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 	}
 
 	public class OverrideHandler extends ItemOverrideList {
-	
+
 		@Override
 		public IBakedModel getModelWithOverrides(IBakedModel originalModel, ItemStack stack, @Nullable World world,
 				@Nullable LivingEntity entity) {
@@ -117,15 +118,20 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			return originalModel;
 		}
 	}
-	
+
 	public class SubModel implements IModelGeometry<SubModel> {
 
-		// minimal Z offset to prevent depth-fighting
+		// Minimal Z offset to prevent depth-fighting
 		private static final float Z_OFFSET = 0.02f;
 		private static final String MASK_TEXTURE = "mask";
-		
+
 		private FabricPattern pattern;
-		
+
+		// These are used when baking the model
+		private TransformationMatrix transform;
+		private List<TextureAtlasSprite> layerSprites;
+		private TextureAtlasSprite maskSprite;
+
 		public SubModel(FabricPattern pattern) {
 			this.pattern = pattern;
 		}
@@ -147,27 +153,19 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 					? PerspectiveMapWrapper
 							.getTransforms(new ModelTransformComposition(transformsFromModel, modelTransform))
 					: PerspectiveMapWrapper.getTransforms(modelTransform);
-			TransformationMatrix transform = modelTransform.getRotation();
+			transform = modelTransform.getRotation();
 
-			LOGGER.info("Baking a model for fabric pattern: {} with mask texture: {}", pattern.getRegistryName(), maskLocation);
+			LOGGER.info("Baking a model for fabric pattern: {}", pattern.getRegistryName());
 
 			ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
-			// Get a list of layers and generate quads for each
-			List<Material> textures = FabricTextureManager.INSTANCE.getTextureList(pattern);
-			float z = 0.0f;
-			TextureAtlasSprite maskSprite = spriteGetter.apply(maskLocation);
-			LOGGER.info("Textures: {}", textures);
-			for (Material texture : textures) {
-				TextureAtlasSprite sprite = spriteGetter.apply(texture);
-				// Add the quads
-				// Use white color
-				// TODO North side, etc. 
-				// Also set tint index
-				builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.SOUTH,
-						0xffffffff, 1));
-				// Increase the depth for each layer
-				z += Z_OFFSET;
-			}
+			// Look up the pattern's textures using FabricTextureManager, and create a list of sprites for each layer
+			maskSprite = spriteGetter.apply(maskLocation);
+			layerSprites = FabricTextureManager.INSTANCE.getTextureStream(pattern)
+					.map(spriteGetter::apply)
+					.collect(Collectors.toList());
+			// Build the north and south faces
+			buildFace(Direction.NORTH, builder);
+			buildFace(Direction.SOUTH, builder);
 
 			// Construct the baked model
 			// The override handler for this model is arbitrary
@@ -186,25 +184,43 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			textures.add(owner.resolveTexture(MASK_TEXTURE));
 			return textures;
 		}
-		
+
+		private void buildFace(Direction direction, ImmutableList.Builder<BakedQuad> builder) {
+			// The depth starts out half a pixel from the middle, in the direction of the face.
+			// Get just the depth component of the direction for math
+			int zDirection = direction.getDirectionVec().getZ();
+			float z = (8.0f + 0.5f * zDirection) / 16.0f;
+			// For every layer sprite, generate quads
+			for (TextureAtlasSprite layerSprite : layerSprites) {
+				// Add the quads
+				// Use white color
+				// TODO set tint index
+				builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, layerSprite, z,
+						direction, 0xffffffff, 1));
+				// Offset the depth for each layer
+				// Make sure to go in the direction of the face
+				z += (Z_OFFSET * zDirection);
+			}
+		}
+
 	}
 
 	private static final Logger LOGGER = LogManager.getLogger();
 	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
-	
+
 	// A map between fabric patterns and baked models to use when overriding items'
 	// models
 	private Map<FabricPattern, IBakedModel> bakedSubModels;
 	private Collection<SubModel> subModels;
-	
+
 	public FabricItemModel() {
 		// Create our submodels whenever the model is first constructed
 		createSubModels();
 	}
-	
+
 	/**
-	 * Creates the fabric item model's submodel's, without baking them.
-	 * This involves creating a submodel for every fabric pattern.
+	 * Creates the fabric item model's submodel's, without baking them. This
+	 * involves creating a submodel for every fabric pattern.
 	 */
 	private void createSubModels() {
 		subModels = new LinkedList<>();
@@ -212,7 +228,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			subModels.add(new SubModel(pattern));
 		}
 	}
-	
+
 	/**
 	 * Bakes the fabric item's submodels, putting the baked models into a cache.
 	 */
@@ -221,7 +237,8 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			ItemOverrideList overrides, ResourceLocation modelLocation) {
 		bakedSubModels = new HashMap<>();
 		for (SubModel subModel : subModels) {
-			bakedSubModels.put(subModel.pattern, subModel.bake(owner, bakery, spriteGetter, modelTransform, overrides, modelLocation));
+			bakedSubModels.put(subModel.pattern,
+					subModel.bake(owner, bakery, spriteGetter, modelTransform, overrides, modelLocation));
 		}
 	}
 
@@ -230,12 +247,13 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			Function<Material, TextureAtlasSprite> spriteGetter, IModelTransform modelTransform,
 			ItemOverrideList overrides, ResourceLocation modelLocation) {
 		// Bake all of our submodels
-		bakeSubmodels(owner, bakery, spriteGetter, modelTransform, overrides,
-				modelLocation);
+		bakeSubmodels(owner, bakery, spriteGetter, modelTransform, overrides, modelLocation);
 		// Construct the baked model
 		// Make sure to give it our custom override handler so it can switch models
-		// Since this model is never really going to be rendered most of the arguments here are arbitrary
-		// We could make a class like "DummyBakedItemModel" if we wanted to avoid all the arguments
+		// Since this model is never really going to be rendered most of the arguments
+		// here are arbitrary
+		// We could make a class like "DummyBakedItemModel" if we wanted to avoid all
+		// the arguments
 		ItemOverrideList overrideHandler = new OverrideHandler();
 		return new BakedItemModel(ImmutableList.of(), null, ImmutableMap.of(), overrideHandler, true, true);
 	}

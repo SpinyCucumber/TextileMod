@@ -8,13 +8,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
@@ -39,7 +39,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.IForgeRegistry;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
-import spinyq.spinytextiles.utility.textile.Fabric;
 import spinyq.spinytextiles.utility.textile.FabricPattern;
 
 /**
@@ -120,25 +119,22 @@ public class FabricTextureManager implements IFutureReloadListener {
 	private Map<FabricPattern, FabricTextures> map = new HashMap<>();
 
 	/**
-	 * Returns a list of the corresponding texture for each layer in the fabric
-	 * pattern. The list is in order of layers and is unmodifiable.
-	 * 
+	 * Returns a stream of the textures used by the pattern.
+	 * The stream is in order of the pattern's layers.
 	 * @param pattern The fabric pattern
-	 * @return The list
+	 * @return The stream
 	 */
-	public List<Material> getTextureList(FabricPattern pattern) {
-		// Use streams to create a new list
+	public Stream<Material> getTextureStream(FabricPattern pattern) {
 		// We use the pattern's list to ensure that the textures are in the right order
 		// First, look up the fabric textures
 		FabricTextures textures = map.get(pattern);
-		return Collections
-				.unmodifiableList(pattern.getLayers().stream().map(textures::get).collect(Collectors.toList()));
+		return pattern.getLayers().stream().map(textures::get);
 	}
 
 	/**
 	 * Returns of collection of textures that the fabric pattern uses. The
 	 * collection has no order is unmodifiable. If the user wants a list of textures
-	 * ordered by layer, they should use getTextureList.
+	 * ordered by layer, they should use getTextureStream.
 	 * 
 	 * @param pattern The fabric pattern
 	 * @return The collection
@@ -147,17 +143,6 @@ public class FabricTextureManager implements IFutureReloadListener {
 		// Lookup textures and return values
 		FabricTextures textures = map.get(pattern);
 		return Collections.unmodifiableCollection(textures.values());
-	}
-
-	// The following are convenience methods that retrieve the textures for a
-	// fabric.
-
-	public List<Material> getTextureList(Fabric fabric) {
-		return getTextureList(fabric.getPattern());
-	}
-
-	public Collection<Material> getTextures(Fabric fabric) {
-		return getTextures(fabric.getPattern());
 	}
 
 	@Override
