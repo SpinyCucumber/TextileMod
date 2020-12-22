@@ -7,10 +7,14 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
+import net.minecraftforge.client.event.ColorHandlerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.IForgeRegistry;
 import spinyq.spinytextiles.utility.ContainedItemStack;
 import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.color.ColorWord;
+import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 import spinyq.spinytextiles.utility.textile.Fabric;
@@ -34,9 +38,23 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 	
 	public FabricItem(Properties properties) {
 		super(properties);
-		// TODO Set up color handler
+		// Make sure we can receive events so we can register our color handler
+		FMLJavaModLoadingContext.get().getModEventBus().register(this);
 	}
 
+	@SubscribeEvent
+	public void onItemColorHandler(ColorHandlerEvent.Item event) {
+		// Register a color handler for all fabric items.
+		// The color handler makes it so each layer of the item is rendered with the right color.
+		event.getItemColors().register((stack, tintIndex) -> {
+				// Look up the layer name using the tint index
+				Fabric fabric = getFabric(stack);
+				String layer = fabric.getPattern().getLayers().get(tintIndex);
+				// Use the layer name to get the color
+				return fabric.getColor(layer).toRGB(new RGBColor(), null).toInt();
+			}, this);
+	}
+	
 	@Override
 	public boolean dye(ContainedItemStack<PlayerInventory> object, IDyeProvider provider) {
 		// TODO Auto-generated method stub

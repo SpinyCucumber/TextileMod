@@ -118,9 +118,8 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		// of the thread.
 		event.getItemColors().register((stack, tintIndex) -> {
 				// For the thread layer, return the color of the thread
-				RGBColor rgb = getColor(stack).toRGB(new RGBColor(), null);
 				if (tintIndex == 1)
-					return rgb.toInt();
+					return getColor(stack).toRGB(new RGBColor(), null).toInt();
 				// For all other layers, return -1 (white)
 				return -1;
 			}, this);

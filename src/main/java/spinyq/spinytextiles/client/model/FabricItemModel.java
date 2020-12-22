@@ -166,7 +166,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			// Build the north and south faces
 			buildFace(Direction.NORTH, builder);
 			buildFace(Direction.SOUTH, builder);
-
+			// TODO Build sides
 			// Construct the baked model
 			// The override handler for this model is arbitrary
 			return new BakedItemModel(builder.build(), null, Maps.immutableEnumMap(transformMap), overrides,
@@ -191,15 +191,17 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			int zDirection = direction.getDirectionVec().getZ();
 			float z = (8.0f + 0.5f * zDirection) / 16.0f;
 			// For every layer sprite, generate quads
+			// We also increment the tint index for each layer
+			int tintIndex = 0;
 			for (TextureAtlasSprite layerSprite : layerSprites) {
 				// Add the quads
 				// Use white color
-				// TODO set tint index
 				builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, layerSprite, z,
-						direction, 0xffffffff, 1));
+						direction, 0xffffffff, tintIndex));
 				// Offset the depth for each layer
 				// Make sure to go in the direction of the face
 				z += (Z_OFFSET * zDirection);
+				tintIndex++;
 			}
 		}
 
