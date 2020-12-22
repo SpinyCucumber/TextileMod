@@ -103,7 +103,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 				: PerspectiveMapWrapper.getTransforms(context.modelTransform);
 		TransformationMatrix transform = context.modelTransform.getRotation();
 
-		LOGGER.info("Baking a model for fabric pattern: {} with mask texture: {}", pattern, maskLocation);
+		LOGGER.info("Baking a model for fabric pattern: {} with mask texture: {}", pattern.getRegistryName(), maskLocation);
 
 		ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
 		// If our fabric info is non-null, convert it into quads
@@ -112,13 +112,11 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		float z = 0.0f;
 		TextureAtlasSprite maskSprite = context.spriteGetter.apply(maskLocation);
 		LOGGER.info("Textures: {}", textures);
-		LOGGER.info("Mask sprite: {}", maskSprite);
 		for (Material texture : textures) {
 			TextureAtlasSprite sprite = context.spriteGetter.apply(texture);
-			LOGGER.info("Layer sprite: {}", sprite);
 			// Add the quads
 			// Use white color
-			// TODO North side
+			// TODO North side, etc.
 			builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.SOUTH,
 					0xffffffff, 1));
 			// Increase the depth for each layer
