@@ -37,6 +37,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.IForgeRegistry;
+import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 import spinyq.spinytextiles.utility.textile.Fabric;
 import spinyq.spinytextiles.utility.textile.FabricPattern;
@@ -55,7 +56,7 @@ public class FabricTextureManager implements IFutureReloadListener {
 	private static final Gson SERIALIZER = new GsonBuilder()
 			.registerTypeAdapter(FabricTextures.class, new FabricTextures.Deserializer()).create();
 
-	public static final ResourceLocation ATLAS_LOCATION = new ResourceLocation("textures/atlas/fabrics.png");
+	public static final ResourceLocation ATLAS_LOCATION = new ResourceLocation(TextileMod.MODID, "textures/atlas/fabrics.png");
 
 	/**
 	 * Provides textures for each layer of a fabric pattern.
@@ -87,6 +88,9 @@ public class FabricTextureManager implements IFutureReloadListener {
 						throw new JsonParseException(textureStr + " is not valid resource location");
 					} else {
 						String layer = entry.getKey();
+						// Changing ATLAS_LOCATION to the block atlas location makes the item render correctly.
+						// It would seem that Minecraft isn't switching textures while rendering the item.
+						// TODO Will have to look into this more.
 						Material texture = new Material(ATLAS_LOCATION, textureLocation);
 						builder.put(layer, texture);
 					}

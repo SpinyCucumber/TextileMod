@@ -101,13 +101,16 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		// Get a list of layers and generate quads for each
 		if (fabric != null) {
 			List<Material> textures = FabricTextureManager.INSTANCE.getTextureList(fabric);
-			LOGGER.info("Textures: {}", textures);
 			float z = 0.0f;
 			TextureAtlasSprite maskSprite = spriteGetter.apply(maskLocation);
+			LOGGER.info("Textures: {}", textures);
+			LOGGER.info("Mask sprite: {}", maskSprite);
 			for (Material texture : textures) {
 				TextureAtlasSprite sprite = spriteGetter.apply(texture);
+				LOGGER.info("Layer sprite: {}", sprite);
 				// Add the quads
 				// Use white color
+				// TODO North side
 				builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.SOUTH,
 						0xffffffff, 1));
 				// Increase the depth for each layer
