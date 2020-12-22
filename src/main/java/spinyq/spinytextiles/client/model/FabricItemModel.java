@@ -1,6 +1,7 @@
 package spinyq.spinytextiles.client.model;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,6 @@ import net.minecraftforge.client.model.BakedItemModel;
 import net.minecraftforge.client.model.IModelConfiguration;
 import net.minecraftforge.client.model.IModelLoader;
 import net.minecraftforge.client.model.ItemTextureQuadConverter;
-import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.client.model.ModelTransformComposition;
 import net.minecraftforge.client.model.PerspectiveMapWrapper;
@@ -51,11 +51,13 @@ import net.minecraftforge.client.model.geometry.IModelGeometry;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
+import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.resource.IResourceType;
 import net.minecraftforge.resource.VanillaResourceType;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.FabricItem;
-import spinyq.spinytextiles.utility.textile.Fabric;
+import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
+import spinyq.spinytextiles.utility.textile.FabricPattern;
 
 // ItemCameraTransform is deprecated but is still being used by BakedItemModel, so we are forced to
 // use it as well.
@@ -64,62 +66,87 @@ import spinyq.spinytextiles.utility.textile.Fabric;
 public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	
+	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
+
 	// minimal Z offset to prevent depth-fighting
 	private static final float Z_OFFSET = 0.02f;
 	private static final String MASK_TEXTURE = "mask";
 
-	private final Fabric fabric;
+	// A map between fabric patterns and baked models to use when overriding items'
+	// models
+	private Map<FabricPattern, IBakedModel> subModels;
 
-	public FabricItemModel(Fabric fabric) {
-		this.fabric = fabric;
+	/**
+	 * Bakes all the submodels of the fabric item model. This involves baking a new
+	 * model for every fabric pattern, and putting it in a cache.
+	 */
+	private void bakeSubmodels(BakingContext context) {
+		subModels = new HashMap<>();
+		for (FabricPattern pattern : PATTERN_REGISTRY.getValues()) {
+			subModels.put(pattern, bakeSubmodel(context, pattern));
+		}
 	}
 
-	@Override
-	public IBakedModel bake(IModelConfiguration owner, ModelBakery bakery,
-			Function<Material, TextureAtlasSprite> spriteGetter, IModelTransform modelTransform,
-			ItemOverrideList overrides, ResourceLocation modelLocation) {
+	private IBakedModel bakeSubmodel(BakingContext context, FabricPattern pattern) {
 		// For each layer of the fabric pattern, create a new quad layer using the
 		// texture.
 		// A mask is applied to each layer to create the look of a fabric item.
 		// Can we use null for the particle texture?
 
 		// Retrieve the particle and mask textures
-		Material maskLocation = owner.resolveTexture(MASK_TEXTURE);
+		Material maskLocation = context.owner.resolveTexture(MASK_TEXTURE);
 
-		IModelTransform transformsFromModel = owner.getCombinedTransform();
+		IModelTransform transformsFromModel = context.owner.getCombinedTransform();
 		ImmutableMap<TransformType, TransformationMatrix> transformMap = transformsFromModel != null
 				? PerspectiveMapWrapper
-						.getTransforms(new ModelTransformComposition(transformsFromModel, modelTransform))
-				: PerspectiveMapWrapper.getTransforms(modelTransform);
-		TransformationMatrix transform = modelTransform.getRotation();
+						.getTransforms(new ModelTransformComposition(transformsFromModel, context.modelTransform))
+				: PerspectiveMapWrapper.getTransforms(context.modelTransform);
+		TransformationMatrix transform = context.modelTransform.getRotation();
 
-		LOGGER.info("Baking a FabricItemModel for fabric: {} with mask texture: {}", fabric, maskLocation);
-		
+		LOGGER.info("Baking a model for fabric pattern: {} with mask texture: {}", pattern, maskLocation);
+
 		ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
 		// If our fabric info is non-null, convert it into quads
 		// Get a list of layers and generate quads for each
-		if (fabric != null) {
-			List<Material> textures = FabricTextureManager.INSTANCE.getTextureList(fabric);
-			float z = 0.0f;
-			TextureAtlasSprite maskSprite = spriteGetter.apply(maskLocation);
-			LOGGER.info("Textures: {}", textures);
-			LOGGER.info("Mask sprite: {}", maskSprite);
-			for (Material texture : textures) {
-				TextureAtlasSprite sprite = spriteGetter.apply(texture);
-				LOGGER.info("Layer sprite: {}", sprite);
-				// Add the quads
-				// Use white color
-				// TODO North side
-				builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.SOUTH,
-						0xffffffff, 1));
-				// Increase the depth for each layer
-				z += Z_OFFSET;
-			}
+		List<Material> textures = FabricTextureManager.INSTANCE.getTextureList(pattern);
+		float z = 0.0f;
+		TextureAtlasSprite maskSprite = context.spriteGetter.apply(maskLocation);
+		LOGGER.info("Textures: {}", textures);
+		LOGGER.info("Mask sprite: {}", maskSprite);
+		for (Material texture : textures) {
+			TextureAtlasSprite sprite = context.spriteGetter.apply(texture);
+			LOGGER.info("Layer sprite: {}", sprite);
+			// Add the quads
+			// Use white color
+			// TODO North side
+			builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, sprite, z, Direction.SOUTH,
+					0xffffffff, 1));
+			// Increase the depth for each layer
+			z += Z_OFFSET;
 		}
 
-		return new BakedModel(bakery, owner, builder.build(), null, Maps.immutableEnumMap(transformMap),
-				Maps.newHashMap(), transform.isIdentity(), modelTransform, owner.isSideLit());
+		// Construct the baked model
+		// The override handler for this model is arbitrary
+		return new BakedItemModel(builder.build(), null, Maps.immutableEnumMap(transformMap), context.overrides,
+				transform.isIdentity(), context.owner.isSideLit());
+	}
+
+	@Override
+	public IBakedModel bake(IModelConfiguration owner, ModelBakery bakery,
+			Function<Material, TextureAtlasSprite> spriteGetter, IModelTransform modelTransform,
+			ItemOverrideList overrides, ResourceLocation modelLocation) {
+		// Create a "baking context" to pass to other methods so we don't have to type
+		// out lists of ugly arguments
+		BakingContext context = new BakingContext(owner, bakery, spriteGetter, modelTransform, overrides,
+				modelLocation);
+		// Bake all of our submodels
+		bakeSubmodels(context);
+		// Construct the baked model
+		// Make sure to give it our custom override handler so it can switch models
+		// Since this model is never really going to be rendered most of the arguments here are arbitrary
+		// We could make a class like "DummyBakedItemModel" if we wanted to avoid all the arguments
+		ItemOverrideList overrideHandler = new OverrideHandler();
+		return new BakedItemModel(ImmutableList.of(), null, ImmutableMap.of(), overrideHandler, true, true);
 	}
 
 	@Override
@@ -128,18 +155,17 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		Set<Material> texs = new HashSet<>();
 
 		texs.add(owner.resolveTexture(MASK_TEXTURE));
-		// TODO This is a temporary fix just to see if things work.
-		// We should probably maintain a map of models, then return all of their textures.
+		// Add all textures used by fabric patterns
 		texs.addAll(FabricTextureManager.INSTANCE.getAllTextureLocations());
 
 		return texs;
 	}
-	
+
 	@EventBusSubscriber(bus = Bus.MOD)
 	public static class Loader implements IModelLoader<FabricItemModel> {
-		
+
 		public static final ResourceLocation ID = new ResourceLocation(TextileMod.MODID, "fabric_item_model");
-		
+
 		@SubscribeEvent
 		public static void onRegisterModels(ModelRegistryEvent event) {
 			// Register ourselves as a model loader
@@ -164,63 +190,26 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 		@Override
 		public FabricItemModel read(JsonDeserializationContext deserializationContext, JsonObject modelContents) {
-			// Construct a new, empty fabric item model
-			return new FabricItemModel(null);
+			// Construct a new fabric item model
+			return new FabricItemModel();
 		}
 	}
 
-	private static final class OverrideHandler extends ItemOverrideList {
-		
-		private final ModelBakery bakery;
-
-		private OverrideHandler(ModelBakery bakery) {
-			this.bakery = bakery;
-		}
+	private class OverrideHandler extends ItemOverrideList {
 
 		@Override
 		public IBakedModel getModelWithOverrides(IBakedModel originalModel, ItemStack stack, @Nullable World world,
 				@Nullable LivingEntity entity) {
 			// Check if the item is a fabric item
-			// If it is, get the model corresponding to the fabric.
-			// We cache models so that we don't have to bake them each time.
+			// If it is, get the model corresponding to the fabric pattern
 			if (stack.getItem() instanceof FabricItem) {
 				FabricItem item = (FabricItem) stack.getItem();
-				BakedModel model = (BakedModel) originalModel;
-				// Get the fabric
-				Fabric fabric = item.getFabric(stack);
-				// Check if fabric is in cache
-				// If it isn't, we have to create it
-				if (model.cache.containsKey(fabric)) {
-					return model.cache.get(fabric);
-				} else {
-					// Create a new unbaked model with the fabric then bake it
-					// Override id is arbitrary
-					IBakedModel bakedModel = new FabricItemModel(fabric).bake(model.owner, bakery,
-							ModelLoader.defaultTextureGetter(), model.originalTransform, model.getOverrides(),
-							new ResourceLocation(TextileMod.MODID, "fabric_item_override"));
-					model.cache.put(fabric, bakedModel);
-					return bakedModel;
-				}
+				// Get the fabric pattern
+				FabricPattern pattern = item.getFabric(stack).getPattern();
+				return subModels.get(pattern);
 			}
 			// If the item is not a fabric item simply return the original model
 			return originalModel;
-		}
-	}
-
-	private static final class BakedModel extends BakedItemModel {
-		
-		private final IModelConfiguration owner;
-		private final Map<Fabric, IBakedModel> cache; // contains all the baked models since they'll never change
-		private final IModelTransform originalTransform;
-
-		BakedModel(ModelBakery bakery, IModelConfiguration owner, ImmutableList<BakedQuad> quads,
-				TextureAtlasSprite particle, ImmutableMap<TransformType, TransformationMatrix> transforms,
-				Map<Fabric, IBakedModel> cache, boolean untransformed, IModelTransform originalTransform,
-				boolean isSideLit) {
-			super(quads, particle, transforms, new OverrideHandler(bakery), untransformed, isSideLit);
-			this.owner = owner;
-			this.cache = cache;
-			this.originalTransform = originalTransform;
 		}
 	}
 
