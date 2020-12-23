@@ -1,114 +1,41 @@
-/*
- * Minecraft Forge
- * Copyright (c) 2016-2019.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation version 2.1
- * of the License.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
+package spinyq.spinytextiles.client.model;
 
-package net.minecraftforge.client.model;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.EnumMap;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.mojang.datafixers.util.Pair;
+
 import net.minecraft.client.renderer.TransformationMatrix;
-import net.minecraft.client.renderer.model.*;
-import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
+import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.model.geometry.IModelGeometry;
+import net.minecraftforge.client.model.ItemTextureQuadConverter;
 import net.minecraftforge.client.model.pipeline.BakedQuadBuilder;
 import net.minecraftforge.client.model.pipeline.IVertexConsumer;
 import net.minecraftforge.client.model.pipeline.TRSRTransformer;
 
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
+// TODO Improvement: Let this class implement IModelGeometry, similar to ItemLayerModel.
+// TODO Improvement: Skipping internal side quads would allow us to cut down on quads.
+// Should rewrite this class eventually with these to things in mind.
+// Most of this code is adapted from ItemLayerModel, with additional comments to clarify things.
+// Right now it only contains static utility methods
+public class TemplateItemModel {
 
-/**
- * Forge reimplementation of vanilla {@link ItemModelGenerator}, i.e. builtin/generated models,
- * with the following changes:
- * - Represented as a true {@link IUnbakedModel} so it can be baked as usual instead of using
- *   special-case logic like vanilla does.
- * - Various fixes in the baking logic.
- * - Not limited to 4 layers maximum.
- */
-// TODO: Implement as new model loader
-// This is a copy of ItemLayerModel with additional comments for documentation.
-// It isn't compiled at all.
-public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
-{
-    public static final ItemLayerModel INSTANCE = new ItemLayerModel(ImmutableList.of());
-
-    private static final Direction[] HORIZONTALS = {Direction.UP, Direction.DOWN};
+	private static final Logger LOGGER = LogManager.getLogger();
+	private static final Level LOG_LEVEL = Level.INFO;
+	
+	private static final Direction[] HORIZONTALS = {Direction.UP, Direction.DOWN};
     private static final Direction[] VERTICALS = {Direction.WEST, Direction.EAST};
 
-    private ImmutableList<Material> textures;
-
-    public ItemLayerModel(ImmutableList<Material> textures)
+    public static void generateQuads(int tint, TextureAtlasSprite template,
+    		TextureAtlasSprite sprite, TransformationMatrix transform, ImmutableList.Builder<BakedQuad> builder)
     {
-        this.textures = textures;
-    }
-
-    public ItemLayerModel()
-    {
-        this.textures = null;
-    }
-
-    private static ImmutableList<Material> getTextures(IModelConfiguration model)
-    {
-        ImmutableList.Builder<Material> builder = ImmutableList.builder();
-        for(int i = 0; model.isTexturePresent("layer" + i); i++)
-        {
-            builder.add(model.resolveTexture("layer" + i));
-        }
-        return builder.build();
-    }
-
-    @Override
-    public IBakedModel bake(IModelConfiguration owner, ModelBakery bakery, Function<Material, TextureAtlasSprite> spriteGetter, IModelTransform modelTransform, ItemOverrideList overrides, ResourceLocation modelLocation)
-    {
-        //TODO: Verify
-        TransformationMatrix transform = modelTransform.getRotation();
-        ImmutableList<BakedQuad> quads = getQuadsForSprites(textures, transform, spriteGetter);
-        TextureAtlasSprite particle = spriteGetter.apply(
-                owner.isTexturePresent("particle") ? owner.resolveTexture("particle") : textures.get(0)
-        );
-        ImmutableMap<TransformType, TransformationMatrix> map = PerspectiveMapWrapper.getTransforms(modelTransform);
-        return new BakedItemModel(quads, particle, map, overrides, transform.isIdentity(), owner.isSideLit());
-    }
-
-    public static ImmutableList<BakedQuad> getQuadsForSprites(List<Material> textures, TransformationMatrix transform, Function<Material, TextureAtlasSprite> spriteGetter)
-    {
-        ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
-        for(int i = 0; i < textures.size(); i++)
-        {
-            TextureAtlasSprite tas = spriteGetter.apply(textures.get(i));
-            builder.addAll(getQuadsForSprite(i, tas, transform));
-        }
-        return builder.build();
-    }
-
-    public static ImmutableList<BakedQuad> getQuadsForSprite(int tint, TextureAtlasSprite sprite, TransformationMatrix transform)
-    {
-        ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
 
         int uMax = sprite.getWidth();
         int vMax = sprite.getHeight();
@@ -123,8 +50,10 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
         
         // This flag marks whether the sprite contains "translucent" pixels -
         // pixels that are not fully transparent, but not fully opaque.
-        boolean translucent = false;
+        boolean translucent = true; // set to true for testing
 
+        LOGGER.log(LOG_LEVEL, "Scanning for edges...");
+        
         // The following section calculates the faceData for the sprite.
         for(int f = 0; f < sprite.getFrameCount(); f++)
         {
@@ -140,9 +69,12 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
                 ptu = true;
                 for(int u = 0; u < uMax; u++)
                 {
+                	// In addition to checking if the sprite's pixel is transparent,
+                	// we also check whether the template's pixel is transparent.
+                	// If either of them is transparent, then the current pixel is transparent.
                     int alpha = sprite.getPixelRGBA(f, u, v) >> 24 & 0xFF;
-                    boolean t = alpha / 255f <= 0.1f;
-
+                    boolean t = (alpha / 255f <= 0.1f) || template.isPixelTransparent(0, u, v);
+                    
                     if (!t && alpha < 255)
                     {
                         translucent = true;
@@ -152,12 +84,14 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
                     // we've found a side facing to the left. (west)
                     if(ptu && !t) // left - transparent, right - opaque
                     {
+                    	LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has a left edge.", u, v);
                         faceData.set(Direction.WEST, u, v);
                     }
                     // Similarly, if we've moved from an opaque pixel to a transparent one,
                     // we've found a side facing to the right. (east)
                     if(!ptu && t) // left - opaque, right - transparent
                     {
+                    	LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has a right edge.", u-1, v);
                         faceData.set(Direction.EAST, u-1, v);
                     }
                     // Next, check the pixel to the top of the current one.
@@ -165,10 +99,12 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
                     // a side facing upwards. Vice versa for a downwards facing side.
                     if(ptv[u] && !t) // up - transparent, down - opaque
                     {
+                    	LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has an up edge.", u, v);
                         faceData.set(Direction.UP, u, v);
                     }
                     if(!ptv[u] && t) // up - opaque, down - transparent
                     {
+                    	LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has a down edge.", u, v-1);
                         faceData.set(Direction.DOWN, u, v-1);
                     }
 
@@ -198,6 +134,8 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
         // They face either up or down. Confusing, the HORIZONTALS variable contains the
         // directions UP and DOWN.
         // The process is performed for both the UP and DOWN direction.
+        
+        LOGGER.log(LOG_LEVEL, "Generating side quads...");
         
         // horizontal quads
         for (Direction facing : HORIZONTALS)
@@ -253,6 +191,8 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
                         {
                             // make quad [uStart, u]
                             int off = facing == Direction.DOWN ? 1 : 0;
+                        	LOGGER.log(LOG_LEVEL, "Building a horizontal quad facing {} at row v={} with start u={} and end u={}",
+                        			facing, v, uStart, u);
                             builder.add(buildSideQuad(transform, facing, tint, sprite, uStart, v+off, u-uStart));
                             building = false;
                         }
@@ -271,6 +211,8 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
                 {
                     // make quad [uStart, uEnd]
                     int off = facing == Direction.DOWN ? 1 : 0;
+                	LOGGER.log(LOG_LEVEL, "Building a horizontal quad facing {} at row v={} with start u={} and end u={}",
+                			facing, v, uStart, uEnd);
                     builder.add(buildSideQuad(transform, facing, tint, sprite, uStart, v+off, uEnd-uStart));
                 }
             }
@@ -308,6 +250,8 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
                         {
                             // make quad [vStart, v]
                             int off = facing == Direction.EAST ? 1 : 0;
+                        	LOGGER.log(LOG_LEVEL, "Building a vertical quad facing {} at column u={} with start v={} and end v={}",
+                        			facing, u, vStart, v);
                             builder.add(buildSideQuad(transform, facing, tint, sprite, u+off, vStart, v-vStart));
                             building = false;
                         }
@@ -322,38 +266,21 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
                 {
                     // make quad [vStart, vEnd]
                     int off = facing == Direction.EAST ? 1 : 0;
+                	LOGGER.log(LOG_LEVEL, "Building a vertical quad facing {} at column u={} with start v={} and end v={}",
+                			facing, u, vStart, vEnd);
                     builder.add(buildSideQuad(transform, facing, tint, sprite, u+off, vStart, vEnd-vStart));
                 }
             }
         }
 
-        // Finally, we build the "cover" front and back quads.
-        // There is nothing fancy going on here, we simply create two quads
-        // that use the entire sprite.
+        LOGGER.log(LOG_LEVEL, "Generating face quads...");
         
-        // front
-        builder.add(buildQuad(transform, Direction.NORTH, sprite, tint,
-            0, 0, 7.5f / 16f, sprite.getMinU(), sprite.getMaxV(),
-            0, 1, 7.5f / 16f, sprite.getMinU(), sprite.getMinV(),
-            1, 1, 7.5f / 16f, sprite.getMaxU(), sprite.getMinV(),
-            1, 0, 7.5f / 16f, sprite.getMaxU(), sprite.getMaxV()
-        ));
-        // back
-        builder.add(buildQuad(transform, Direction.SOUTH, sprite, tint,
-            0, 0, 8.5f / 16f, sprite.getMinU(), sprite.getMaxV(),
-            1, 0, 8.5f / 16f, sprite.getMaxU(), sprite.getMaxV(),
-            1, 1, 8.5f / 16f, sprite.getMaxU(), sprite.getMinV(),
-            0, 1, 8.5f / 16f, sprite.getMinU(), sprite.getMinV()
-        ));
-
-        return builder.build();
-    }
-
-    @Override
-    public Collection<Material> getTextures(IModelConfiguration owner, Function<ResourceLocation, IUnbakedModel> modelGetter, Set<Pair<String, String>> missingTextureErrors)
-    {
-        textures = getTextures(owner);
-        return textures;
+        // Finally, we build the "cover" front and back quads.
+        // We let ItemTextureQuadConverter handle this.
+        builder.addAll(ItemTextureQuadConverter.convertTexture(transform, template, sprite,
+        		7.5f / 16f, Direction.NORTH, 0xffffffff, tint));
+        builder.addAll(ItemTextureQuadConverter.convertTexture(transform, template, sprite,
+        		8.5f / 16f, Direction.SOUTH, 0xffffffff, tint));
     }
 
     private static class FaceData
@@ -508,4 +435,5 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
             }
         }
     }
+	
 }

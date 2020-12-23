@@ -36,7 +36,6 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -45,7 +44,6 @@ import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.BakedItemModel;
 import net.minecraftforge.client.model.IModelConfiguration;
 import net.minecraftforge.client.model.IModelLoader;
-import net.minecraftforge.client.model.ItemTextureQuadConverter;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.client.model.ModelTransformComposition;
 import net.minecraftforge.client.model.PerspectiveMapWrapper;
@@ -121,16 +119,9 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 	public class SubModel implements IModelGeometry<SubModel> {
 
-		// Minimal Z offset to prevent depth-fighting
-		private static final float Z_OFFSET = 0.01f;
 		private static final String MASK_TEXTURE = "mask";
 
 		private FabricPattern pattern;
-
-		// These are used when baking the model
-		private TransformationMatrix transform;
-		private List<TextureAtlasSprite> layerSprites;
-		private TextureAtlasSprite maskSprite;
 
 		public SubModel(FabricPattern pattern) {
 			this.pattern = pattern;
@@ -153,20 +144,23 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 					? PerspectiveMapWrapper
 							.getTransforms(new ModelTransformComposition(transformsFromModel, modelTransform))
 					: PerspectiveMapWrapper.getTransforms(modelTransform);
-			transform = modelTransform.getRotation();
+			TransformationMatrix transform = modelTransform.getRotation();
 
 			LOGGER.info("Baking a model for fabric pattern: {}", pattern.getRegistryName());
 
 			ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
 			// Look up the pattern's textures using FabricTextureManager, and create a list of sprites for each layer
-			maskSprite = spriteGetter.apply(maskLocation);
-			layerSprites = FabricTextureManager.INSTANCE.getTextureStream(pattern)
+			TextureAtlasSprite mask = spriteGetter.apply(maskLocation);
+			List<TextureAtlasSprite> sprites = FabricTextureManager.INSTANCE.getTextureStream(pattern)
 					.map(spriteGetter::apply)
 					.collect(Collectors.toList());
-			// Build the north and south faces
-			buildFace(Direction.NORTH, builder);
-			buildFace(Direction.SOUTH, builder);
-			// TODO Build sides
+			// Build quads
+			// We also increment the tint index for each layer
+			int tint = 0;
+			for (TextureAtlasSprite sprite : sprites) {
+				TemplateItemModel.generateQuads(tint, mask, sprite, transform, builder);
+				tint++;
+			}
 			// Construct the baked model
 			// The override handler for this model is arbitrary
 			return new BakedItemModel(builder.build(), null, Maps.immutableEnumMap(transformMap), overrides,
@@ -183,26 +177,6 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			// Also include the mask texture
 			textures.add(owner.resolveTexture(MASK_TEXTURE));
 			return textures;
-		}
-
-		private void buildFace(Direction direction, ImmutableList.Builder<BakedQuad> builder) {
-			// The depth starts out half a pixel from the middle, in the direction of the face.
-			// Get just the depth component of the direction for math
-			int zDirection = direction.getDirectionVec().getZ();
-			float z = (8.0f + 0.5f * zDirection) / 16.0f;
-			// For every layer sprite, generate quads
-			// We also increment the tint index for each layer
-			int tintIndex = 0;
-			for (TextureAtlasSprite layerSprite : layerSprites) {
-				// Add the quads
-				// Use white color
-				builder.addAll(ItemTextureQuadConverter.convertTexture(transform, maskSprite, layerSprite, z,
-						direction, 0xffffffff, tintIndex));
-				// Offset the depth for each layer
-				// Make sure to go in the direction of the face
-				z += (Z_OFFSET * zDirection);
-				tintIndex++;
-			}
 		}
 
 	}
