@@ -28,7 +28,7 @@ import net.minecraftforge.client.model.pipeline.TRSRTransformer;
 public class TemplateItemModel {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	private static final Level LOG_LEVEL = Level.INFO;
+	private static final Level LOG_LEVEL = Level.TRACE;
 	
 	private static final Direction[] HORIZONTALS = {Direction.UP, Direction.DOWN};
     private static final Direction[] VERTICALS = {Direction.WEST, Direction.EAST};
@@ -277,10 +277,12 @@ public class TemplateItemModel {
         
         // Finally, we build the "cover" front and back quads.
         // We let ItemTextureQuadConverter handle this.
-        builder.addAll(ItemTextureQuadConverter.convertTexture(transform, template, sprite,
-        		7.5f / 16f, Direction.NORTH, 0xffffffff, tint));
-        builder.addAll(ItemTextureQuadConverter.convertTexture(transform, template, sprite,
-        		8.5f / 16f, Direction.SOUTH, 0xffffffff, tint));
+		
+		builder.addAll(ItemTextureQuadConverter.convertTexture(transform, template,
+		sprite, 7.5f / 16f, Direction.NORTH, 0xffffffff, tint));
+		builder.addAll(ItemTextureQuadConverter.convertTexture(transform, template,
+		sprite, 8.5f / 16f, Direction.SOUTH, 0xffffffff, tint));
+		 
     }
 
     private static class FaceData
@@ -335,7 +337,7 @@ public class TemplateItemModel {
         // both the DOWN and UP sides.
         switch(side)
         {
-        // If the direction is either WEST or DOWN we have to flip the z coordinates
+        // If the direction is either WEST or UP we have to flip the z coordinates
         // in order to preserve the winding of the vertices. The winding determines
         // which direction the quad faces.
         // If the quad is vertical, we set the add the size to the y coordinate of the
@@ -348,10 +350,10 @@ public class TemplateItemModel {
             break;
         // If the quad is horizontal, we set the add the size to the x coordinate of the
         // first corner to retrieve the x coordinate of the second corner.
-        case DOWN:
+        case UP:
             z0 = 8.5f / 16f;
             z1 = 7.5f / 16f;
-        case UP:
+        case DOWN:
             x1 = (float) (u + size) / width;
             break;
         default:
@@ -366,8 +368,13 @@ public class TemplateItemModel {
         float v0 = 16f * (1f - y0 - dy);
         float v1 = 16f * (1f - y1 - dy);
 
+        // Because Minecraft is weird, we also have to flip the y coordinates.
+        float tmp = y0;
+        y0 = 1f - y1;
+        y1 = 1f - tmp;
+        
         return buildQuad(
-            transform, remap(side), sprite, tint,
+            transform, side, sprite, tint,
             x0, y0, z0, sprite.getInterpolatedU(u0), sprite.getInterpolatedV(v0),
             x1, y1, z0, sprite.getInterpolatedU(u1), sprite.getInterpolatedV(v1),
             x1, y1, z1, sprite.getInterpolatedU(u1), sprite.getInterpolatedV(v1),
@@ -375,13 +382,7 @@ public class TemplateItemModel {
         );
     }
 
-    private static Direction remap(Direction side)
-    {
-        // getOpposite is related to the swapping of V direction
-        return side.getAxis() == Direction.Axis.Y ? side.getOpposite() : side;
-    }
-
-    private static BakedQuad buildQuad(TransformationMatrix transform, Direction side, TextureAtlasSprite sprite, int tint,
+	private static BakedQuad buildQuad(TransformationMatrix transform, Direction side, TextureAtlasSprite sprite, int tint,
         float x0, float y0, float z0, float u0, float v0,
         float x1, float y1, float z1, float u1, float v1,
         float x2, float y2, float z2, float u2, float v2,
