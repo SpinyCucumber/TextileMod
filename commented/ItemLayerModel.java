@@ -53,7 +53,6 @@ import java.util.function.Function;
 // TODO: Implement as new model loader
 // This is a copy of ItemLayerModel with additional comments for documentation.
 // It isn't compiled at all.
-@SuppressWarnings("deprecation")
 public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
 {
     public static final ItemLayerModel INSTANCE = new ItemLayerModel(ImmutableList.of());
@@ -198,6 +197,7 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
         // Note that these quads are horizontally aligned, rather than facing a horizontal.
         // They face either up or down. Confusing, the HORIZONTALS variable contains the
         // directions UP and DOWN.
+        // The process is performed for both the UP and DOWN direction.
         
         // horizontal quads
         for (Direction facing : HORIZONTALS)
@@ -215,6 +215,24 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
                 {
                 	// Retrieve whether the current pixel has a side or not 
                     boolean face = faceData.get(facing, u, v);
+                    
+                    // If the sprite doesn't contain any translucent pixels, we can afford to
+                    // only worry about the first and last sides in the row of pixels.
+                    // Why? Consider three possible cases:
+                    // 1. The side is totally straight, in which case we would be fine caring about
+                    // the geometry in the middle or not.
+                    // 2. The side is convex; it has a "bump" in the middle. If the sprite doesn't have translucence,
+                    // then we are okay generating only one quad for the row, since any bit of the quad below
+                    // the "bump" is hidden by the front and back cover quads. If the sprite does have translucense,
+                    // however, the player might see some weirdness going on.
+                    // 3. The side is concave; it has a "dip" in the middle. We are okay generating only
+                    // one quad no matter the translucense of the sprite. This is because the texture of the
+                    // side quad is the same as the row of pixels it borders, so any transparent pixels
+                    // won't show up on the side.
+                    // Note that a side can have both a "bump" and a "dip."
+                    // We only care about the second case, so all we need to do is track whether or not
+                    // the sprite has translucency.
+                    
                     if (!translucent)
                     {
                         if (face)
@@ -258,6 +276,10 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
             }
         }
 
+        // This does the same thing as the above section, but for vertical quads instead.
+        // This means scanning the WEST and EAST sides of each pixel and building quads
+        // for contiguous sides.
+        
         // vertical quads
         for (Direction facing : VERTICALS)
         {
@@ -305,6 +327,10 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
             }
         }
 
+        // Finally, we build the "cover" front and back quads.
+        // There is nothing fancy going on here, we simply create two quads
+        // that use the entire sprite.
+        
         // front
         builder.add(buildQuad(transform, Direction.NORTH, sprite, tint,
             0, 0, 7.5f / 16f, sprite.getMinU(), sprite.getMaxV(),
@@ -369,19 +395,29 @@ public final class ItemLayerModel implements IModelGeometry<ItemLayerModel>
         int width = sprite.getWidth();
         int height = sprite.getHeight();
 
+        // These describe the position of the side quad.
         float x0 = (float) u / width;
         float y0 = (float) v / height;
         float x1 = x0, y1 = y0;
         float z0 = 7.5f / 16f, z1 = 8.5f / 16f;
 
+        // Switch statements can be unclear.
+        // In this case, the line y1 = (float) (v + size) / height line is executed
+        // for both the WEST and EAST sides since the WEST branch doesn't have a break statement.
+        // Similarly, the x1 = (float) (u + size) / width line is executed for
+        // both the DOWN and UP sides.
         switch(side)
         {
+        // If the quad is vertical, we set the add the size to the y coordinate of the
+        // first corner to retrieve the y coordinate of the second corner.
         case WEST:
             z0 = 8.5f / 16f;
             z1 = 7.5f / 16f;
         case EAST:
             y1 = (float) (v + size) / height;
             break;
+        // If the quad is horizontal, we set the add the size to the x coordinate of the
+        // first corner to retrieve the x coordinate of the second corner.
         case DOWN:
             z0 = 8.5f / 16f;
             z1 = 7.5f / 16f;
