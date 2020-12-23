@@ -119,7 +119,8 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 	public class SubModel implements IModelGeometry<SubModel> {
 
-		private static final String MASK_TEXTURE = "mask";
+		private static final String TEMPLATE_TEXTURE = "template",
+				DETAIL_TEXTURE = "detail";
 
 		private FabricPattern pattern;
 
@@ -133,11 +134,12 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 				ItemOverrideList overrides, ResourceLocation modelLocation) {
 			// For each layer of the fabric pattern, create a new quad layer using the
 			// texture.
-			// A mask is applied to each layer to create the look of a fabric item.
+			// A template is applied to each layer to create the look of a fabric item.
 			// Can we use null for the particle texture?
 
-			// Retrieve the and mask texture
-			Material maskLocation = owner.resolveTexture(MASK_TEXTURE);
+			// Retrieve template texture and detail texture
+			Material templateLocation = owner.resolveTexture(TEMPLATE_TEXTURE),
+					detailLocation = owner.resolveTexture(DETAIL_TEXTURE);
 
 			IModelTransform transformsFromModel = owner.getCombinedTransform();
 			ImmutableMap<TransformType, TransformationMatrix> transformMap = transformsFromModel != null
@@ -150,7 +152,8 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 			ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
 			// Look up the pattern's textures using FabricTextureManager, and create a list of sprites for each layer
-			TextureAtlasSprite mask = spriteGetter.apply(maskLocation);
+			TextureAtlasSprite template = spriteGetter.apply(templateLocation),
+					detail = spriteGetter.apply(detailLocation);
 			List<TextureAtlasSprite> sprites = FabricTextureManager.INSTANCE.getTextureStream(pattern)
 					.map(spriteGetter::apply)
 					.collect(Collectors.toList());
@@ -158,7 +161,8 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			// We also increment the tint index for each layer
 			int tint = 0;
 			for (TextureAtlasSprite sprite : sprites) {
-				TemplateItemModel.generateQuads(tint, mask, sprite, transform, builder);
+				TemplateItemModel.generateQuads(tint, template, sprite, transform, builder);
+				TemplateItemModel.generateQuads(tint, sprite, detail, transform, builder);
 				tint++;
 			}
 			// Construct the baked model
@@ -175,7 +179,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			// Include all the textures used by the pattern
 			textures.addAll(FabricTextureManager.INSTANCE.getTextures(pattern));
 			// Also include the mask texture
-			textures.add(owner.resolveTexture(MASK_TEXTURE));
+			textures.add(owner.resolveTexture(TEMPLATE_TEXTURE));
 			return textures;
 		}
 
