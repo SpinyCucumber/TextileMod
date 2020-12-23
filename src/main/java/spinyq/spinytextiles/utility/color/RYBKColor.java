@@ -45,7 +45,7 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 			new RGBColor(0.2f, 0.094f, 0.0f), // BROWN
 	};
 	
-	private static final RGBColor BLACK = new RGBColor(0.1f, 0.1f, 0.1f);
+	private static final RGBColor BLACK = new RGBColor(0.2f, 0.2f, 0.2f);
 	
 	// Cache the RYB colors of different dyes to speed things up
 	private static final Map<DyeColor, RYBKColor> DYE_MAP = new EnumMap<>(new ImmutableMap.Builder<DyeColor, RYBKColor>()
