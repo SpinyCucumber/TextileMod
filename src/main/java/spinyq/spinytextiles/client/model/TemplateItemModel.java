@@ -77,7 +77,7 @@ public class TemplateItemModel {
                 	// In addition to checking if the sprite's pixel is transparent,
                 	// we also check whether the template's pixel is transparent.
                 	// If either of them is transparent, then the current pixel is transparent.
-                    boolean t = !isVisible(sprite.getPixelRGBA(f, u, v)) || !isVisible(template.getPixelRGBA(0, u, v));
+                    boolean t = !isVisible(sprite, f, u, v) || !isVisible(template, 0, u, v);
                     
                     // If we've just moved from a transparent pixel to an opaque pixel,
                     // we've found a side facing to the left. (west)
@@ -397,10 +397,10 @@ public class TemplateItemModel {
         int start = -1;
         for (int y = 0; y < h; y++)
         {
-            for (int x = 0; x < w; x++)
+            for (int x = 0; x <= w; x++)
             {
                 // current pixel
-                boolean isVisible = isVisible(template.getPixelRGBA(0, x, y));
+                boolean isVisible = isVisible(template, 0, x, y);
 
                 // no current quad but found a new one
                 if (start < 0 && isVisible)
@@ -418,7 +418,7 @@ public class TemplateItemModel {
                     {
                         for (int i = 0; i < w; i++)
                         {
-                            if (isVisible(template.getPixelRGBA(0, i, y)) != isVisible(template.getPixelRGBA(0, i, endY)))
+                            if (isVisible(template, 0, i, y) != isVisible(template, 0, i, endY))
                             {
                                 sameRow = false;
                                 break;
@@ -468,10 +468,10 @@ public class TemplateItemModel {
         int start = -1;
         for (int x = 0; x < w; x++)
         {
-            for (int y = 0; y < h; y++)
+            for (int y = 0; y <= h; y++)
             {
                 // current pixel
-                boolean isVisible = isVisible(template.getPixelRGBA(0, x, y));
+                boolean isVisible = isVisible(template, 0, x, y);
 
                 // no current quad but found a new one
                 if (start < 0 && isVisible)
@@ -489,7 +489,7 @@ public class TemplateItemModel {
                     {
                         for (int i = 0; i < h; i++)
                         {
-                            if (isVisible(template.getPixelRGBA(0, x, i)) != isVisible(template.getPixelRGBA(0, endX, i)))
+                            if (isVisible(template, 0, x, i) != isVisible(template, 0, endX, i))
                             {
                                 sameColumn = false;
                                 break;
@@ -523,9 +523,12 @@ public class TemplateItemModel {
         return quads;
     }
 
-    private static boolean isVisible(int color)
+    private static boolean isVisible(TextureAtlasSprite sprite, int frame, int u, int v)
     {
-        return (color >> 24 & 255) / 255f > 0.1f;
+    	// If the coordinates are not on the sprite return false
+    	if (u < 0 || u >= sprite.getWidth() || v < 0 || v >= sprite.getHeight()) return false;
+    	// Else look up the pixel
+        return (sprite.getPixelRGBA(frame, u, v) >> 24 & 255) / 255f > 0.1f;
     }
 
 	private static BakedQuad buildQuad(TransformationMatrix transform, Direction side, TextureAtlasSprite sprite, int tint,
