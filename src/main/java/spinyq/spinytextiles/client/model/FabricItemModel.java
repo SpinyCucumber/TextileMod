@@ -122,7 +122,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		private static final String TEMPLATE_TEXTURE = "template",
 				DETAIL_TEXTURE = "detail";
 
-		private static final float NUDGE_INCREMENT = 0.0002f;
+		private static final float NUDGE_INCREMENT = 0.0001f;
 		
 		private FabricPattern pattern;
 

@@ -212,7 +212,7 @@ public class TemplateItemModel {
                         {
                             // make quad [uStart, u]
                             int off = facing == Direction.DOWN ? 1 : 0;
-                        	LOGGER.log(LOG_LEVEL, "\nBuilding a horizontal quad facing {} at row v={} with start u={} and end u={}",
+                        	LOGGER.log(LOG_LEVEL, "Building a horizontal quad facing {} at row v={} with start u={} and end u={}",
                         			facing, v, uStart, u);
                             builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, uStart, v+off, u-uStart));
                             building = false;
@@ -246,7 +246,7 @@ public class TemplateItemModel {
         // vertical quads
         for (Direction facing : VERTICALS)
         {
-        	LOGGER.log(LOG_LEVEL, "=========================\n{} QUADS\n=========================", facing.toString().toUpperCase());
+        	LOGGER.log(LOG_LEVEL, "\n=========================\n{} QUADS\n=========================", facing.toString().toUpperCase());
             for (int u = 0; u < uMax; u++)
             {
                 int vStart = 0, vEnd = vMax;
@@ -272,7 +272,7 @@ public class TemplateItemModel {
                         {
                             // make quad [vStart, v]
                             int off = facing == Direction.EAST ? 1 : 0;
-                        	LOGGER.log(LOG_LEVEL, "\nBuilding a vertical quad facing {} at column u={} with start v={} and end v={}",
+                        	LOGGER.log(LOG_LEVEL, "Building a vertical quad facing {} at column u={} with start v={} and end v={}",
                         			facing, u, vStart, v);
                             builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, u+off, vStart, v-vStart));
                             building = false;
@@ -341,7 +341,7 @@ public class TemplateItemModel {
 
     private static BakedQuad buildSideQuad(TransformationMatrix transform, Direction side, int tint, float nudge, TextureAtlasSprite sprite, int u, int v, int size)
     {
-        final float eps = 1e-2f;
+        final float eps = 1e-3f;
 
         int width = sprite.getWidth();
         int height = sprite.getHeight();
@@ -373,8 +373,6 @@ public class TemplateItemModel {
         // If the quad is horizontal, we set the add the size to the x coordinate of the
         // first corner to retrieve the x coordinate of the second corner.
         case UP:
-            z0 = 8.5f / 16f;
-            z1 = 7.5f / 16f;
         case DOWN:
             x1 = (float) (u + size) / width;
             break;
@@ -387,8 +385,8 @@ public class TemplateItemModel {
 
         float u0 = 16f * (x0 - dx);
         float u1 = 16f * (x1 - dx);
-        float v0 = 16f * (y0 - dy);
-        float v1 = 16f * (y1 - dy);
+        float v0 = 16f * (y0 + dy);
+        float v1 = 16f * (y1 + dy);
 
         // Because Minecraft is weird, we also have to flip the y coordinates.
         float tmp = y0;
@@ -403,7 +401,8 @@ public class TemplateItemModel {
         y0 += yNudge;
         y1 += yNudge;
         
-        LOGGER.log(LOG_LEVEL, "Side quad (x0,y0,z0): ({},{},{}) (x1,y1,z1): ({},{},{})", x0, y0, z0, x1, y1, z1);
+        LOGGER.log(LOG_LEVEL, "SIDE QUAD\n(x0,y0,z0): ({},{},{}) (x1,y1,z1): ({},{},{})\n(u0,v0): ({},{}) (u1,v1): ({},{})\n",
+        		x0, y0, z0, x1, y1, z1, u0, v0, u1, v1);
         
         return buildQuad(
             transform, side, sprite, tint,
