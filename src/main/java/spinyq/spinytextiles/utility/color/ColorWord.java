@@ -30,6 +30,16 @@ public enum ColorWord {
 	public String getName() {
 		return this.toString().toLowerCase();
 	}
+	
+	/**
+	 * Returns a translation key which can be
+	 * used to describe the color an object.
+	 * This isn't applicable in all languages.
+	 * @return
+	 */
+	public String getTranslationKey() {
+		return "color.spinytextiles." + getName();
+	}
 
 	public static ColorWord getClosest(RYBKColor to) {
 		List<ColorWord> list = Arrays.asList(ColorWord.values());

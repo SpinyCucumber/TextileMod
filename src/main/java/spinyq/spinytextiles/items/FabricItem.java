@@ -1,5 +1,8 @@
 package spinyq.spinytextiles.items;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.ImmutableList;
 
 import net.minecraft.entity.player.PlayerInventory;
@@ -7,12 +10,17 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.LanguageMap;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.IForgeRegistry;
 import spinyq.spinytextiles.utility.ContainedItemStack;
 import spinyq.spinytextiles.utility.NBTHelper;
+import spinyq.spinytextiles.utility.NBTHelper.CalculatedValue;
+import spinyq.spinytextiles.utility.color.ColorWord;
 import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
@@ -23,11 +31,22 @@ import spinyq.spinytextiles.utility.textile.IDyeProvider;
 
 public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 
+	private static final Logger LOGGER = LogManager.getLogger();
+	private static final LanguageMap LOCAL_LANGUAGE = LanguageMap.getInstance();
+	private static final String FABRIC_TAG = "Fabric", COLOR_WORD_TAG = "ColorWord";
 	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
-	private static final String FABRIC_TAG = "Fabric";
 	// White and dark blue
 	private static final ImmutableList<RYBKColor> DEFAULT_COLORS = ImmutableList.of(new RYBKColor(0f, 0f, 0f, 0f),
 			new RYBKColor(0f, 0f, 1f, 0.5f));
+	
+	private CalculatedValue<ColorWord> closestColorWord = NBTHelper.createCalculatedEnumValue(
+			COLOR_WORD_TAG, ColorWord.class,
+			(item) -> {
+				// Retrieve the closest color word to the color of the first layer
+				LOGGER.info("Calculating closest color word of fabric item: {}", item);
+				RYBKColor color = getFabric(item).getColor(0);
+				return ColorWord.getClosest(color);
+			});
 	
 	public Fabric getFabric(ItemStack stack) {
 		return NBTHelper.getOrNull(Fabric::new, stack.getOrCreateTag(), FABRIC_TAG);
@@ -37,6 +56,25 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		NBTHelper.put(stack.getOrCreateTag(), FABRIC_TAG, info);
 	}
 	
+	@Override
+	public ITextComponent getDisplayName(ItemStack stack) {
+		// Construct some additional arugments to pass to the text component
+		// These are optionally used by the localization files to format stuff
+		String colorKey = closestColorWord.get(stack).getTranslationKey();
+		return new TranslationTextComponent(getTranslationKey(stack), new TranslationTextComponent(colorKey));
+	}
+
+	@Override
+	public String getTranslationKey(ItemStack stack) {
+		// Construct a key using the closest color word
+		String colorName = closestColorWord.get(stack).getName();
+		String defaultKey = FabricItem.super.getTranslationKey(),
+				specificKey = defaultKey + '.' + colorName;
+		// If the specific translation key exists, use it.
+		// Otherwise, fall back to the default translation key 
+		return LOCAL_LANGUAGE.exists(specificKey) ? specificKey : defaultKey;
+	}
+
 	public FabricItem(Properties properties) {
 		super(properties);
 		// Make sure we can receive events so we can register our color handler

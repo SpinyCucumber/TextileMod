@@ -33,6 +33,10 @@ public class Fabric implements IGarmentComponent {
 	public RYBKColor getColor(String layer) {
 		return colors.get(layer);
 	}
+	
+	public RYBKColor getColor(int index) {
+		return getColor(pattern.getLayers().get(index));
+	}
 
 	@Override
 	public CompoundNBT serializeNBT() {

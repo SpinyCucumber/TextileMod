@@ -154,6 +154,17 @@ public class NBTHelper {
 		return new CalculatedValue<>(tag, CompoundNBT::getString, CompoundNBT::putString, calculator);
 	}
 	
+	public static <T extends Enum<T>> CalculatedValue<T> createCalculatedEnumValue(String tag, Class<T> clazz, Function<ItemStack, T> calculator) {
+		return new CalculatedValue<T>(tag,
+				(nbt, key) -> {
+					return clazz.getEnumConstants()[nbt.getInt(key)];
+				},
+				(nbt, key, value) -> {
+					nbt.putInt(key, value.ordinal());
+				},
+				calculator);
+	}
+	
 	public static <T extends INBTSerializable<K>, K extends INBT> void put(CompoundNBT nbt, String key, T object) {
 		nbt.put(key, object.serializeNBT());
 	}
