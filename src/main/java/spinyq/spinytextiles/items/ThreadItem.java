@@ -1,6 +1,6 @@
 package spinyq.spinytextiles.items;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Objects;
 
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
@@ -12,7 +12,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.utility.ContainedItemStack;
 import spinyq.spinytextiles.utility.NBTHelper;
-import spinyq.spinytextiles.utility.NBTHelper.Attribute;
 import spinyq.spinytextiles.utility.NBTHelper.CalculatedValue;
 import spinyq.spinytextiles.utility.color.ColorWord;
 import spinyq.spinytextiles.utility.color.RGBColor;
@@ -25,13 +24,12 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 	private static final String COLOR_TAG = "Color";
 	private static final String TRANSLATION_KEY_TAG = "TranslationKey";
 	
-	private Attribute<RYBKColor> color = NBTHelper.createAttribute(RYBKColor::new, COLOR_TAG);
 	private CalculatedValue<String> translationKey = NBTHelper.createCalculatedStringValue(
-			TRANSLATION_KEY_TAG, ImmutableList.of(color),
-			(inputs) -> {
+			TRANSLATION_KEY_TAG,
+			(item) -> {
 				// Retrieve the closest color word to the given color and stitch together a
 				// translation key
-				String colorName = ColorWord.getClosest(inputs.get(color)).getName();
+				String colorName = ColorWord.getClosest(getColor(item)).getName();
 				return ThreadItem.super.getTranslationKey() + '.' + colorName;
 			});
 	
@@ -84,12 +82,14 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		return translationKey.get(item);
 	}
 
-	public void setColor(ItemStack item, RYBKColor value) {
-		color.set(item, value);
+	public void setColor(ItemStack item, RYBKColor color) {
+		// If new color is different from old color, mark translation key as dirty
+		if (!Objects.equal(color, getColor(item))) translationKey.markDirty(item);
+		NBTHelper.put(item.getOrCreateTag(), COLOR_TAG, color);
 	}
 
 	public RYBKColor getColor(ItemStack item) {
-		return color.get(item);
+		return NBTHelper.getOrNull(RYBKColor::new, item.getOrCreateTag(), COLOR_TAG);
 	}
 
 	@Override

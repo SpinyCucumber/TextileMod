@@ -1,11 +1,7 @@
 package spinyq.spinytextiles.utility;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -85,49 +81,28 @@ public class NBTHelper {
 		
 	}
 	
-	public static abstract class Value<T> {
-		
-		protected Collection<CalculatedValue<?>> subscribers = new LinkedList<>();
-		
-		protected void markSubscribersDirty(ItemStack item) {
-			for (CalculatedValue<?> subscriber : subscribers) {
-				subscriber.markDirty(item);
-			}
-		}
-		
-		public abstract T get(ItemStack item);
-		
-	}
-	
-	public static class CalculatedValue<T> extends Value<T> {
+	public static class CalculatedValue<T> {
 		
 		private String tag;
-		private List<Value<?>> inputs;
 		private BiFunction<CompoundNBT, String, T> getter;
 		private TriConsumer<CompoundNBT, String, T> setter;
-		private Function<Values, T> calculator;
+		private Function<ItemStack, T> calculator;
 		
-		private CalculatedValue(String tag, List<Value<?>> inputs, BiFunction<CompoundNBT, String, T> getter,
-				TriConsumer<CompoundNBT, String, T> setter, Function<Values, T> calculator) {
+		private CalculatedValue(String tag, BiFunction<CompoundNBT, String, T> getter,
+				TriConsumer<CompoundNBT, String, T> setter, Function<ItemStack, T> calculator) {
 			this.tag = tag;
-			this.inputs = inputs;
 			this.getter = getter;
 			this.setter = setter;
 			this.calculator = calculator;
-			// Subscribe to each of our inputs
-			for (Value<?> input : inputs) input.subscribers.add(this);
 		}
 		
-		@Override
 		public T get(ItemStack item) {
 			T value;
 			// Check if dirty
 			// If the value is dirty, we have to recalculate it
 			CompoundNBT compound = getCompound(item);
 			if (isDirty(item)) {
-				// Set up inputs to calculator
-				Values values = new Values(item, inputs);
-				value = calculator.apply(values);
+				value = calculator.apply(item);
 				// Remove dirty flag
 				compound.putBoolean(DIRTY_TAG, false);
 				// Store value
@@ -141,8 +116,6 @@ public class NBTHelper {
 		}
 
 		public void markDirty(ItemStack item) {
-			// Mark our own subscribers as dirty
-			markSubscribersDirty(item);
 			// Set the dirty flag
 			getCompound(item).putBoolean(DIRTY_TAG, true);
 		}
@@ -177,62 +150,8 @@ public class NBTHelper {
 		
 	}
 	
-	public static class Attribute<T> extends Value<T> {
-		
-		private String tag;
-		private BiFunction<CompoundNBT, String, T> getter;
-		private TriConsumer<CompoundNBT, String, T> setter;
-		
-		private Attribute(String tag, BiFunction<CompoundNBT, String, T> getter,
-				TriConsumer<CompoundNBT, String, T> setter) {
-			this.tag = tag;
-			this.getter = getter;
-			this.setter = setter;
-		}
-
-		@Override
-		public T get(ItemStack item) {
-			return getter.apply(item.getOrCreateTag(), tag);
-		}
-		
-		public void set(ItemStack item, T value) {
-			// If the new value is different from the old value, mark the subscribers as dirty
-			if (!Objects.equals(value, get(item))) markSubscribersDirty(item);
-			setter.accept(item.getOrCreateTag(), tag, value);
-		}
-		
-	}
-	
-	public static class Values {
-		
-		private Map<Value<?>, Object> map = new HashMap<>();
-		
-		private Values(ItemStack item, List<Value<?>> inputs) {
-			// Fill the map
-			for (Value<?> value : inputs) {
-				map.put(value, value.get(item));
-			}
-		}
-		
-		@SuppressWarnings("unchecked")
-		public <T> T get(Value<T> value) {
-			return (T) map.get(value);
-		}
-		
-	}
-
-	public static Attribute<String> createStringAttribute(String tag) {
-		return new Attribute<>(tag, CompoundNBT::getString, CompoundNBT::putString);
-	}
-	
-	public static CalculatedValue<String> createCalculatedStringValue(String tag, List<Value<?>> inputs, Function<Values, String> calculator) {
-		return new CalculatedValue<>(tag, inputs, CompoundNBT::getString, CompoundNBT::putString, calculator);
-	}
-	
-	public static <T extends INBTSerializable<K>, K extends INBT> Attribute<T> createAttribute(Supplier<T> supplier, String tag) {
-		return new Attribute<>(tag,
-				(nbt, key) -> get(supplier, nbt, key),
-				NBTHelper::put);
+	public static CalculatedValue<String> createCalculatedStringValue(String tag, Function<ItemStack, String> calculator) {
+		return new CalculatedValue<>(tag, CompoundNBT::getString, CompoundNBT::putString, calculator);
 	}
 	
 	public static <T extends INBTSerializable<K>, K extends INBT> void put(CompoundNBT nbt, String key, T object) {
