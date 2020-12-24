@@ -22,14 +22,11 @@ public class ModPatterns {
 	public static final DeferredRegister<GarmentPattern> GARMENT_PATTERNS = new DeferredRegister<>(
 			LazyForgeRegistry.of(GarmentPattern.class), TextileMod.MODID);
 
-	public static final RegistryObject<FabricPattern> SOLID = FABRIC_PATTERNS.register("solid",
-			() -> new FabricPattern("base")),
-			HORIZONTAL_STRIPES = FABRIC_PATTERNS.register("horizontal_stripes",
-					() -> new FabricPattern("base", "stripes")),
-			VERTICAL_STRIPES = FABRIC_PATTERNS.register("vertical_stripes",
-					() -> new FabricPattern("base", "stripes")),
-			DIAGONAL_STRIPES = FABRIC_PATTERNS.register("diagonal_stripes",
-					() -> new FabricPattern("base", "stripes"));
+	public static final RegistryObject<FabricPattern> SOLID = FABRIC_PATTERNS.register("solid", () -> new FabricPattern("base")),
+			HORIZONTAL_STRIPES = FABRIC_PATTERNS.register("horizontal_stripes", () -> new FabricPattern("base", "stripes")),
+			VERTICAL_STRIPES = FABRIC_PATTERNS.register("vertical_stripes", () -> new FabricPattern("base", "stripes")),
+			DIAGONAL_STRIPES = FABRIC_PATTERNS.register("diagonal_stripes", () -> new FabricPattern("base", "stripes")),
+			DOTS = FABRIC_PATTERNS.register("dots", () -> new FabricPattern("base", "dots"));
 
 	@SubscribeEvent
 	public static void createRegistries(RegistryEvent.NewRegistry event) {
