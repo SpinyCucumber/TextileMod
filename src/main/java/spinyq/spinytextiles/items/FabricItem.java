@@ -1,8 +1,5 @@
 package spinyq.spinytextiles.items;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.collect.ImmutableList;
 
 import net.minecraft.entity.player.PlayerInventory;
@@ -31,7 +28,6 @@ import spinyq.spinytextiles.utility.textile.IDyeProvider;
 
 public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 
-	private static final Logger LOGGER = LogManager.getLogger();
 	private static final LanguageMap LOCAL_LANGUAGE = LanguageMap.getInstance();
 	private static final String FABRIC_TAG = "Fabric", COLOR_WORD_TAG = "ColorWord";
 	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
@@ -43,7 +39,6 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 			COLOR_WORD_TAG, ColorWord.class,
 			(item) -> {
 				// Retrieve the closest color word to the color of the first layer
-				LOGGER.info("Calculating closest color word of fabric item: {}", item);
 				RYBKColor color = getFabric(item).getColor(0);
 				return ColorWord.getClosest(color);
 			});

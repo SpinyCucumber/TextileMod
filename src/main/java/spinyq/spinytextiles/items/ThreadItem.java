@@ -7,6 +7,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.LanguageMap;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -21,18 +24,15 @@ import spinyq.spinytextiles.utility.textile.IDyeProvider;
 
 public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 
+	private static final LanguageMap LOCAL_LANGUAGE = LanguageMap.getInstance();
 	private static final String COLOR_TAG = "Color";
-	private static final String TRANSLATION_KEY_TAG = "TranslationKey";
-	
-	private CalculatedValue<String> translationKey = NBTHelper.createCalculatedStringValue(
-			TRANSLATION_KEY_TAG,
-			(item) -> {
-				// Retrieve the closest color word to the given color and stitch together a
-				// translation key
-				String colorName = ColorWord.getClosest(getColor(item)).getName();
-				return ThreadItem.super.getTranslationKey() + '.' + colorName;
+	private static final String COLOR_WORD_TAG = "ColorWord";
+
+	private CalculatedValue<ColorWord> closestColorWord = NBTHelper.createCalculatedEnumValue(COLOR_WORD_TAG,
+			ColorWord.class, (item) -> {
+				return ColorWord.getClosest(getColor(item));
 			});
-	
+
 	private int dyeCost = 1, bleachCost = 1;
 
 	public ThreadItem(Properties properties) {
@@ -40,19 +40,20 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		// Make sure we can receive events so we can register our color handler
 		FMLJavaModLoadingContext.get().getModEventBus().register(this);
 	}
-	
+
 	@SubscribeEvent
 	public void onItemColorHandler(ColorHandlerEvent.Item event) {
 		// Register a color handler for all thread items.
-		// This ensures that the thread layer of each item is rendered with the actual color
+		// This ensures that the thread layer of each item is rendered with the actual
+		// color
 		// of the thread.
 		event.getItemColors().register((stack, tintIndex) -> {
-				// For the thread layer, return the color of the thread
-				if (tintIndex == 1)
-					return getColor(stack).toRGB(new RGBColor(), null).toInt();
-				// For all other layers, return -1 (white)
-				return -1;
-			}, this);
+			// For the thread layer, return the color of the thread
+			if (tintIndex == 1)
+				return getColor(stack).toRGB(new RGBColor(), null).toInt();
+			// For all other layers, return -1 (white)
+			return -1;
+		}, this);
 	}
 
 	/**
@@ -78,13 +79,27 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 	}
 
 	@Override
+	public ITextComponent getDisplayName(ItemStack stack) {
+		// Construct some additional arugments to pass to the text component
+		// These are optionally used by the localization files to format stuff
+		String colorKey = closestColorWord.get(stack).getTranslationKey();
+		return new TranslationTextComponent(getTranslationKey(stack), new TranslationTextComponent(colorKey));
+	}
+
+	@Override
 	public String getTranslationKey(ItemStack item) {
-		return translationKey.get(item);
+		// Construct a key using the closest color word
+		String colorName = closestColorWord.get(item).getName();
+		String defaultKey = ThreadItem.super.getTranslationKey(), specificKey = defaultKey + '.' + colorName;
+		// If the specific translation key exists, use it.
+		// Otherwise, fall back to the default translation key
+		return LOCAL_LANGUAGE.exists(specificKey) ? specificKey : defaultKey;
 	}
 
 	public void setColor(ItemStack item, RYBKColor color) {
 		// If new color is different from old color, mark translation key as dirty
-		if (!Objects.equal(color, getColor(item))) translationKey.markDirty(item);
+		if (!Objects.equal(color, getColor(item)))
+			closestColorWord.markDirty(item);
 		NBTHelper.put(item.getOrCreateTag(), COLOR_TAG, color);
 	}
 

@@ -13,8 +13,8 @@
 - [x] Fiber Items
 - [x] Brush Item
 - [x] Item Color Helper
-- [ ] Fabric Item
-	- [ ] Allow patterns to be "loaded." Patterns should be able to specify their layers in a JSON file, which is loaded during setup.
+- [x] Fabric Item
+	- [x] Allow patterns to be "loaded." Patterns should be able to specify their layers in a JSON file, which is loaded during setup.
 		- Minecraft has interfaces like "IResourceManager" and "ISelectiveResourceReloadListener" which handle loading resources. We should probably try to implement these to handle pattern loading. "LootTableManager" might be a good resource.
 		- Since "Material" is client-side, we will need to separate out the texture map from FabricPattern, perhaps into another class. This is also going to complicate loading. We might end up needing two files for each pattern: one to specify the layer names, recipe, etc., and another to specify the textures.
 		- The best solution going forward would be to separate FabricPattern into a FabricPattern class, which would only contain the list of layers, and a "FabricTextures" class, which would map layers to textures. The layers could be specified when constructing the FabricPattern, avoiding the need for a file, and the textures could be specified in a resource file. Note that the fabric textures aren't a model. FabricItemModel handles creating models of fabric items by using their textures. We're also going to need a place to store the fabric textures associated with each FabricPattern. ModelBakery seems to be a good resource.
@@ -39,7 +39,7 @@
 - [x] Pattern Registry
 - [ ] Module System
 - [ ] More efficient nearest-neighbor search for ColorWord
-- [ ] Better localization support
+- [x] Better localization support
 - [x] Delete ItemColorManager?
 - [x] Make ThreadItem cache its translation key
 - [ ] IMPROVEMENT Also make ThreadItem cache its RGBColor for rendering.
