@@ -32,7 +32,7 @@ import net.minecraftforge.client.model.pipeline.TRSRTransformer;
 public class TemplateItemModel {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	private static final Level LOG_LEVEL = Level.INFO;
+	private static final Level LOG_LEVEL = Level.TRACE;
 	
 	private static final Direction[] HORIZONTALS = {Direction.UP, Direction.DOWN};
     private static final Direction[] VERTICALS = {Direction.WEST, Direction.EAST};
