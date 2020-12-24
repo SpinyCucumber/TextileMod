@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -55,6 +57,7 @@ import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.resource.IResourceType;
 import net.minecraftforge.resource.VanillaResourceType;
 import spinyq.spinytextiles.TextileMod;
+import spinyq.spinytextiles.client.model.TemplateItemModel.TemplateLayer;
 import spinyq.spinytextiles.items.FabricItem;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 import spinyq.spinytextiles.utility.textile.FabricPattern;
@@ -121,8 +124,6 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 		private static final String TEMPLATE_TEXTURE = "template",
 				DETAIL_TEXTURE = "detail";
-
-		private static final float NUDGE_INCREMENT = 0.0001f;
 		
 		private FabricPattern pattern;
 
@@ -156,23 +157,24 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			// Look up the pattern's textures using FabricTextureManager, and create a list of sprites for each layer
 			TextureAtlasSprite template = spriteGetter.apply(templateLocation),
 					detail = spriteGetter.apply(detailLocation);
-			List<TextureAtlasSprite> sprites = FabricTextureManager.INSTANCE.getTextureStream(pattern)
-					.map(spriteGetter::apply)
-					.collect(Collectors.toList());
 			LOGGER.info("Template: {} Template Sprite: {} Detail: {} Detail Sprite: {}",
 					templateLocation, template, detailLocation, detail);
 			// Build quads
 			// We also increment the tint index for each layer
 			// Increase the "nudge" for each layer as well to prevent depth fighting
-			int tint = 0;
-			float nudge = 0f;
-			for (TextureAtlasSprite sprite : sprites) {
-				TemplateItemModel.generateQuads(tint, nudge, template, sprite, transform, builder);
-				nudge += NUDGE_INCREMENT;
-				TemplateItemModel.generateQuads(tint, nudge, sprite, detail, transform, builder);
-				nudge += NUDGE_INCREMENT;
-				tint++;
-			}
+			
+			List<TemplateLayer> layers = IntStream.range(0, pattern.getLayers().size())
+			.mapToObj((index) -> {
+				String layer = pattern.getLayers().get(index);
+				Material texture = FabricTextureManager.INSTANCE.getTextures(pattern).get(layer);
+				TextureAtlasSprite sprite = spriteGetter.apply(texture);
+				return Stream.of(new TemplateLayer(sprite, template, index), new TemplateLayer(detail, sprite, index));
+			})
+			.flatMap(Function.identity())
+			.collect(Collectors.toList());
+			
+			TemplateItemModel.generateQuads(layers, transform, builder);
+			
 			ImmutableList<BakedQuad> quads = builder.build();
 			LOGGER.info("Total Quads: {}", quads.size());
 			// Construct the baked model
@@ -187,7 +189,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			// Create a new set of textures
 			Set<Material> textures = new HashSet<>();
 			// Include all the textures used by the pattern
-			textures.addAll(FabricTextureManager.INSTANCE.getTextures(pattern));
+			textures.addAll(FabricTextureManager.INSTANCE.getTextures(pattern).values());
 			// Also include the template and detail textures
 			textures.add(owner.resolveTexture(TEMPLATE_TEXTURE));
 			textures.add(owner.resolveTexture(DETAIL_TEXTURE));

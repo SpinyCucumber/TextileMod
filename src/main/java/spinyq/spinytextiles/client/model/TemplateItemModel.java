@@ -36,7 +36,30 @@ public class TemplateItemModel {
 	
 	private static final Direction[] HORIZONTALS = {Direction.UP, Direction.DOWN};
     private static final Direction[] VERTICALS = {Direction.WEST, Direction.EAST};
+    private static final float NUDGE_INCREMENT = 0.0001f;
+    
+    public static class TemplateLayer {
+    	
+    	private final TextureAtlasSprite sprite, template;
+    	private int tint;
 
+		public TemplateLayer(TextureAtlasSprite sprite, TextureAtlasSprite template, int tint) {
+			this.sprite = sprite;
+			this.template = template;
+			this.tint = tint;
+		}
+    	
+    }
+
+    public static void generateQuads(Iterable<TemplateLayer> layers,
+    		TransformationMatrix transform, ImmutableList.Builder<BakedQuad> builder) {
+    	float nudge = 0f;
+    	for (TemplateLayer layer : layers) {
+    		generateQuads(layer.tint, nudge, layer.template, layer.sprite, transform, builder);
+    		nudge += NUDGE_INCREMENT;
+    	}
+    }
+    
     public static void generateQuads(int tint, float nudge, TextureAtlasSprite template,
     		TextureAtlasSprite sprite, TransformationMatrix transform, ImmutableList.Builder<BakedQuad> builder)
     {

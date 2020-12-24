@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
@@ -65,7 +64,7 @@ public class FabricTextureManager implements IFutureReloadListener {
 	 * @author SpinyQ
 	 *
 	 */
-	private static class FabricTextures {
+	public static class FabricTextures {
 
 		private static class Deserializer implements JsonDeserializer<FabricTextures> {
 
@@ -105,11 +104,11 @@ public class FabricTextureManager implements IFutureReloadListener {
 			this.map = textures;
 		}
 
-		private Material get(String layer) {
+		public Material get(String layer) {
 			return map.get(layer);
 		}
 
-		private Collection<Material> values() {
+		public Collection<Material> values() {
 			return map.values();
 		}
 
@@ -118,31 +117,8 @@ public class FabricTextureManager implements IFutureReloadListener {
 	// The internal map between fabric patterns and textures
 	private Map<FabricPattern, FabricTextures> map = new HashMap<>();
 
-	/**
-	 * Returns a stream of the textures used by the pattern.
-	 * The stream is in order of the pattern's layers.
-	 * @param pattern The fabric pattern
-	 * @return The stream
-	 */
-	public Stream<Material> getTextureStream(FabricPattern pattern) {
-		// We use the pattern's list to ensure that the textures are in the right order
-		// First, look up the fabric textures
-		FabricTextures textures = map.get(pattern);
-		return pattern.getLayers().stream().map(textures::get);
-	}
-
-	/**
-	 * Returns of collection of textures that the fabric pattern uses. The
-	 * collection has no order is unmodifiable. If the user wants a list of textures
-	 * ordered by layer, they should use getTextureStream.
-	 * 
-	 * @param pattern The fabric pattern
-	 * @return The collection
-	 */
-	public Collection<Material> getTextures(FabricPattern pattern) {
-		// Lookup textures and return values
-		FabricTextures textures = map.get(pattern);
-		return Collections.unmodifiableCollection(textures.values());
+	public FabricTextures getTextures(FabricPattern pattern) {
+		return map.get(pattern);
 	}
 
 	@Override
