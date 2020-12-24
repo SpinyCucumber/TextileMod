@@ -169,8 +169,8 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			for (TextureAtlasSprite sprite : sprites) {
 				TemplateItemModel.generateQuads(tint, nudge, template, sprite, transform, builder);
 				nudge += NUDGE_INCREMENT;
-//				TemplateItemModel.generateQuads(tint, nudge, sprite, detail, transform, builder);
-//				nudge += NUDGE_INCREMENT;
+				TemplateItemModel.generateQuads(tint, nudge, sprite, detail, transform, builder);
+				nudge += NUDGE_INCREMENT;
 				tint++;
 			}
 			ImmutableList<BakedQuad> quads = builder.build();

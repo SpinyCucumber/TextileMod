@@ -3,6 +3,7 @@ package spinyq.spinytextiles.client.model;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -11,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import net.minecraft.client.renderer.TransformationMatrix;
 import net.minecraft.client.renderer.model.BakedQuad;
@@ -54,7 +56,6 @@ public class TemplateItemModel {
         
         // This flag marks whether the sprite contains "translucent" pixels -
         // pixels that are not fully transparent, but not fully opaque.
-        boolean translucent = true; // set to true for testing
 
         LOGGER.log(LOG_LEVEL, "Scanning for edges...");
         
@@ -76,27 +77,18 @@ public class TemplateItemModel {
                 	// In addition to checking if the sprite's pixel is transparent,
                 	// we also check whether the template's pixel is transparent.
                 	// If either of them is transparent, then the current pixel is transparent.
-                    int alpha = sprite.getPixelRGBA(f, u, v) >> 24 & 0xFF;
-                    boolean t = (alpha / 255f <= 0.1f) || template.isPixelTransparent(0, u, v);
+                    boolean t = !isVisible(sprite.getPixelRGBA(f, u, v)) || !isVisible(template.getPixelRGBA(0, u, v));
                     
-                    if (!t && alpha < 255)
-                    {
-                        translucent = true;
-                    }
-                    // LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}): {}", u, v, t ? "transparent" : "opaque");
-
                     // If we've just moved from a transparent pixel to an opaque pixel,
                     // we've found a side facing to the left. (west)
                     if(ptu && !t) // left - transparent, right - opaque
                     {
-                    	// LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has a left edge.", u, v);
                         faceData.set(Direction.WEST, u, v);
                     }
                     // Similarly, if we've moved from an opaque pixel to a transparent one,
                     // we've found a side facing to the right. (east)
                     if(!ptu && t) // left - opaque, right - transparent
                     {
-                    	// LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has a right edge.", u-1, v);
                         faceData.set(Direction.EAST, u-1, v);
                     }
                     // Next, check the pixel to the top of the current one.
@@ -104,12 +96,10 @@ public class TemplateItemModel {
                     // a side facing upwards. Vice versa for a downwards facing side.
                     if(ptv[u] && !t) // up - transparent, down - opaque
                     {
-                    	// LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has an up edge.", u, v);
                         faceData.set(Direction.UP, u, v);
                     }
                     if(!ptv[u] && t) // up - opaque, down - transparent
                     {
-                    	// LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has a down edge.", u, v-1);
                         faceData.set(Direction.DOWN, u, v-1);
                     }
 
@@ -134,6 +124,7 @@ public class TemplateItemModel {
             }
         }
 
+        // DEBUG
         for (Direction facing : new Direction[] {Direction.UP, Direction.DOWN, Direction.WEST, Direction.EAST}) {
         	
         	String output = IntStream.range(0, vMax)
@@ -175,55 +166,23 @@ public class TemplateItemModel {
                 	// Retrieve whether the current pixel has a side or not 
                     boolean face = faceData.get(facing, u, v);
                     
-                    // If the sprite doesn't contain any translucent pixels, we can afford to
-                    // only worry about the first and last sides in the row of pixels.
-                    // Why? Consider three possible cases:
-                    // 1. The side is totally straight, in which case we would be fine caring about
-                    // the geometry in the middle or not.
-                    // 2. The side is convex; it has a "bump" in the middle. If the sprite doesn't have translucence,
-                    // then we are okay generating only one quad for the row, since any bit of the quad below
-                    // the "bump" is hidden by the front and back cover quads. If the sprite does have translucense,
-                    // however, the player might see some weirdness going on.
-                    // 3. The side is concave; it has a "dip" in the middle. We are okay generating only
-                    // one quad no matter the translucense of the sprite. This is because the texture of the
-                    // side quad is the same as the row of pixels it borders, so any transparent pixels
-                    // won't show up on the side.
-                    // Note that a side can have both a "bump" and a "dip."
-                    // We only care about the second case, so all we need to do is track whether or not
-                    // the sprite has translucency.
-                    
-                    if (!translucent)
+                	// If we're building a quad and the current pixel doesn't have a side,
+                	// we finish the current quad and send it to the list.
+                    if (building && !face) // finish current quad
                     {
-                        if (face)
-                        {
-                            if (!building)
-                            {
-                                building = true;
-                                uStart = u;
-                            }
-                            uEnd = u + 1;
-                        }
+                        // make quad [uStart, u]
+                        int off = facing == Direction.DOWN ? 1 : 0;
+                    	LOGGER.log(LOG_LEVEL, "Building a horizontal quad facing {} at row v={} with start u={} and end u={}",
+                    			facing, v, uStart, u);
+                        builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, uStart, v+off, u-uStart));
+                        building = false;
                     }
-                    else
+                    // If we're not already building a quad and the current pixel has a side,
+                    // we start building a new quad.
+                    else if (!building && face) // start new quad
                     {
-                    	// If we're building a quad and the current pixel doesn't have a side,
-                    	// we finish the current quad and send it to the list.
-                        if (building && !face) // finish current quad
-                        {
-                            // make quad [uStart, u]
-                            int off = facing == Direction.DOWN ? 1 : 0;
-                        	LOGGER.log(LOG_LEVEL, "Building a horizontal quad facing {} at row v={} with start u={} and end u={}",
-                        			facing, v, uStart, u);
-                            builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, uStart, v+off, u-uStart));
-                            building = false;
-                        }
-                        // If we're not already building a quad and the current pixel has a side,
-                        // we start building a new quad.
-                        else if (!building && face) // start new quad
-                        {
-                            building = true;
-                            uStart = u;
-                        }
+                        building = true;
+                        uStart = u;
                     }
                 }
                 // If we're still building a quad at the end of the row,
@@ -254,34 +213,20 @@ public class TemplateItemModel {
                 for (int v = 0; v < vMax; v++)
                 {
                     boolean face = faceData.get(facing, u, v);
-                    if (!translucent)
+
+                    if (building && !face) // finish current quad
                     {
-                        if (face)
-                        {
-                            if (!building)
-                            {
-                                building = true;
-                                vStart = v;
-                            }
-                            vEnd = v + 1;
-                        }
+                        // make quad [vStart, v]
+                        int off = facing == Direction.EAST ? 1 : 0;
+                    	LOGGER.log(LOG_LEVEL, "Building a vertical quad facing {} at column u={} with start v={} and end v={}",
+                    			facing, u, vStart, v);
+                        builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, u+off, vStart, v-vStart));
+                        building = false;
                     }
-                    else
+                    else if (!building && face) // start new quad
                     {
-                        if (building && !face) // finish current quad
-                        {
-                            // make quad [vStart, v]
-                            int off = facing == Direction.EAST ? 1 : 0;
-                        	LOGGER.log(LOG_LEVEL, "Building a vertical quad facing {} at column u={} with start v={} and end v={}",
-                        			facing, u, vStart, v);
-                            builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, u+off, vStart, v-vStart));
-                            building = false;
-                        }
-                        else if (!building && face) // start new quad
-                        {
-                            building = true;
-                            vStart = v;
-                        }
+                        building = true;
+                        vStart = v;
                     }
                 }
                 if (building) // build remaining quad
@@ -298,12 +243,14 @@ public class TemplateItemModel {
         LOGGER.log(LOG_LEVEL, "Generating face quads...");
         
         // Finally, we build the "cover" front and back quads.
-        // We let ItemTextureQuadConverter handle this.
 		
-		builder.addAll(ItemTextureQuadConverter.convertTexture(transform, template,
-		sprite, 7.5f / 16f - nudge, Direction.NORTH, 0xffffffff, tint));
-		builder.addAll(ItemTextureQuadConverter.convertTexture(transform, template,
-		sprite, 8.5f / 16f + nudge, Direction.SOUTH, 0xffffffff, tint));
+        List<BakedQuad> backQuads = convertTexture(transform, template,
+        		sprite, 7.5f / 16f - nudge, Direction.NORTH, 0xffffffff, tint);
+        List<BakedQuad> frontQuads = convertTexture(transform, template,
+        		sprite, 8.5f / 16f + nudge, Direction.SOUTH, 0xffffffff, tint);
+        LOGGER.log(LOG_LEVEL, "Total back quads: {} Total front quads: {}", backQuads.size(), frontQuads.size());
+		builder.addAll(backQuads);
+		builder.addAll(frontQuads);
 		 
     }
 
@@ -411,6 +358,174 @@ public class TemplateItemModel {
             x1, y1, z1, sprite.getInterpolatedU(u1), sprite.getInterpolatedV(v1),
             x0, y0, z1, sprite.getInterpolatedU(u0), sprite.getInterpolatedV(v0)
         );
+    }
+    
+    /**
+     * Takes a texture and converts it into BakedQuads.
+     * The conversion is done by scanning the texture horizontally and vertically and creating "strips" of the texture.
+     * Strips that are of the same size and follow each other are converted into one bigger quad.
+     * </br>
+     * The resulting list of quads is the texture represented as a list of horizontal OR vertical quads,
+     * depending on which creates less quads. If the amount of quads is equal, horizontal is preferred.
+     *
+     * @param format
+     * @param template The input texture to convert
+     * @param sprite   The texture whose UVs shall be used
+     * @return The generated quads.
+     */
+    public static List<BakedQuad> convertTexture(TransformationMatrix transform, TextureAtlasSprite template, TextureAtlasSprite sprite, float z, Direction facing, int color, int tint)
+    {
+        List<BakedQuad> horizontal = convertTextureHorizontal(transform, template, sprite, z, facing, color, tint);
+        List<BakedQuad> vertical = convertTextureVertical(transform, template, sprite, z, facing, color, tint);
+
+        return horizontal.size() <= vertical.size() ? horizontal : vertical;
+    }
+
+    /**
+     * Scans a texture and converts it into a list of horizontal strips stacked on top of each other.
+     * The height of the strips is as big as possible.
+     */
+    public static List<BakedQuad> convertTextureHorizontal(TransformationMatrix transform, TextureAtlasSprite template, TextureAtlasSprite sprite, float z, Direction facing, int color, int tint)
+    {
+        int w = template.getWidth();
+        int h = template.getHeight();
+        float wScale = 16f / (float)w;
+        float hScale = 16f / (float)h;
+        List<BakedQuad> quads = Lists.newArrayList();
+
+        // the upper left x-position of the current quad
+        int start = -1;
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                // current pixel
+                boolean isVisible = isVisible(template.getPixelRGBA(0, x, y));
+
+                // no current quad but found a new one
+                if (start < 0 && isVisible)
+                {
+                    start = x;
+                }
+                // got a current quad, but it ends here
+                if (start >= 0 && !isVisible)
+                {
+                    // we now check if the visibility of the next row matches the one fo the current row
+                    // if they are, we can extend the quad downwards
+                    int endY = y + 1;
+                    boolean sameRow = true;
+                    while (sameRow && endY < h)
+                    {
+                        for (int i = 0; i < w; i++)
+                        {
+                            if (isVisible(template.getPixelRGBA(0, i, y)) != isVisible(template.getPixelRGBA(0, i, endY)))
+                            {
+                                sameRow = false;
+                                break;
+                            }
+                        }
+                        if (sameRow)
+                        {
+                            endY++;
+                        }
+                    }
+
+                    // create the quad
+                    quads.add(ItemTextureQuadConverter.genQuad(transform,
+                                      (float)start * wScale,
+                                      (float)y * hScale,
+                                      (float)x * wScale,
+                                      (float)endY * hScale,
+                                      z, sprite, facing, color, tint));
+
+                    // update Y if all the rows match. no need to rescan
+                    if (endY - y > 1)
+                    {
+                        y = endY - 1;
+                    }
+                    // clear current quad
+                    start = -1;
+                }
+            }
+        }
+
+        return quads;
+    }
+
+    /**
+     * Scans a texture and converts it into a list of vertical strips stacked next to each other from left to right.
+     * The width of the strips is as big as possible.
+     */
+    public static List<BakedQuad> convertTextureVertical(TransformationMatrix transform, TextureAtlasSprite template, TextureAtlasSprite sprite, float z, Direction facing, int color, int tint)
+    {
+        int w = template.getWidth();
+        int h = template.getHeight();
+        float wScale = 16f / (float)w;
+        float hScale = 16f / (float)h;
+        List<BakedQuad> quads = Lists.newArrayList();
+
+        // the upper left y-position of the current quad
+        int start = -1;
+        for (int x = 0; x < w; x++)
+        {
+            for (int y = 0; y < h; y++)
+            {
+                // current pixel
+                boolean isVisible = isVisible(template.getPixelRGBA(0, x, y));
+
+                // no current quad but found a new one
+                if (start < 0 && isVisible)
+                {
+                    start = y;
+                }
+                // got a current quad, but it ends here
+                if (start >= 0 && !isVisible)
+                {
+                    // we now check if the visibility of the next column matches the one fo the current row
+                    // if they are, we can extend the quad downwards
+                    int endX = x + 1;
+                    boolean sameColumn = true;
+                    while (sameColumn && endX < w)
+                    {
+                        for (int i = 0; i < h; i++)
+                        {
+                            if (isVisible(template.getPixelRGBA(0, x, i)) != isVisible(template.getPixelRGBA(0, endX, i)))
+                            {
+                                sameColumn = false;
+                                break;
+                            }
+                        }
+                        if (sameColumn)
+                        {
+                            endX++;
+                        }
+                    }
+
+                    // create the quad
+                    quads.add(ItemTextureQuadConverter.genQuad(transform,
+                                      (float)x * wScale,
+                                      (float)start * hScale,
+                                      (float)endX * wScale,
+                                      (float)y * hScale,
+                                      z, sprite, facing, color, tint));
+
+                    // update X if all the columns match. no need to rescan
+                    if (endX - x > 1)
+                    {
+                        x = endX - 1;
+                    }
+                    // clear current quad
+                    start = -1;
+                }
+            }
+        }
+
+        return quads;
+    }
+
+    private static boolean isVisible(int color)
+    {
+        return (color >> 24 & 255) / 255f > 0.1f;
     }
 
 	private static BakedQuad buildQuad(TransformationMatrix transform, Direction side, TextureAtlasSprite sprite, int tint,
