@@ -1,5 +1,7 @@
 package spinyq.spinytextiles.items;
 
+import com.google.common.collect.ImmutableList;
+
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
@@ -10,6 +12,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.utility.ContainedItemStack;
 import spinyq.spinytextiles.utility.NBTHelper;
+import spinyq.spinytextiles.utility.NBTHelper.Attribute;
+import spinyq.spinytextiles.utility.NBTHelper.CalculatedValue;
 import spinyq.spinytextiles.utility.color.ColorWord;
 import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
@@ -18,91 +22,19 @@ import spinyq.spinytextiles.utility.textile.IDyeProvider;
 
 public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 
-	/**
-	 * Class that handles reading/writing color data from stacks.
-	 * 
-	 * @author SpinyQ
-	 *
-	 */
-	public class StorageHandler {
-
-		private static final String TAG_COLOR = "Color", TRANSLATION_KEY_TAG = "TranslationKey", TAG_DIRTY = "Dirty";
-
-		/**
-		 * Writes a color to an itemstack
-		 * 
-		 * @param stack The itemstack
-		 */
-		public void setColor(ItemStack stack, RYBKColor color) {
-			// If the new color is different than the itemstacks old color,
-			// mark the translatio key as being dirty is it is recalculated.
-			// getColor(...) may return null, so pass it as the argument
-			if (!color.equals(getColor(stack)))
-				markTranslationKeyDirty(stack);
-			NBTHelper.put(stack.getOrCreateTag(), TAG_COLOR, color);
-		}
-
-		/**
-		 * @param stack
-		 * @return The color of the thread itemstack, or null if no color is attached.
-		 */
-		public RYBKColor getColor(ItemStack stack) {
-			return NBTHelper.getOrNull(RYBKColor::new, stack.getOrCreateTag(), TAG_COLOR);
-		}
-
-		/**
-		 * Retrieves the translation key of a given thread item stack. Since looking up
-		 * the closest color word is a somewhat complex operation, we cache the
-		 * translation key in the NBT data of the itemstack. We also store the color
-		 * that was used to calculate the translation key, so that we know if the
-		 * translation key is outdated.
-		 * 
-		 * @param stack The itemstack.
-		 * @return The translation key.
-		 */
-		// TODO Improvement: We could abstract this using notions of a "Value,"
-		// "Attribute,"
-		// and a
-		// "CalculatedValue." This doesn't feel necessary right now but if we have
-		// items with
-		// larger calculated attributes it might be worthwhile.
-		// TODO Improvement: We could also cache an RGBColor for rendering.
-		public String getTranslationKey(ItemStack stack) {
-			// Check to see if our current translation key is out-of-date or not
-			// If it is current, simply return it
-			// If not, we have to calculate and store it so we can use it later
-			String result;
-			if (isTranslationKeyDirty(stack)) {
-				RYBKColor color = getColor(stack);
-				result = calculateTranslationKey(color);
-				// Remove the dirty flag and cache the translation key
-				stack.getOrCreateTag().putBoolean(TAG_DIRTY, false);
-				stack.getOrCreateTag().putString(TRANSLATION_KEY_TAG, result);
-			} else {
-				result = stack.getTag().getString(TRANSLATION_KEY_TAG);
-			}
-			return result;
-		}
-
-		private boolean isTranslationKeyDirty(ItemStack stack) {
-			// Check dirty flag
-			return stack.getOrCreateTag().getBoolean(TAG_DIRTY);
-		}
-
-		private void markTranslationKeyDirty(ItemStack stack) {
-			stack.getOrCreateTag().putBoolean(TAG_DIRTY, true);
-		}
-
-		private String calculateTranslationKey(RYBKColor color) {
-			// Retrieve the closest color word to the given color and stitch together a
-			// translation key
-			String colorName = ColorWord.getClosest(color).getName();
-			return ThreadItem.super.getTranslationKey() + '.' + colorName;
-		}
-
-	}
-
-	private StorageHandler storageHandler = new StorageHandler();
+	private static final String COLOR_TAG = "Color";
+	private static final String TRANSLATION_KEY_TAG = "TranslationKey";
+	
+	private Attribute<RYBKColor> color = NBTHelper.createAttribute(RYBKColor::new, COLOR_TAG);
+	private CalculatedValue<String> translationKey = NBTHelper.createCalculatedStringValue(
+			TRANSLATION_KEY_TAG, ImmutableList.of(color),
+			(inputs) -> {
+				// Retrieve the closest color word to the given color and stitch together a
+				// translation key
+				String colorName = ColorWord.getClosest(inputs.get(color)).getName();
+				return ThreadItem.super.getTranslationKey() + '.' + colorName;
+			});
+	
 	private int dyeCost = 1, bleachCost = 1;
 
 	public ThreadItem(Properties properties) {
@@ -148,16 +80,16 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 	}
 
 	@Override
-	public String getTranslationKey(ItemStack stack) {
-		return storageHandler.getTranslationKey(stack);
+	public String getTranslationKey(ItemStack item) {
+		return translationKey.get(item);
 	}
 
-	public void setColor(ItemStack stack, RYBKColor color) {
-		storageHandler.setColor(stack, color);
+	public void setColor(ItemStack item, RYBKColor value) {
+		color.set(item, value);
 	}
 
-	public RYBKColor getColor(ItemStack stack) {
-		return storageHandler.getColor(stack);
+	public RYBKColor getColor(ItemStack item) {
+		return color.get(item);
 	}
 
 	@Override
