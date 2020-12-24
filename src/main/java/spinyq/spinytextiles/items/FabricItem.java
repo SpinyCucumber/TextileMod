@@ -25,6 +25,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 
 	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
 	private static final String FABRIC_TAG = "Fabric";
+	// White and dark blue
 	private static final ImmutableList<RYBKColor> DEFAULT_COLORS = ImmutableList.of(new RYBKColor(0f, 0f, 0f, 0f),
 			new RYBKColor(0f, 0f, 1f, 0.5f));
 	
