@@ -43,6 +43,8 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 				return ColorWord.getClosest(color);
 			});
 	
+	// TODO Add more information to tooltip
+	
 	public Fabric getFabric(ItemStack stack) {
 		return NBTHelper.getOrNull(Fabric::new, stack.getOrCreateTag(), FABRIC_TAG);
 	}
