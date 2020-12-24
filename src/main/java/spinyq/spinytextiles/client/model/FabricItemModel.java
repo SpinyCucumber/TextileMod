@@ -122,6 +122,8 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		private static final String TEMPLATE_TEXTURE = "template",
 				DETAIL_TEXTURE = "detail";
 
+		private static final float NUDGE_INCREMENT = 0.06f;
+		
 		private FabricPattern pattern;
 
 		public SubModel(FabricPattern pattern) {
@@ -157,12 +159,18 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			List<TextureAtlasSprite> sprites = FabricTextureManager.INSTANCE.getTextureStream(pattern)
 					.map(spriteGetter::apply)
 					.collect(Collectors.toList());
+			LOGGER.info("Template: {} Template Sprite: {} Detail: {} Detail Sprite: {}",
+					templateLocation, template, detailLocation, detail);
 			// Build quads
 			// We also increment the tint index for each layer
+			// Increase the "nudge" for each layer as well to prevent depth fighting
 			int tint = 0;
+			float nudge = 0f;
 			for (TextureAtlasSprite sprite : sprites) {
-				TemplateItemModel.generateQuads(tint, template, sprite, transform, builder);
-				TemplateItemModel.generateQuads(tint, sprite, detail, transform, builder);
+				TemplateItemModel.generateQuads(tint, nudge, template, sprite, transform, builder);
+				nudge += NUDGE_INCREMENT;
+//				TemplateItemModel.generateQuads(tint, nudge, sprite, detail, transform, builder);
+//				nudge += NUDGE_INCREMENT;
 				tint++;
 			}
 			// Construct the baked model
@@ -178,8 +186,9 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			Set<Material> textures = new HashSet<>();
 			// Include all the textures used by the pattern
 			textures.addAll(FabricTextureManager.INSTANCE.getTextures(pattern));
-			// Also include the mask texture
+			// Also include the template and detail textures
 			textures.add(owner.resolveTexture(TEMPLATE_TEXTURE));
+			textures.add(owner.resolveTexture(DETAIL_TEXTURE));
 			return textures;
 		}
 

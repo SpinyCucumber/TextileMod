@@ -28,15 +28,17 @@ import net.minecraftforge.client.model.pipeline.TRSRTransformer;
 public class TemplateItemModel {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	private static final Level LOG_LEVEL = Level.TRACE;
+	private static final Level LOG_LEVEL = Level.INFO;
 	
 	private static final Direction[] HORIZONTALS = {Direction.UP, Direction.DOWN};
     private static final Direction[] VERTICALS = {Direction.WEST, Direction.EAST};
 
-    public static void generateQuads(int tint, TextureAtlasSprite template,
+    public static void generateQuads(int tint, float nudge, TextureAtlasSprite template,
     		TextureAtlasSprite sprite, TransformationMatrix transform, ImmutableList.Builder<BakedQuad> builder)
     {
 
+    	LOGGER.log(LOG_LEVEL, "Generating quads for sprite: {} with template: {} with nudge: {}", sprite, template, nudge);
+    	
         int uMax = sprite.getWidth();
         int vMax = sprite.getHeight();
 
@@ -79,6 +81,7 @@ public class TemplateItemModel {
                     {
                         translucent = true;
                     }
+                    LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}): {}", u, v, t ? "transparent" : "opaque");
 
                     // If we've just moved from a transparent pixel to an opaque pixel,
                     // we've found a side facing to the left. (west)
@@ -193,7 +196,7 @@ public class TemplateItemModel {
                             int off = facing == Direction.DOWN ? 1 : 0;
                         	LOGGER.log(LOG_LEVEL, "Building a horizontal quad facing {} at row v={} with start u={} and end u={}",
                         			facing, v, uStart, u);
-                            builder.add(buildSideQuad(transform, facing, tint, sprite, uStart, v+off, u-uStart));
+                            builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, uStart, v+off, u-uStart));
                             building = false;
                         }
                         // If we're not already building a quad and the current pixel has a side,
@@ -213,7 +216,7 @@ public class TemplateItemModel {
                     int off = facing == Direction.DOWN ? 1 : 0;
                 	LOGGER.log(LOG_LEVEL, "Building a horizontal quad facing {} at row v={} with start u={} and end u={}",
                 			facing, v, uStart, uEnd);
-                    builder.add(buildSideQuad(transform, facing, tint, sprite, uStart, v+off, uEnd-uStart));
+                    builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, uStart, v+off, uEnd-uStart));
                 }
             }
         }
@@ -252,7 +255,7 @@ public class TemplateItemModel {
                             int off = facing == Direction.EAST ? 1 : 0;
                         	LOGGER.log(LOG_LEVEL, "Building a vertical quad facing {} at column u={} with start v={} and end v={}",
                         			facing, u, vStart, v);
-                            builder.add(buildSideQuad(transform, facing, tint, sprite, u+off, vStart, v-vStart));
+                            builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, u+off, vStart, v-vStart));
                             building = false;
                         }
                         else if (!building && face) // start new quad
@@ -268,7 +271,7 @@ public class TemplateItemModel {
                     int off = facing == Direction.EAST ? 1 : 0;
                 	LOGGER.log(LOG_LEVEL, "Building a vertical quad facing {} at column u={} with start v={} and end v={}",
                 			facing, u, vStart, vEnd);
-                    builder.add(buildSideQuad(transform, facing, tint, sprite, u+off, vStart, vEnd-vStart));
+                    builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, u+off, vStart, vEnd-vStart));
                 }
             }
         }
@@ -279,9 +282,9 @@ public class TemplateItemModel {
         // We let ItemTextureQuadConverter handle this.
 		
 		builder.addAll(ItemTextureQuadConverter.convertTexture(transform, template,
-		sprite, 7.5f / 16f, Direction.NORTH, 0xffffffff, tint));
+		sprite, 7.5f / 16f - nudge, Direction.NORTH, 0xffffffff, tint));
 		builder.addAll(ItemTextureQuadConverter.convertTexture(transform, template,
-		sprite, 8.5f / 16f, Direction.SOUTH, 0xffffffff, tint));
+		sprite, 8.5f / 16f + nudge, Direction.SOUTH, 0xffffffff, tint));
 		 
     }
 
@@ -317,7 +320,7 @@ public class TemplateItemModel {
         }
     }
 
-    private static BakedQuad buildSideQuad(TransformationMatrix transform, Direction side, int tint, TextureAtlasSprite sprite, int u, int v, int size)
+    private static BakedQuad buildSideQuad(TransformationMatrix transform, Direction side, int tint, float nudge, TextureAtlasSprite sprite, int u, int v, int size)
     {
         final float eps = 1e-2f;
 
@@ -372,6 +375,16 @@ public class TemplateItemModel {
         float tmp = y0;
         y0 = 1f - y1;
         y1 = 1f - tmp;
+        
+        // Nudge the x and y coordinates slightly to prevent depth fighting
+        float xNudge = (float) side.getXOffset() * nudge;
+        float yNudge = (float) side.getYOffset() * nudge;
+        x0 += xNudge;
+        x1 += xNudge;
+        y0 += yNudge;
+        y1 += yNudge;
+        
+        LOGGER.log(LOG_LEVEL, "Side quad (x0,y0,z0): ({},{},{}) (x1,y1,z1): ({},{},{})", x0, y0, z0, x1, y1, z1);
         
         return buildQuad(
             transform, side, sprite, tint,
