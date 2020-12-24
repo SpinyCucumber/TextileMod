@@ -3,6 +3,8 @@ package spinyq.spinytextiles.client.model;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.EnumMap;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -81,20 +83,20 @@ public class TemplateItemModel {
                     {
                         translucent = true;
                     }
-                    LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}): {}", u, v, t ? "transparent" : "opaque");
+                    // LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}): {}", u, v, t ? "transparent" : "opaque");
 
                     // If we've just moved from a transparent pixel to an opaque pixel,
                     // we've found a side facing to the left. (west)
                     if(ptu && !t) // left - transparent, right - opaque
                     {
-                    	LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has a left edge.", u, v);
+                    	// LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has a left edge.", u, v);
                         faceData.set(Direction.WEST, u, v);
                     }
                     // Similarly, if we've moved from an opaque pixel to a transparent one,
                     // we've found a side facing to the right. (east)
                     if(!ptu && t) // left - opaque, right - transparent
                     {
-                    	LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has a right edge.", u-1, v);
+                    	// LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has a right edge.", u-1, v);
                         faceData.set(Direction.EAST, u-1, v);
                     }
                     // Next, check the pixel to the top of the current one.
@@ -102,12 +104,12 @@ public class TemplateItemModel {
                     // a side facing upwards. Vice versa for a downwards facing side.
                     if(ptv[u] && !t) // up - transparent, down - opaque
                     {
-                    	LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has an up edge.", u, v);
+                    	// LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has an up edge.", u, v);
                         faceData.set(Direction.UP, u, v);
                     }
                     if(!ptv[u] && t) // up - opaque, down - transparent
                     {
-                    	LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has a down edge.", u, v-1);
+                    	// LOGGER.log(LOG_LEVEL, "Pixel at ({}, {}) has a down edge.", u, v-1);
                         faceData.set(Direction.DOWN, u, v-1);
                     }
 
@@ -132,6 +134,21 @@ public class TemplateItemModel {
             }
         }
 
+        for (Direction facing : new Direction[] {Direction.UP, Direction.DOWN, Direction.WEST, Direction.EAST}) {
+        	
+        	String output = IntStream.range(0, vMax)
+            		.mapToObj((v) -> {
+    		        	return IntStream.range(0, uMax)
+    		        			.mapToObj((u) -> faceData.get(facing, u, v) ? "1" : "0")
+    				        	.collect(Collectors.joining(" "));
+            		}).collect(Collectors.joining("\n"));
+        	
+        	LOGGER.log(LOG_LEVEL, "Direction: {}", facing);
+        	LOGGER.log(LOG_LEVEL, "FaceData:\n{}", output);
+        	
+        }
+        
+        
         // The following section generates horizontal side quads.
         // Note that these quads are horizontally aligned, rather than facing a horizontal.
         // They face either up or down. Confusing, the HORIZONTALS variable contains the
@@ -143,6 +160,7 @@ public class TemplateItemModel {
         // horizontal quads
         for (Direction facing : HORIZONTALS)
         {
+        	LOGGER.log(LOG_LEVEL, "\n=========================\n{} QUADS\n=========================", facing.toString().toUpperCase());
         	// Iterate over each row of pixels.
             for (int v = 0; v < vMax; v++)
             {
@@ -194,7 +212,7 @@ public class TemplateItemModel {
                         {
                             // make quad [uStart, u]
                             int off = facing == Direction.DOWN ? 1 : 0;
-                        	LOGGER.log(LOG_LEVEL, "Building a horizontal quad facing {} at row v={} with start u={} and end u={}",
+                        	LOGGER.log(LOG_LEVEL, "\nBuilding a horizontal quad facing {} at row v={} with start u={} and end u={}",
                         			facing, v, uStart, u);
                             builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, uStart, v+off, u-uStart));
                             building = false;
@@ -228,6 +246,7 @@ public class TemplateItemModel {
         // vertical quads
         for (Direction facing : VERTICALS)
         {
+        	LOGGER.log(LOG_LEVEL, "=========================\n{} QUADS\n=========================", facing.toString().toUpperCase());
             for (int u = 0; u < uMax; u++)
             {
                 int vStart = 0, vEnd = vMax;
@@ -253,7 +272,7 @@ public class TemplateItemModel {
                         {
                             // make quad [vStart, v]
                             int off = facing == Direction.EAST ? 1 : 0;
-                        	LOGGER.log(LOG_LEVEL, "Building a vertical quad facing {} at column u={} with start v={} and end v={}",
+                        	LOGGER.log(LOG_LEVEL, "\nBuilding a vertical quad facing {} at column u={} with start v={} and end v={}",
                         			facing, u, vStart, v);
                             builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, u+off, vStart, v-vStart));
                             building = false;
@@ -368,8 +387,8 @@ public class TemplateItemModel {
 
         float u0 = 16f * (x0 - dx);
         float u1 = 16f * (x1 - dx);
-        float v0 = 16f * (1f - y0 - dy);
-        float v1 = 16f * (1f - y1 - dy);
+        float v0 = 16f * (y0 - dy);
+        float v1 = 16f * (y1 - dy);
 
         // Because Minecraft is weird, we also have to flip the y coordinates.
         float tmp = y0;

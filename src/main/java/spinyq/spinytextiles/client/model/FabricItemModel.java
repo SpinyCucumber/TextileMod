@@ -122,7 +122,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		private static final String TEMPLATE_TEXTURE = "template",
 				DETAIL_TEXTURE = "detail";
 
-		private static final float NUDGE_INCREMENT = 0.06f;
+		private static final float NUDGE_INCREMENT = 0.0002f;
 		
 		private FabricPattern pattern;
 
@@ -173,9 +173,11 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 //				nudge += NUDGE_INCREMENT;
 				tint++;
 			}
+			ImmutableList<BakedQuad> quads = builder.build();
+			LOGGER.info("Total Quads: {}", quads.size());
 			// Construct the baked model
 			// The override handler for this model is arbitrary
-			return new BakedItemModel(builder.build(), null, Maps.immutableEnumMap(transformMap), overrides,
+			return new BakedItemModel(quads, null, Maps.immutableEnumMap(transformMap), overrides,
 					transform.isIdentity(), owner.isSideLit());
 		}
 
