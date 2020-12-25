@@ -105,7 +105,7 @@ public abstract class TemplateItemModel implements IModelGeometry<TemplateItemMo
     	
 		ImmutableList.Builder<BakedQuad> builder = new ImmutableList.Builder<>();
     	float nudge = 0f;
-    	for (TemplateLayer layer : layers) {
+    	for (TemplateLayer layer : getLayers(owner)) {
     		// Get the sprites
     		TextureAtlasSprite sprite = spriteGetter.apply(layer.texture),
     				templateSprite = spriteGetter.apply(layer.template);
@@ -124,16 +124,20 @@ public abstract class TemplateItemModel implements IModelGeometry<TemplateItemMo
 	@Override
 	public Collection<Material> getTextures(IModelConfiguration owner,
 			Function<ResourceLocation, IUnbakedModel> modelGetter, Set<Pair<String, String>> missingTextureErrors) {
-		// We cache the layers to use later when baking the model
-		layers = getLayers(owner);
 		// Create a set of all the textures that the layers use
-		return layers.stream()
+		return getLayers(owner).stream()
 			.map((layer) -> Stream.of(layer.texture, layer.template))
 			.flatMap(Function.identity())
 			.collect(Collectors.toSet());
 	}
 
-	public abstract List<TemplateLayer> getLayers(IModelConfiguration owner);
+	private List<TemplateLayer> getLayers(IModelConfiguration owner) {
+		// We cache the layers to use later when baking the model
+		if (layers == null) layers = createLayers(owner);
+		return layers;
+	}
+	
+	public abstract List<TemplateLayer> createLayers(IModelConfiguration owner);
     
     public static void generateQuads(int tint, float nudge, TextureAtlasSprite sprite,
     		TextureAtlasSprite template, TransformationMatrix transform, ImmutableList.Builder<BakedQuad> builder)

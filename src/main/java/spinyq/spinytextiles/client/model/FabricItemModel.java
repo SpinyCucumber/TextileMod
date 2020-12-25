@@ -134,7 +134,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		}
 
 		@Override
-		public List<TemplateLayer> getLayers(IModelConfiguration owner) {
+		public List<TemplateLayer> createLayers(IModelConfiguration owner) {
 			// Resolve the template and detail textures
 			Material template = owner.resolveTexture(TEMPLATE_TEXTURE),
 				detail = owner.resolveTexture(DETAIL_TEXTURE);
