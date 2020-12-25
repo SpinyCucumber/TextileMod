@@ -2,69 +2,132 @@ package spinyq.spinytextiles.client.model;
 
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.client.renderer.TransformationMatrix;
 import net.minecraft.client.renderer.model.BakedQuad;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.model.IModelTransform;
+import net.minecraft.client.renderer.model.IUnbakedModel;
+import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
+import net.minecraft.client.renderer.model.ItemOverrideList;
+import net.minecraft.client.renderer.model.Material;
+import net.minecraft.client.renderer.model.ModelBakery;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.model.BakedItemModel;
+import net.minecraftforge.client.model.IModelConfiguration;
 import net.minecraftforge.client.model.ItemTextureQuadConverter;
+import net.minecraftforge.client.model.ModelTransformComposition;
+import net.minecraftforge.client.model.PerspectiveMapWrapper;
+import net.minecraftforge.client.model.geometry.IModelGeometry;
 import net.minecraftforge.client.model.pipeline.BakedQuadBuilder;
 import net.minecraftforge.client.model.pipeline.IVertexConsumer;
 import net.minecraftforge.client.model.pipeline.TRSRTransformer;
 
-// TODO Improvement: Let this class implement IModelGeometry, similar to ItemLayerModel.
 // TODO Improvement: Skipping internal side quads would allow us to cut down on quads.
+// TODO Handle particle texture
 // Should rewrite this class eventually with these to things in mind.
 // Most of this code is adapted from ItemLayerModel, with additional comments to clarify things.
 // Right now it only contains static utility methods
-public class TemplateItemModel {
+@SuppressWarnings("deprecation")
+public abstract class TemplateItemModel implements IModelGeometry<TemplateItemModel> {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	private static final Level LOG_LEVEL = Level.TRACE;
 	
 	private static final Direction[] HORIZONTALS = {Direction.UP, Direction.DOWN};
     private static final Direction[] VERTICALS = {Direction.WEST, Direction.EAST};
     private static final float NUDGE_INCREMENT = 0.0001f;
     
+    private List<TemplateLayer> layers;
+    
     public static class TemplateLayer {
     	
-    	private final TextureAtlasSprite sprite, template;
+    	private final Material texture, template;
     	private int tint;
 
-		public TemplateLayer(TextureAtlasSprite sprite, TextureAtlasSprite template, int tint) {
-			this.sprite = sprite;
+		public TemplateLayer(Material texture, Material template, int tint) {
+			this.texture = texture;
 			this.template = template;
 			this.tint = tint;
 		}
+
+		@Override
+		public String toString() {
+			return "TemplateLayer [texture=" + texture + ", template=" + template + ", tint=" + tint + "]";
+		}
     	
     }
-
-    public static void generateQuads(Iterable<TemplateLayer> layers,
-    		TransformationMatrix transform, ImmutableList.Builder<BakedQuad> builder) {
+    
+    @Override
+	public IBakedModel bake(IModelConfiguration owner, ModelBakery bakery,
+			Function<Material, TextureAtlasSprite> spriteGetter, IModelTransform modelTransform,
+			ItemOverrideList overrides, ResourceLocation modelLocation) {
+    	// Do some logging
+    	LOGGER.info("Baking a template item model for layers: {}", layers);
+    	// Get transforms
+    	IModelTransform transformsFromModel = owner.getCombinedTransform();
+		ImmutableMap<TransformType, TransformationMatrix> transformMap = transformsFromModel != null
+				? PerspectiveMapWrapper
+						.getTransforms(new ModelTransformComposition(transformsFromModel, modelTransform))
+				: PerspectiveMapWrapper.getTransforms(modelTransform);
+		TransformationMatrix transform = modelTransform.getRotation();
+    	
+		ImmutableList.Builder<BakedQuad> builder = new ImmutableList.Builder<>();
     	float nudge = 0f;
     	for (TemplateLayer layer : layers) {
-    		generateQuads(layer.tint, nudge, layer.template, layer.sprite, transform, builder);
+    		// Get the sprites
+    		TextureAtlasSprite sprite = spriteGetter.apply(layer.texture),
+    				templateSprite = spriteGetter.apply(layer.template);
+    		generateQuads(layer.tint, nudge, sprite, templateSprite, transform, builder);
     		nudge += NUDGE_INCREMENT;
     	}
-    }
+    	
+    	ImmutableList<BakedQuad> quads = builder.build();
+		LOGGER.info("Total Quads: {}", quads.size());
+    	// Construct the baked model
+		// The override handler for this model is arbitrary
+		return new BakedItemModel(quads, null, Maps.immutableEnumMap(transformMap), overrides,
+				transform.isIdentity(), owner.isSideLit());
+	}
     
-    public static void generateQuads(int tint, float nudge, TextureAtlasSprite template,
-    		TextureAtlasSprite sprite, TransformationMatrix transform, ImmutableList.Builder<BakedQuad> builder)
+	@Override
+	public Collection<Material> getTextures(IModelConfiguration owner,
+			Function<ResourceLocation, IUnbakedModel> modelGetter, Set<Pair<String, String>> missingTextureErrors) {
+		// We cache the layers to use later when baking the model
+		layers = getLayers(owner);
+		// Create a set of all the textures that the layers use
+		return layers.stream()
+			.map((layer) -> Stream.of(layer.texture, layer.template))
+			.flatMap(Function.identity())
+			.collect(Collectors.toSet());
+	}
+
+	public abstract List<TemplateLayer> getLayers(IModelConfiguration owner);
+    
+    public static void generateQuads(int tint, float nudge, TextureAtlasSprite sprite,
+    		TextureAtlasSprite template, TransformationMatrix transform, ImmutableList.Builder<BakedQuad> builder)
     {
 
-    	LOGGER.log(LOG_LEVEL, "Generating quads for sprite: {} with template: {} with nudge: {}", sprite, template, nudge);
+    	LOGGER.trace("Generating quads for sprite: {} with template: {} with nudge: {}", sprite, template, nudge);
     	
         int uMax = sprite.getWidth();
         int vMax = sprite.getHeight();
@@ -80,7 +143,7 @@ public class TemplateItemModel {
         // This flag marks whether the sprite contains "translucent" pixels -
         // pixels that are not fully transparent, but not fully opaque.
 
-        LOGGER.log(LOG_LEVEL, "Scanning for edges...");
+        LOGGER.trace("Scanning for edges...");
         
         // The following section calculates the faceData for the sprite.
         for(int f = 0; f < sprite.getFrameCount(); f++)
@@ -157,8 +220,8 @@ public class TemplateItemModel {
     				        	.collect(Collectors.joining(" "));
             		}).collect(Collectors.joining("\n"));
         	
-        	LOGGER.log(LOG_LEVEL, "Direction: {}", facing);
-        	LOGGER.log(LOG_LEVEL, "FaceData:\n{}", output);
+        	LOGGER.trace("Direction: {}", facing);
+        	LOGGER.trace("FaceData:\n{}", output);
         	
         }
         
@@ -169,12 +232,12 @@ public class TemplateItemModel {
         // directions UP and DOWN.
         // The process is performed for both the UP and DOWN direction.
         
-        LOGGER.log(LOG_LEVEL, "Generating side quads...");
+        LOGGER.trace("Generating side quads...");
         
         // horizontal quads
         for (Direction facing : HORIZONTALS)
         {
-        	LOGGER.log(LOG_LEVEL, "\n=========================\n{} QUADS\n=========================", facing.toString().toUpperCase());
+        	LOGGER.trace("\n=========================\n{} QUADS\n=========================", facing.toString().toUpperCase());
         	// Iterate over each row of pixels.
             for (int v = 0; v < vMax; v++)
             {
@@ -195,7 +258,7 @@ public class TemplateItemModel {
                     {
                         // make quad [uStart, u]
                         int off = facing == Direction.DOWN ? 1 : 0;
-                    	LOGGER.log(LOG_LEVEL, "Building a horizontal quad facing {} at row v={} with start u={} and end u={}",
+                    	LOGGER.trace("Building a horizontal quad facing {} at row v={} with start u={} and end u={}",
                     			facing, v, uStart, u);
                         builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, uStart, v+off, u-uStart));
                         building = false;
@@ -214,7 +277,7 @@ public class TemplateItemModel {
                 {
                     // make quad [uStart, uEnd]
                     int off = facing == Direction.DOWN ? 1 : 0;
-                	LOGGER.log(LOG_LEVEL, "Building a horizontal quad facing {} at row v={} with start u={} and end u={}",
+                	LOGGER.trace("Building a horizontal quad facing {} at row v={} with start u={} and end u={}",
                 			facing, v, uStart, uEnd);
                     builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, uStart, v+off, uEnd-uStart));
                 }
@@ -228,7 +291,7 @@ public class TemplateItemModel {
         // vertical quads
         for (Direction facing : VERTICALS)
         {
-        	LOGGER.log(LOG_LEVEL, "\n=========================\n{} QUADS\n=========================", facing.toString().toUpperCase());
+        	LOGGER.trace("\n=========================\n{} QUADS\n=========================", facing.toString().toUpperCase());
             for (int u = 0; u < uMax; u++)
             {
                 int vStart = 0, vEnd = vMax;
@@ -241,7 +304,7 @@ public class TemplateItemModel {
                     {
                         // make quad [vStart, v]
                         int off = facing == Direction.EAST ? 1 : 0;
-                    	LOGGER.log(LOG_LEVEL, "Building a vertical quad facing {} at column u={} with start v={} and end v={}",
+                    	LOGGER.trace("Building a vertical quad facing {} at column u={} with start v={} and end v={}",
                     			facing, u, vStart, v);
                         builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, u+off, vStart, v-vStart));
                         building = false;
@@ -256,22 +319,22 @@ public class TemplateItemModel {
                 {
                     // make quad [vStart, vEnd]
                     int off = facing == Direction.EAST ? 1 : 0;
-                	LOGGER.log(LOG_LEVEL, "Building a vertical quad facing {} at column u={} with start v={} and end v={}",
+                	LOGGER.trace("Building a vertical quad facing {} at column u={} with start v={} and end v={}",
                 			facing, u, vStart, vEnd);
                     builder.add(buildSideQuad(transform, facing, tint, nudge, sprite, u+off, vStart, vEnd-vStart));
                 }
             }
         }
 
-        LOGGER.log(LOG_LEVEL, "Generating face quads...");
+        LOGGER.trace("Generating face quads...");
         
         // Finally, we build the "cover" front and back quads.
 		
-        List<BakedQuad> backQuads = convertTexture(transform, template,
-        		sprite, 7.5f / 16f - nudge, Direction.NORTH, 0xffffffff, tint);
-        List<BakedQuad> frontQuads = convertTexture(transform, template,
-        		sprite, 8.5f / 16f + nudge, Direction.SOUTH, 0xffffffff, tint);
-        LOGGER.log(LOG_LEVEL, "Total back quads: {} Total front quads: {}", backQuads.size(), frontQuads.size());
+        List<BakedQuad> backQuads = convertTexture(transform, sprite,
+        		template, 7.5f / 16f - nudge, Direction.NORTH, 0xffffffff, tint);
+        List<BakedQuad> frontQuads = convertTexture(transform, sprite,
+        		template, 8.5f / 16f + nudge, Direction.SOUTH, 0xffffffff, tint);
+        LOGGER.trace("Total back quads: {} Total front quads: {}", backQuads.size(), frontQuads.size());
 		builder.addAll(backQuads);
 		builder.addAll(frontQuads);
 		 
@@ -371,7 +434,7 @@ public class TemplateItemModel {
         y0 += yNudge;
         y1 += yNudge;
         
-        LOGGER.log(LOG_LEVEL, "SIDE QUAD\n(x0,y0,z0): ({},{},{}) (x1,y1,z1): ({},{},{})\n(u0,v0): ({},{}) (u1,v1): ({},{})\n",
+        LOGGER.trace("SIDE QUAD\n(x0,y0,z0): ({},{},{}) (x1,y1,z1): ({},{},{})\n(u0,v0): ({},{}) (u1,v1): ({},{})\n",
         		x0, y0, z0, x1, y1, z1, u0, v0, u1, v1);
         
         return buildQuad(
@@ -396,10 +459,10 @@ public class TemplateItemModel {
      * @param sprite   The texture whose UVs shall be used
      * @return The generated quads.
      */
-    public static List<BakedQuad> convertTexture(TransformationMatrix transform, TextureAtlasSprite template, TextureAtlasSprite sprite, float z, Direction facing, int color, int tint)
+    public static List<BakedQuad> convertTexture(TransformationMatrix transform, TextureAtlasSprite sprite, TextureAtlasSprite template, float z, Direction facing, int color, int tint)
     {
-        List<BakedQuad> horizontal = convertTextureHorizontal(transform, template, sprite, z, facing, color, tint);
-        List<BakedQuad> vertical = convertTextureVertical(transform, template, sprite, z, facing, color, tint);
+        List<BakedQuad> horizontal = convertTextureHorizontal(transform, sprite, template, z, facing, color, tint);
+        List<BakedQuad> vertical = convertTextureVertical(transform, sprite, template, z, facing, color, tint);
 
         return horizontal.size() <= vertical.size() ? horizontal : vertical;
     }
@@ -408,7 +471,7 @@ public class TemplateItemModel {
      * Scans a texture and converts it into a list of horizontal strips stacked on top of each other.
      * The height of the strips is as big as possible.
      */
-    public static List<BakedQuad> convertTextureHorizontal(TransformationMatrix transform, TextureAtlasSprite template, TextureAtlasSprite sprite, float z, Direction facing, int color, int tint)
+    public static List<BakedQuad> convertTextureHorizontal(TransformationMatrix transform, TextureAtlasSprite sprite, TextureAtlasSprite template, float z, Direction facing, int color, int tint)
     {
         int w = template.getWidth();
         int h = template.getHeight();
@@ -479,7 +542,7 @@ public class TemplateItemModel {
      * Scans a texture and converts it into a list of vertical strips stacked next to each other from left to right.
      * The width of the strips is as big as possible.
      */
-    public static List<BakedQuad> convertTextureVertical(TransformationMatrix transform, TextureAtlasSprite template, TextureAtlasSprite sprite, float z, Direction facing, int color, int tint)
+    public static List<BakedQuad> convertTextureVertical(TransformationMatrix transform, TextureAtlasSprite sprite, TextureAtlasSprite template, float z, Direction facing, int color, int tint)
     {
         int w = template.getWidth();
         int h = template.getHeight();

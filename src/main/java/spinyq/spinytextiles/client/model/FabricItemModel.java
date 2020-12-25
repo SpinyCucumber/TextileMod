@@ -15,22 +15,15 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
 
-import net.minecraft.client.renderer.TransformationMatrix;
-import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.IModelTransform;
 import net.minecraft.client.renderer.model.IUnbakedModel;
-import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.model.Material;
 import net.minecraft.client.renderer.model.ModelBakery;
@@ -47,8 +40,6 @@ import net.minecraftforge.client.model.BakedItemModel;
 import net.minecraftforge.client.model.IModelConfiguration;
 import net.minecraftforge.client.model.IModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
-import net.minecraftforge.client.model.ModelTransformComposition;
-import net.minecraftforge.client.model.PerspectiveMapWrapper;
 import net.minecraftforge.client.model.geometry.IModelGeometry;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -57,14 +48,12 @@ import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.resource.IResourceType;
 import net.minecraftforge.resource.VanillaResourceType;
 import spinyq.spinytextiles.TextileMod;
-import spinyq.spinytextiles.client.model.TemplateItemModel.TemplateLayer;
 import spinyq.spinytextiles.items.FabricItem;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 import spinyq.spinytextiles.utility.textile.FabricPattern;
 
 // ItemCameraTransform is deprecated but is still being used by BakedItemModel, so we are forced to
 // use it as well.
-@SuppressWarnings("deprecation")
 @OnlyIn(Dist.CLIENT)
 public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
@@ -120,7 +109,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		}
 	}
 
-	public class SubModel implements IModelGeometry<SubModel> {
+	public class SubModel extends TemplateItemModel {
 
 		private static final String TEMPLATE_TEXTURE = "template",
 				DETAIL_TEXTURE = "detail";
@@ -129,58 +118,6 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 		public SubModel(FabricPattern pattern) {
 			this.pattern = pattern;
-		}
-
-		@Override
-		public IBakedModel bake(IModelConfiguration owner, ModelBakery bakery,
-				Function<Material, TextureAtlasSprite> spriteGetter, IModelTransform modelTransform,
-				ItemOverrideList overrides, ResourceLocation modelLocation) {
-			// For each layer of the fabric pattern, create a new quad layer using the
-			// texture.
-			// A template is applied to each layer to create the look of a fabric item.
-			// Can we use null for the particle texture?
-
-			// Retrieve template texture and detail texture
-			Material templateLocation = owner.resolveTexture(TEMPLATE_TEXTURE),
-					detailLocation = owner.resolveTexture(DETAIL_TEXTURE);
-
-			IModelTransform transformsFromModel = owner.getCombinedTransform();
-			ImmutableMap<TransformType, TransformationMatrix> transformMap = transformsFromModel != null
-					? PerspectiveMapWrapper
-							.getTransforms(new ModelTransformComposition(transformsFromModel, modelTransform))
-					: PerspectiveMapWrapper.getTransforms(modelTransform);
-			TransformationMatrix transform = modelTransform.getRotation();
-
-			LOGGER.info("Baking a model for fabric pattern: {}", pattern.getRegistryName());
-
-			ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();
-			// Look up the pattern's textures using FabricTextureManager, and create a list of sprites for each layer
-			TextureAtlasSprite template = spriteGetter.apply(templateLocation),
-					detail = spriteGetter.apply(detailLocation);
-			LOGGER.info("Template: {} Template Sprite: {} Detail: {} Detail Sprite: {}",
-					templateLocation, template, detailLocation, detail);
-			// Build quads
-			// We also increment the tint index for each layer
-			// Increase the "nudge" for each layer as well to prevent depth fighting
-			
-			List<TemplateLayer> layers = IntStream.range(0, pattern.getLayers().size())
-			.mapToObj((index) -> {
-				String layer = pattern.getLayers().get(index);
-				Material texture = FabricTextureManager.INSTANCE.getTextures(pattern).get(layer);
-				TextureAtlasSprite sprite = spriteGetter.apply(texture);
-				return Stream.of(new TemplateLayer(sprite, template, index), new TemplateLayer(detail, sprite, index));
-			})
-			.flatMap(Function.identity())
-			.collect(Collectors.toList());
-			
-			TemplateItemModel.generateQuads(layers, transform, builder);
-			
-			ImmutableList<BakedQuad> quads = builder.build();
-			LOGGER.info("Total Quads: {}", quads.size());
-			// Construct the baked model
-			// The override handler for this model is arbitrary
-			return new BakedItemModel(quads, null, Maps.immutableEnumMap(transformMap), overrides,
-					transform.isIdentity(), owner.isSideLit());
 		}
 
 		@Override
@@ -196,9 +133,26 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			return textures;
 		}
 
+		@Override
+		public List<TemplateLayer> getLayers(IModelConfiguration owner) {
+			// Resolve the template and detail textures
+			Material template = owner.resolveTexture(TEMPLATE_TEXTURE),
+				detail = owner.resolveTexture(DETAIL_TEXTURE);
+			// Construct the list of layers
+			// A template is applied to each layer to create the look of a fabric item.
+			// For each layer, we also some "detail" quads for some added style.
+			return IntStream.range(0, pattern.getLayers().size())
+					.mapToObj((index) -> {
+						String layer = pattern.getLayers().get(index);
+						Material texture = FabricTextureManager.INSTANCE.getTextures(pattern).get(layer);
+						return Stream.of(new TemplateLayer(texture, template, index), new TemplateLayer(detail, texture, index));
+					})
+					.flatMap(Function.identity())
+					.collect(Collectors.toList());
+		}
+
 	}
 
-	private static final Logger LOGGER = LogManager.getLogger();
 	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
 
 	// A map between fabric patterns and baked models to use when overriding items'
