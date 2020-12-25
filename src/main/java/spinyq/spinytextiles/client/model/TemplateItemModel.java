@@ -45,9 +45,15 @@ import net.minecraftforge.client.model.pipeline.TRSRTransformer;
 
 // TODO Improvement: Skipping internal side quads would allow us to cut down on quads.
 // TODO Handle particle texture
-// Should rewrite this class eventually with these to things in mind.
-// Most of this code is adapted from ItemLayerModel, with additional comments to clarify things.
-// Right now it only contains static utility methods
+// TODO Rewrite this eventually
+// Most of this code is adapted from ItemLayerModel and ItemTextureQuadConverter,
+// with additional comments for clarifying things.
+// This class is a Frankenstein monster made from already dodgy code;
+// the algorithms used in here are by no means the most efficient way of doing things.
+// ItemTextureQuadConverter didn't work for an edge case, which I had to fix.
+// And strangely, ItemLayerModel generated the side quads upside down, which I changed.
+// ItemCameraTransform type is deprecated, but BakedItemModel uses it so we are forced
+// to use it as well. Oh well
 @SuppressWarnings("deprecation")
 public abstract class TemplateItemModel implements IModelGeometry<TemplateItemModel> {
 
@@ -59,6 +65,12 @@ public abstract class TemplateItemModel implements IModelGeometry<TemplateItemMo
     
     private List<TemplateLayer> layers;
     
+    /**
+     * A template layer described a layer of a template item model.
+     * It has a texture as well as a template texture.
+     * @author Elijah Hilty
+     *
+     */
     public static class TemplateLayer {
     	
     	private final Material texture, template;
