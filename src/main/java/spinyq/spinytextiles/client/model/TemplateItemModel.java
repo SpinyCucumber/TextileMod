@@ -66,7 +66,7 @@ import net.minecraftforge.client.model.pipeline.TRSRTransformer;
 //TODO Rewrite this eventually
 @SuppressWarnings("deprecation")
 @OnlyIn(Dist.CLIENT)
-public abstract class TemplateItemModel implements IModelGeometry<TemplateItemModel> {
+public class TemplateItemModel implements IModelGeometry<TemplateItemModel> {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -99,6 +99,33 @@ public abstract class TemplateItemModel implements IModelGeometry<TemplateItemMo
 			return "TemplateLayer [texture=" + texture + ", template=" + template + ", tint=" + tint + "]";
 		}
 
+	}
+
+	private static class FaceData {
+		private final EnumMap<Direction, BitSet> data = new EnumMap<>(Direction.class);
+	
+		private final int vMax;
+	
+		FaceData(int uMax, int vMax) {
+			this.vMax = vMax;
+	
+			data.put(Direction.WEST, new BitSet(uMax * vMax));
+			data.put(Direction.EAST, new BitSet(uMax * vMax));
+			data.put(Direction.UP, new BitSet(uMax * vMax));
+			data.put(Direction.DOWN, new BitSet(uMax * vMax));
+		}
+	
+		public void set(Direction facing, int u, int v) {
+			data.get(facing).set(getIndex(u, v));
+		}
+	
+		public boolean get(Direction facing, int u, int v) {
+			return data.get(facing).get(getIndex(u, v));
+		}
+	
+		private int getIndex(int u, int v) {
+			return v * vMax + u;
+		}
 	}
 
 	@Override
@@ -141,14 +168,17 @@ public abstract class TemplateItemModel implements IModelGeometry<TemplateItemMo
 				.flatMap(Function.identity()).collect(Collectors.toSet());
 	}
 
+	public List<TemplateLayer> createLayers(IModelConfiguration owner) {
+		// TODO Improvement: create default behavior
+		return ImmutableList.of();
+	}
+
 	private List<TemplateLayer> getLayers(IModelConfiguration owner) {
 		// We cache the layers to use later when baking the model
 		if (layers == null)
 			layers = createLayers(owner);
 		return layers;
 	}
-
-	public abstract List<TemplateLayer> createLayers(IModelConfiguration owner);
 
 	public static void generateQuads(int tint, float nudge, TextureAtlasSprite sprite, TextureAtlasSprite template,
 			TransformationMatrix transform, ImmutableList.Builder<BakedQuad> builder) {
@@ -358,104 +388,6 @@ public abstract class TemplateItemModel implements IModelGeometry<TemplateItemMo
 
 	}
 
-	private static class FaceData {
-		private final EnumMap<Direction, BitSet> data = new EnumMap<>(Direction.class);
-
-		private final int vMax;
-
-		FaceData(int uMax, int vMax) {
-			this.vMax = vMax;
-
-			data.put(Direction.WEST, new BitSet(uMax * vMax));
-			data.put(Direction.EAST, new BitSet(uMax * vMax));
-			data.put(Direction.UP, new BitSet(uMax * vMax));
-			data.put(Direction.DOWN, new BitSet(uMax * vMax));
-		}
-
-		public void set(Direction facing, int u, int v) {
-			data.get(facing).set(getIndex(u, v));
-		}
-
-		public boolean get(Direction facing, int u, int v) {
-			return data.get(facing).get(getIndex(u, v));
-		}
-
-		private int getIndex(int u, int v) {
-			return v * vMax + u;
-		}
-	}
-
-	private static BakedQuad buildSideQuad(TransformationMatrix transform, Direction side, int tint, float nudge,
-			TextureAtlasSprite sprite, int u, int v, int size) {
-		final float eps = 1e-3f;
-
-		int width = sprite.getWidth();
-		int height = sprite.getHeight();
-
-		// These describe the position of the side quad.
-		float x0 = (float) u / width;
-		float y0 = (float) v / height;
-		float x1 = x0, y1 = y0;
-		float z0 = 7.5f / 16f, z1 = 8.5f / 16f;
-
-		// Switch statements can be unclear.
-		// In this case, the line y1 = (float) (v + size) / height line is executed
-		// for both the WEST and EAST sides since the WEST branch doesn't have a break
-		// statement.
-		// Similarly, the x1 = (float) (u + size) / width line is executed for
-		// both the DOWN and UP sides.
-		switch (side) {
-		// If the direction is either WEST or UP we have to flip the z coordinates
-		// in order to preserve the winding of the vertices. The winding determines
-		// which direction the quad faces.
-		// If the quad is vertical, we set the add the size to the y coordinate of the
-		// first corner to retrieve the y coordinate of the second corner.
-		case WEST:
-			z0 = 8.5f / 16f;
-			z1 = 7.5f / 16f;
-		case EAST:
-			y1 = (float) (v + size) / height;
-			break;
-		// If the quad is horizontal, we set the add the size to the x coordinate of the
-		// first corner to retrieve the x coordinate of the second corner.
-		case UP:
-		case DOWN:
-			x1 = (float) (u + size) / width;
-			break;
-		default:
-			throw new IllegalArgumentException("can't handle z-oriented side");
-		}
-
-		float dx = side.getDirectionVec().getX() * eps / width;
-		float dy = side.getDirectionVec().getY() * eps / height;
-
-		float u0 = 16f * (x0 - dx);
-		float u1 = 16f * (x1 - dx);
-		float v0 = 16f * (y0 + dy);
-		float v1 = 16f * (y1 + dy);
-
-		// Because Minecraft is weird, we also have to flip the y coordinates.
-		float tmp = y0;
-		y0 = 1f - y1;
-		y1 = 1f - tmp;
-
-		// Nudge the x and y coordinates slightly to prevent depth fighting
-		float xNudge = (float) side.getXOffset() * nudge;
-		float yNudge = (float) side.getYOffset() * nudge;
-		x0 += xNudge;
-		x1 += xNudge;
-		y0 += yNudge;
-		y1 += yNudge;
-
-		LOGGER.trace("SIDE QUAD\n(x0,y0,z0): ({},{},{}) (x1,y1,z1): ({},{},{})\n(u0,v0): ({},{}) (u1,v1): ({},{})\n",
-				x0, y0, z0, x1, y1, z1, u0, v0, u1, v1);
-
-		return buildQuad(transform, side, sprite, tint, x0, y0, z0, sprite.getInterpolatedU(u0),
-				sprite.getInterpolatedV(v0), x1, y1, z0, sprite.getInterpolatedU(u1), sprite.getInterpolatedV(v1), x1,
-				y1, z1, sprite.getInterpolatedU(u1), sprite.getInterpolatedV(v1), x0, y0, z1,
-				sprite.getInterpolatedU(u0), sprite.getInterpolatedV(v0));
-	}
-
 	/**
 	 * Takes a texture and converts it into BakedQuads. The conversion is done by
 	 * scanning the texture horizontally and vertically and creating "strips" of the
@@ -595,6 +527,77 @@ public abstract class TemplateItemModel implements IModelGeometry<TemplateItemMo
 		}
 
 		return quads;
+	}
+
+	private static BakedQuad buildSideQuad(TransformationMatrix transform, Direction side, int tint, float nudge,
+			TextureAtlasSprite sprite, int u, int v, int size) {
+		final float eps = 1e-3f;
+	
+		int width = sprite.getWidth();
+		int height = sprite.getHeight();
+	
+		// These describe the position of the side quad.
+		float x0 = (float) u / width;
+		float y0 = (float) v / height;
+		float x1 = x0, y1 = y0;
+		float z0 = 7.5f / 16f, z1 = 8.5f / 16f;
+	
+		// Switch statements can be unclear.
+		// In this case, the line y1 = (float) (v + size) / height line is executed
+		// for both the WEST and EAST sides since the WEST branch doesn't have a break
+		// statement.
+		// Similarly, the x1 = (float) (u + size) / width line is executed for
+		// both the DOWN and UP sides.
+		switch (side) {
+		// If the direction is either WEST or UP we have to flip the z coordinates
+		// in order to preserve the winding of the vertices. The winding determines
+		// which direction the quad faces.
+		// If the quad is vertical, we set the add the size to the y coordinate of the
+		// first corner to retrieve the y coordinate of the second corner.
+		case WEST:
+			z0 = 8.5f / 16f;
+			z1 = 7.5f / 16f;
+		case EAST:
+			y1 = (float) (v + size) / height;
+			break;
+		// If the quad is horizontal, we set the add the size to the x coordinate of the
+		// first corner to retrieve the x coordinate of the second corner.
+		case UP:
+		case DOWN:
+			x1 = (float) (u + size) / width;
+			break;
+		default:
+			throw new IllegalArgumentException("can't handle z-oriented side");
+		}
+	
+		float dx = side.getDirectionVec().getX() * eps / width;
+		float dy = side.getDirectionVec().getY() * eps / height;
+	
+		float u0 = 16f * (x0 - dx);
+		float u1 = 16f * (x1 - dx);
+		float v0 = 16f * (y0 + dy);
+		float v1 = 16f * (y1 + dy);
+	
+		// Because Minecraft is weird, we also have to flip the y coordinates.
+		float tmp = y0;
+		y0 = 1f - y1;
+		y1 = 1f - tmp;
+	
+		// Nudge the x and y coordinates slightly to prevent depth fighting
+		float xNudge = (float) side.getXOffset() * nudge;
+		float yNudge = (float) side.getYOffset() * nudge;
+		x0 += xNudge;
+		x1 += xNudge;
+		y0 += yNudge;
+		y1 += yNudge;
+	
+		LOGGER.trace("SIDE QUAD\n(x0,y0,z0): ({},{},{}) (x1,y1,z1): ({},{},{})\n(u0,v0): ({},{}) (u1,v1): ({},{})\n",
+				x0, y0, z0, x1, y1, z1, u0, v0, u1, v1);
+	
+		return buildQuad(transform, side, sprite, tint, x0, y0, z0, sprite.getInterpolatedU(u0),
+				sprite.getInterpolatedV(v0), x1, y1, z0, sprite.getInterpolatedU(u1), sprite.getInterpolatedV(v1), x1,
+				y1, z1, sprite.getInterpolatedU(u1), sprite.getInterpolatedV(v1), x0, y0, z1,
+				sprite.getInterpolatedU(u0), sprite.getInterpolatedV(v0));
 	}
 
 	private static boolean isVisible(TextureAtlasSprite sprite, int frame, int u, int v) {

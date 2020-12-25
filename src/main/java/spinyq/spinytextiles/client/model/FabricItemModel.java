@@ -52,11 +52,12 @@ import spinyq.spinytextiles.items.FabricItem;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 import spinyq.spinytextiles.utility.textile.FabricPattern;
 
-// ItemCameraTransform is deprecated but is still being used by BakedItemModel, so we are forced to
-// use it as well.
 @OnlyIn(Dist.CLIENT)
 public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
+	private static final String TEMPLATE_TAG = "template";
+	private static final String DETAIL_TAG = "detail";
+	
 	@EventBusSubscriber(bus = Bus.MOD)
 	public static class Loader implements IModelLoader<FabricItemModel> {
 
@@ -111,9 +112,6 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 
 	public class SubModel extends TemplateItemModel {
 
-		private static final String TEMPLATE_TEXTURE = "template",
-				DETAIL_TEXTURE = "detail";
-		
 		private FabricPattern pattern;
 
 		public SubModel(FabricPattern pattern) {
@@ -121,23 +119,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		}
 
 		@Override
-		public Collection<Material> getTextures(IModelConfiguration owner,
-				Function<ResourceLocation, IUnbakedModel> modelGetter, Set<Pair<String, String>> missingTextureErrors) {
-			// Create a new set of textures
-			Set<Material> textures = new HashSet<>();
-			// Include all the textures used by the pattern
-			textures.addAll(FabricTextureManager.INSTANCE.getTextures(pattern).values());
-			// Also include the template and detail textures
-			textures.add(owner.resolveTexture(TEMPLATE_TEXTURE));
-			textures.add(owner.resolveTexture(DETAIL_TEXTURE));
-			return textures;
-		}
-
-		@Override
 		public List<TemplateLayer> createLayers(IModelConfiguration owner) {
-			// Resolve the template and detail textures
-			Material template = owner.resolveTexture(TEMPLATE_TEXTURE),
-				detail = owner.resolveTexture(DETAIL_TEXTURE);
 			// Construct the list of layers
 			// A template is applied to each layer to create the look of a fabric item.
 			// For each layer, we also some "detail" quads for some added style.
@@ -145,7 +127,9 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 					.mapToObj((index) -> {
 						String layer = pattern.getLayers().get(index);
 						Material texture = FabricTextureManager.INSTANCE.getTextures(pattern).get(layer);
-						return Stream.of(new TemplateLayer(texture, template, index), new TemplateLayer(detail, texture, index));
+						return Stream.of(
+								new TemplateLayer(texture, getTemplateTexture(owner), index),
+								new TemplateLayer(getDetailTexture(owner), texture, index));
 					})
 					.flatMap(Function.identity())
 					.collect(Collectors.toList());
@@ -159,6 +143,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 	// models
 	private Map<FabricPattern, IBakedModel> bakedSubModels;
 	private Collection<SubModel> subModels;
+	private Material templateTexture, detailTexture;
 
 	public FabricItemModel() {
 		// Create our submodels whenever the model is first constructed
@@ -189,6 +174,16 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 		}
 	}
 
+	private Material getTemplateTexture(IModelConfiguration owner) {
+		if (templateTexture == null) templateTexture = owner.resolveTexture(TEMPLATE_TAG);
+		return templateTexture;
+	}
+	
+	private Material getDetailTexture(IModelConfiguration owner) {
+		if (detailTexture == null) detailTexture = owner.resolveTexture(DETAIL_TAG);
+		return detailTexture;
+	}
+	
 	@Override
 	public IBakedModel bake(IModelConfiguration owner, ModelBakery bakery,
 			Function<Material, TextureAtlasSprite> spriteGetter, IModelTransform modelTransform,
