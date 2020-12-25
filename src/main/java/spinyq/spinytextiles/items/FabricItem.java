@@ -83,11 +83,16 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		// Register a color handler for all fabric items.
 		// The color handler makes it so each layer of the item is rendered with the right color.
 		event.getItemColors().register((stack, tintIndex) -> {
-				// Look up the layer name using the tint index
 				Fabric fabric = getFabric(stack);
-				String layer = fabric.getPattern().getLayers().get(tintIndex);
-				// Use the layer name to get the color
-				return fabric.getColor(layer).toRGB(new RGBColor(), null).toInt();
+				// Only return a color if the fabric info is non-null
+				// If it is null, return -1 (white)
+				if (fabric != null) {
+					// Look up the layer name using the tint index
+					String layer = fabric.getPattern().getLayers().get(tintIndex);
+					// Use the layer name to get the color
+					return fabric.getColor(layer).toRGB(new RGBColor(), null).toInt();
+				}
+				return -1;
 			}, this);
 	}
 	

@@ -21,6 +21,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.IModelTransform;
 import net.minecraft.client.renderer.model.IUnbakedModel;
@@ -50,6 +51,7 @@ import net.minecraftforge.resource.VanillaResourceType;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.FabricItem;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
+import spinyq.spinytextiles.utility.textile.Fabric;
 import spinyq.spinytextiles.utility.textile.FabricPattern;
 
 /**
@@ -119,10 +121,16 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			// If it is, get the model corresponding to the fabric pattern
 			if (stack.getItem() instanceof FabricItem) {
 				FabricItem item = (FabricItem) stack.getItem();
-				// Get the fabric pattern
-				// TODO Check for null
-				FabricPattern pattern = item.getFabric(stack).getPattern();
-				return bakedSubModels.get(pattern);
+				// Check if the item actually has fabric info attached
+				// If it doesn't, return the missing model
+				// If not, look up the corresponding model using the fabric pattern
+				Fabric fabric = item.getFabric(stack);
+				if (fabric != null) {
+					return bakedSubModels.get(fabric.getPattern());
+				}
+				else {
+					return Minecraft.getInstance().getModelManager().getMissingModel();
+				}
 			}
 			// If the item is not a fabric item simply return the original model
 			return originalModel;
