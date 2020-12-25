@@ -13,7 +13,10 @@
 - [x] Fiber Items
 - [x] Brush Item
 - [x] Item Color Helper
+- [ ] TemplateItemModel rewrite
+- [ ] Proper versioning
 - [x] Fabric Item
+	- [ ] More info on tooltips
 	- [x] Allow patterns to be "loaded." Patterns should be able to specify their layers in a JSON file, which is loaded during setup.
 		- Minecraft has interfaces like "IResourceManager" and "ISelectiveResourceReloadListener" which handle loading resources. We should probably try to implement these to handle pattern loading. "LootTableManager" might be a good resource.
 		- Since "Material" is client-side, we will need to separate out the texture map from FabricPattern, perhaps into another class. This is also going to complicate loading. We might end up needing two files for each pattern: one to specify the layer names, recipe, etc., and another to specify the textures.
