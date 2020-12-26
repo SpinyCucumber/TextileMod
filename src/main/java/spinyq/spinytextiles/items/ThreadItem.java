@@ -8,7 +8,6 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.LanguageMap;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -24,7 +23,6 @@ import spinyq.spinytextiles.utility.textile.IDyeProvider;
 
 public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 
-	private static final LanguageMap LOCAL_LANGUAGE = LanguageMap.getInstance();
 	private static final String COLOR_TAG = "Color";
 	private static final String COLOR_WORD_TAG = "ColorWord";
 
@@ -82,18 +80,10 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 	public ITextComponent getDisplayName(ItemStack stack) {
 		// Construct some additional arugments to pass to the text component
 		// These are optionally used by the localization files to format stuff
-		String colorKey = closestColorWord.get(stack).getTranslationKey();
-		return new TranslationTextComponent(getTranslationKey(stack), new TranslationTextComponent(colorKey));
-	}
-
-	@Override
-	public String getTranslationKey(ItemStack item) {
-		// Construct a key using the closest color word
-		String colorName = closestColorWord.get(item).getName();
-		String defaultKey = ThreadItem.super.getTranslationKey(), specificKey = defaultKey + '.' + colorName;
-		// If the specific translation key exists, use it.
-		// Otherwise, fall back to the default translation key
-		return LOCAL_LANGUAGE.exists(specificKey) ? specificKey : defaultKey;
+		// We pass the color description
+		String descriptionKey = closestColorWord.get(stack).getDescriptionTranslationKey();
+		return new TranslationTextComponent(getTranslationKey(stack),
+				new TranslationTextComponent(descriptionKey));
 	}
 
 	public void setColor(ItemStack item, RYBKColor color) {

@@ -47,13 +47,11 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 	public ITextComponent getDisplayName(ItemStack stack) {
 		// Construct some additional arugments to pass to the text component
 		// These are optionally used by the localization files to format stuff
-		// We pass the fabric pattern description and the fabric pattern name
-		// but only if we have fabric info
+		// We pass the fabric pattern description but only if we have fabric info
 		Fabric fabric = getFabric(stack);
 		if (fabric != null) {
 			FabricPattern pattern = fabric.getPattern();
 			return new TranslationTextComponent(getTranslationKey(stack),
-					new TranslationTextComponent(pattern.getTranslationKey()),
 					new TranslationTextComponent(pattern.getDescriptionTranslationKey()));
 		}
 		return super.getDisplayName(stack);
