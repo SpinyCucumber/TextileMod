@@ -92,11 +92,11 @@
 	"fabricpattern.spinytextiles.dots.description": "Dotted",
 
     "fabriclayer.spinytextiles.base": "Base",
-    "fabriclayer.spinytextiles.horizontal_stripes": "Stripes",
-    "fabriclayer.spinytextiles.vertical_stripes": "Stripes",
-    "fabriclayer.spinytextiles.horizontal_stripes_translucent": "Stripes",
-    "fabriclayer.spinytextiles.vertical_stripes_translucent": "Stripes",
-    "fabriclayer.spinytextiles.diagonal_stripes": "Stripes",
+    "fabriclayer.spinytextiles.horizontal_stripes": "Horizontal Stripes",
+    "fabriclayer.spinytextiles.vertical_stripes": "Vertical Stripes",
+    "fabriclayer.spinytextiles.horizontal_stripes_translucent": "Horizontal Stripes",
+    "fabriclayer.spinytextiles.vertical_stripes_translucent": "Vertical Stripes",
+    "fabriclayer.spinytextiles.diagonal_stripes": "Diagonal Stripes",
     "fabriclayer.spinytextiles.dots": "Dots",
 
     "item.spinytextiles.fabric": "%s Fabric",
