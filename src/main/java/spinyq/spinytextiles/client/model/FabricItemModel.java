@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -150,10 +149,9 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			// Construct the list of layers
 			// A template is applied to each layer to create the look of a fabric item.
 			// For each layer, we also some "detail" quads for some added style.
-			return IntStream.range(0, pattern.getLayers().size())
+			return pattern.getIndexStream()
 					.mapToObj((index) -> {
-						String layer = pattern.getLayers().get(index);
-						Material texture = FabricTextureManager.INSTANCE.getTextures(pattern).get(layer);
+						Material texture = pattern.getLayer(index).getTexture();
 						return Stream.of(
 								new TemplateLayer(texture, getTemplateTexture(owner), index),
 								new TemplateLayer(getDetailTexture(owner), texture, index));
