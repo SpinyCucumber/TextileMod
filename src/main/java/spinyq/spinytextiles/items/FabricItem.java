@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import net.minecraft.client.util.ITooltipFlag;
@@ -111,7 +110,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 			RYBKColor oldColor = fabric.getLayerColor(layerIndex);
 			RYBKColor newColor = provider.getColor().plus(oldColor).clamp();
 			// Fail if new color didn't change
-			if (Objects.equal(oldColor, newColor)) return false;
+			if (oldColor.equalsRGB(newColor)) return false;
 			// Attempt to pay for dye
 			// If the provider has enough dye, proceed to dye the layer
 			if (provider.drain(layerDyeCost)) {
@@ -153,7 +152,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 			RYBKColor oldColor = fabric.getLayerColor(layerIndex);
 			RYBKColor newColor = oldColor.minus(new RYBKColor(provider.getBleachLevel())).clamp();
 			// Skip layer if new color didn't change
-			if (Objects.equal(oldColor, newColor)) return false;
+			if (oldColor.equalsRGB(newColor)) return false;
 			// Attempt to pay for bleach
 			// If the provider has enough bleach, proceed to bleach the layer
 			if (provider.drain(layerBleachCost)) {

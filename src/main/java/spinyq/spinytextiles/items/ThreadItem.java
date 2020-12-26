@@ -103,8 +103,7 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		RYBKColor oldColor = getColor(stack.getStack());
 		RYBKColor newColor = provider.getColor().plus(oldColor).clamp();
 		// If the new color didn't change, don't dye the object
-		if (oldColor.equals(newColor))
-			return false;
+		if (oldColor.equalsRGB(newColor)) return false;
 		// "Pay" for dye
 		// If the dye provider has enough dye, proceed to dye the object
 		if (provider.drain(dyeCost)) {
@@ -125,8 +124,7 @@ public class ThreadItem extends Item implements IDyeableItem, IBleachableItem {
 		RYBKColor oldColor = getColor(stack.getStack());
 		RYBKColor newColor = oldColor.minus(new RYBKColor(provider.getBleachLevel())).clamp();
 		// If the new color didn't change, don't bleach the object
-		if (oldColor.equals(newColor))
-			return false;
+		if (oldColor.equalsRGB(newColor)) return false;
 		// "Pay" for bleach
 		// If the bleach provider has enough bleach, proceed to bleach the object
 		if (provider.drain(bleachCost)) {
