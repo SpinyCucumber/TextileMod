@@ -15,7 +15,8 @@
 - [ ] TemplateItemModel rewrite
 - [ ] Proper versioning
 - [x] Fabric Item
-	- [ ] Ability to dye
+	- [ ] Create FabricLayer enum?
+	- [x] Ability to dye and bleach
 	- [x] More info on tooltips
 	- [x] Make display name use pattern
 	- [x] Allow patterns to be "loaded." Patterns should be able to specify their layers in a JSON file, which is loaded during setup.
