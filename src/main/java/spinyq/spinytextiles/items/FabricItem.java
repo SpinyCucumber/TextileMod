@@ -87,7 +87,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 				// If it is null, return -1 (white)
 				if (fabric != null) {
 					// Look up the color using the tint index
-					return fabric.getColor(tintIndex).toRGB(new RGBColor(), null).toInt();
+					return fabric.getLayerColor(tintIndex).toRGB(new RGBColor(), null).toInt();
 				}
 				return -1;
 			}, this);
@@ -108,14 +108,14 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		boolean success = pattern.getLayerIndexStream().anyMatch((layerIndex) -> {
 			// Get current color of layer
 			// Add dye color to existing color to get new color of layer
-			RYBKColor oldColor = fabric.getColor(layerIndex);
+			RYBKColor oldColor = fabric.getLayerColor(layerIndex);
 			RYBKColor newColor = provider.getColor().plus(oldColor).clamp();
 			// Fail if new color didn't change
 			if (Objects.equal(oldColor, newColor)) return false;
 			// Attempt to pay for dye
 			// If the provider has enough dye, proceed to dye the layer
 			if (provider.drain(layerDyeCost)) {
-				fabric.setColor(layerIndex, newColor);
+				fabric.setLayerColor(layerIndex, newColor);
 				// Also mark the layer's closest color word as dirty,
 				// so we know to recalculate it
 				getClosestColorWord(layerIndex).markDirty(stack.getStack());
@@ -146,14 +146,14 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		boolean success = pattern.getLayerIndexStream().anyMatch((layerIndex) -> {
 			// Get current color of layer
 			// Subtract from each component of current color to get new color
-			RYBKColor oldColor = fabric.getColor(layerIndex);
+			RYBKColor oldColor = fabric.getLayerColor(layerIndex);
 			RYBKColor newColor = oldColor.minus(new RYBKColor(provider.getBleachLevel())).clamp();
 			// Skip layer if new color didn't change
 			if (Objects.equal(oldColor, newColor)) return false;
 			// Attempt to pay for bleach
 			// If the provider has enough bleach, proceed to bleach the layer
 			if (provider.drain(layerBleachCost)) {
-				fabric.setColor(layerIndex, newColor);
+				fabric.setLayerColor(layerIndex, newColor);
 				// Also mark the layer's closest color word as dirty,
 				// so we know to recalculate it
 				getClosestColorWord(layerIndex).markDirty(stack.getStack());
@@ -222,7 +222,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 					(item) -> {
 						// Get color of layer, then get closest color word to color
 						Fabric fabric = getFabric(item);
-						return ColorWord.getClosest(fabric.getColor(layerIndex));
+						return ColorWord.getClosest(fabric.getLayerColor(layerIndex));
 					});
 			// Store the calculated value in our map
 			closestColorWordMap.put(layerIndex, value);
@@ -238,7 +238,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		// If there are more layers than colors cycle through the colors
 		pattern.getLayerIndexStream().forEach((layerIndex) -> {
 			RYBKColor color = DEFAULT_COLORS.get(layerIndex % DEFAULT_COLORS.size()).copy();
-			fabric.setColor(layerIndex, color);
+			fabric.setLayerColor(layerIndex, color);
 		});
 		// Construct a new itemstack and set the fabric
 		ItemStack item = new ItemStack(this);

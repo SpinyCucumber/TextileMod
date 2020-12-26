@@ -39,25 +39,32 @@ public class Fabric implements IGarmentComponent {
 		// switch to using the fabric pattern
 		// Otherwise simply return the same fabric
 		if (monochrome.isPresent()) {
-			// TODO
+			// Only construct a new fabric if the fabric pattern
+			// supports it
+			Optional<FabricPattern> newPattern = pattern.getMonochromePattern();
+			if (newPattern.isPresent()) {
+				// Create a new fabric with the new pattern, with all colors
+				// set to the monochrome color
+				Fabric fabric = new Fabric(newPattern);
+			}
 		}
 		return this;
 	}
 	
-	public void setColor(FabricLayer layer, RYBKColor color) {
+	public void setLayerColor(FabricLayer layer, RYBKColor color) {
 		colors.put(layer, color);
 	}
 	
-	public void setColor(int index, RYBKColor color) {
-		setColor(pattern.getLayer(index), color);
+	public void setLayerColor(int index, RYBKColor color) {
+		setLayerColor(pattern.getLayer(index), color);
 	}
 	
-	public RYBKColor getColor(FabricLayer layer) {
+	public RYBKColor getLayerColor(FabricLayer layer) {
 		return colors.get(layer);
 	}
 	
-	public RYBKColor getColor(int index) {
-		return getColor(pattern.getLayer(index));
+	public RYBKColor getLayerColor(int index) {
+		return getLayerColor(pattern.getLayer(index));
 	}
 
 	@Override
@@ -116,7 +123,7 @@ public class Fabric implements IGarmentComponent {
 	 * this method returns that color.
 	 */
 	private Optional<RYBKColor> getMonochrome() {
-		Stream<RYBKColor> colorStream = pattern.getLayerStream().map(this::getColor);
+		Stream<RYBKColor> colorStream = pattern.getLayerStream().map(this::getLayerColor);
 		// Get the first color
 		RYBKColor toMatch = colorStream.findFirst().get();
 		// If any other color doesn't match the first color, fail
