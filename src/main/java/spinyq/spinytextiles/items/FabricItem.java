@@ -102,26 +102,27 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		// Only attempt to dye if we have fabric info attached
 		Fabric fabric = getFabric(stack.getStack());
 		if (fabric == null) return false;
-		boolean success = false;
-		// Iterate over each layer in the pattern
+		// Iterate over each layer in the pattern, keeping
+		// track of whether we successfully dyed the layer
 		FabricPattern pattern = fabric.getPattern();
-		for (int layerIndex = 0; layerIndex < pattern.getMaxLayerIndex(); layerIndex++) {
+		boolean success = pattern.getLayerIndexStream().anyMatch((layerIndex) -> {
 			// Get current color of layer
 			// Add dye color to existing color to get new color of layer
 			RYBKColor oldColor = fabric.getColor(layerIndex);
 			RYBKColor newColor = provider.getColor().plus(oldColor).clamp();
-			// Skip layer if new color didn't change
-			if (Objects.equal(oldColor, newColor)) continue;
+			// Fail if new color didn't change
+			if (Objects.equal(oldColor, newColor)) return false;
 			// Attempt to pay for dye
 			// If the provider has enough dye, proceed to dye the layer
 			if (provider.drain(layerDyeCost)) {
 				fabric.setColor(layerIndex, newColor);
-				success = Boolean.FALSE;
 				// Also mark the layer's closest color word as dirty,
 				// so we know to recalculate it
 				getClosestColorWord(layerIndex).markDirty(stack.getStack());
+				return true;
 			}
-		}
+			return false;
+		});
 		// If we successfully dyed a layer, create a new itemstack
 		// with the updated fabric info and give it to the player
 		if (success) {
@@ -139,26 +140,27 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		// Only attempt to bleach if we have fabric info attached
 		Fabric fabric = getFabric(stack.getStack());
 		if (fabric == null) return false;
-		boolean success = false;
-		// Iterate over each layer in the pattern
+		// Iterate over each layer in the pattern, keeping
+		// track of whether we successfully bleached the layer
 		FabricPattern pattern = fabric.getPattern();
-		for (int layerIndex = 0; layerIndex < pattern.getMaxLayerIndex(); layerIndex++) {
+		boolean success = pattern.getLayerIndexStream().anyMatch((layerIndex) -> {
 			// Get current color of layer
 			// Subtract from each component of current color to get new color
 			RYBKColor oldColor = fabric.getColor(layerIndex);
 			RYBKColor newColor = oldColor.minus(new RYBKColor(provider.getBleachLevel())).clamp();
 			// Skip layer if new color didn't change
-			if (Objects.equal(oldColor, newColor)) continue;
+			if (Objects.equal(oldColor, newColor)) return false;
 			// Attempt to pay for bleach
 			// If the provider has enough bleach, proceed to bleach the layer
 			if (provider.drain(layerBleachCost)) {
 				fabric.setColor(layerIndex, newColor);
-				success = true;
 				// Also mark the layer's closest color word as dirty,
 				// so we know to recalculate it
 				getClosestColorWord(layerIndex).markDirty(stack.getStack());
+				return true;
 			}
-		}
+			return false;
+		});
 		// If we successfully bleached a layer, create a new itemstack
 		// with the updated fabric info and give it to the player
 		if (success) {
