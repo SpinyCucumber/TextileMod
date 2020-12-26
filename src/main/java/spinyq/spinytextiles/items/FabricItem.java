@@ -126,9 +126,13 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		// If we successfully dyed a layer, create a new itemstack
 		// with the updated fabric info and give it to the player
 		if (success) {
+			// Before creating the new item, "reduce" the colors of the fabric
+			// This involves checking if the fabric is monochrome, and switching to
+			// different pattern if the fabric is monochrome.
 			// Only dye one item at a time
+			Fabric reducedFabric = fabric.reduceColors();
 			ItemStack dyedFabricItem = stack.getStack().split(1);
-			setFabric(dyedFabricItem, fabric);
+			setFabric(dyedFabricItem, reducedFabric);
 			stack.getInventory().addItemStackToInventory(dyedFabricItem);
 		}
 		// Return whether we were successful
@@ -164,9 +168,13 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		// If we successfully bleached a layer, create a new itemstack
 		// with the updated fabric info and give it to the player
 		if (success) {
-			// Only bleach one item at a time
+			// Before creating the new item, "reduce" the colors of the fabric
+			// This involves checking if the fabric is monochrome, and switching to
+			// different pattern if the fabric is monochrome.
+			// Only dye one item at a time
+			Fabric reducedFabric = fabric.reduceColors();
 			ItemStack bleachedFabricItem = stack.getStack().split(1);
-			setFabric(bleachedFabricItem, fabric);
+			setFabric(bleachedFabricItem, reducedFabric);
 			stack.getInventory().addItemStackToInventory(bleachedFabricItem);
 		}
 		// Return whether we were successful
