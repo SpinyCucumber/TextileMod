@@ -21,13 +21,13 @@ public class ModFabricPatterns {
 	public static final RegistryObject<FabricPattern> SOLID = FABRIC_PATTERNS.register("solid",
 			() -> new FabricPattern(ModFabricLayers.BASE)),
 			HORIZONTAL_STRIPES = FABRIC_PATTERNS.register("horizontal_stripes",
-					() -> new FabricPattern(ModFabricLayers.BASE, ModFabricLayers.HORIZONTAL_STRIPES)),
+					() -> new FabricPattern(SOLID, ModFabricLayers.BASE, ModFabricLayers.HORIZONTAL_STRIPES)),
 			VERTICAL_STRIPES = FABRIC_PATTERNS.register("vertical_stripes",
-					() -> new FabricPattern(ModFabricLayers.BASE, ModFabricLayers.VERTICAL_STRIPES)),
+					() -> new FabricPattern(SOLID, ModFabricLayers.BASE, ModFabricLayers.VERTICAL_STRIPES)),
 			DIAGONAL_STRIPES = FABRIC_PATTERNS.register("diagonal_stripes",
-					() -> new FabricPattern(ModFabricLayers.BASE, ModFabricLayers.DIAGONAL_STRIPES)),
+					() -> new FabricPattern(SOLID, ModFabricLayers.BASE, ModFabricLayers.DIAGONAL_STRIPES)),
 			DOTS = FABRIC_PATTERNS.register("dots",
-					() -> new FabricPattern(ModFabricLayers.BASE, ModFabricLayers.DOTS));
+					() -> new FabricPattern(SOLID, ModFabricLayers.BASE, ModFabricLayers.DOTS));
 
 	@SubscribeEvent
 	public static void createRegistries(RegistryEvent.NewRegistry event) {
