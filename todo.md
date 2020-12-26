@@ -15,7 +15,7 @@
 - [ ] TemplateItemModel rewrite
 - [ ] Proper versioning
 - [x] Fabric Item
-	- [ ] Create FabricLayer enum?
+	- [x] Create FabricLayer object
 	- [x] Ability to dye and bleach
 	- [x] More info on tooltips
 	- [x] Make display name use pattern

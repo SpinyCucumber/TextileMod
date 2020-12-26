@@ -19,6 +19,8 @@ import net.minecraftforge.common.util.INBTSerializable;
  */
 public class RYBKColor implements INBTSerializable<IntNBT> {
 
+	private static final float EPS = 0.01f;
+	
 	public static enum Axis {
 		
 		RED(new RYBKColor(1.0f, 0.0f, 0.0f, 0.0f)),
@@ -273,10 +275,12 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 	/**
 	 * Checks whether the RGB rendering of this color
 	 * matches the RGB rendering of another.
+	 * This works by comparing the RGB distance to see if
+	 * it is within a certain threshold.
 	 * @param other The other RYBK color
 	 */
 	public boolean equalsRGB(RYBKColor other) {
-		return toRGB(new RGBColor(), null).equals(other.toRGB(new RGBColor(), null));
+		return toRGB(new RGBColor(), null).distSquared(other.toRGB(new RGBColor(), null)) < EPS;
 	}
 	
 	@Override

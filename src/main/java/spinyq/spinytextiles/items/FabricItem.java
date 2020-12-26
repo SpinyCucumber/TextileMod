@@ -92,10 +92,6 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 			}, this);
 	}
 	
-	// TODO Possible improvement: For both dyeing and bleaching, combine consecutive layers
-	// into a single layer if they have the same color. There would be a list of rules about
-	// what kind of layers can do this, but it would make sense from a user perspective.
-	// When layers are combined, we would need to find a pattern that matches the new list of layers.
 	@Override
 	public boolean dye(ContainedItemStack<PlayerInventory> stack, IDyeProvider provider) {
 		// Only attempt to dye if we have fabric info attached
