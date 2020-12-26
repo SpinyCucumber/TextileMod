@@ -46,5 +46,9 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 	public String getDescriptionTranslationKey() {
 		return getTranslationKey() + ".description";
 	}
+	
+	public String getLayerTranslationKey(String layer) {
+		return "fabriclayer." + layer;
+	}
 
 }
