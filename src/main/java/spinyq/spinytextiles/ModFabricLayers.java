@@ -15,10 +15,14 @@ import spinyq.spinytextiles.utility.textile.FabricLayer;
 @EventBusSubscriber(bus = Bus.MOD)
 public class ModFabricLayers {
 
-	public static final DeferredRegister<FabricLayer> FABRIC_LAYER = new DeferredRegister<>(
+	public static final DeferredRegister<FabricLayer> FABRIC_LAYERS = new DeferredRegister<>(
 			LazyForgeRegistry.of(FabricLayer.class), TextileMod.MODID);
 
-	public static final RegistryObject<FabricLayer> BASE = FABRIC_LAYER.register("base", FabricLayer::new);
+	public static final RegistryObject<FabricLayer> BASE = FABRIC_LAYERS.register("base", FabricLayer::new),
+			HORIZONTAL_STRIPES = FABRIC_LAYERS.register("horizontal_stripes", FabricLayer::new),
+			VERTICAL_STRIPES = FABRIC_LAYERS.register("vertical_stripes", FabricLayer::new),
+			DIAGONAL_STRIPES = FABRIC_LAYERS.register("diagonal_stripes", FabricLayer::new),
+			DOTS = FABRIC_LAYERS.register("dots", FabricLayer::new);
 
 	@SubscribeEvent
 	public static void createRegistries(RegistryEvent.NewRegistry event) {
@@ -27,7 +31,7 @@ public class ModFabricLayers {
 				.setName(new ResourceLocation(TextileMod.MODID, "fabriclayer"))
 				.create();
 		// Hook up deferred register
-		FABRIC_LAYER.register(FMLJavaModLoadingContext.get().getModEventBus());
+		FABRIC_LAYERS.register(FMLJavaModLoadingContext.get().getModEventBus());
 	}
 
 }
