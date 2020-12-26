@@ -282,37 +282,6 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 	public boolean equalsRGB(RYBKColor other) {
 		return toRGB(new RGBColor(), null).distSquared(other.toRGB(new RGBColor(), null)) < EPS;
 	}
-	
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Float.floatToIntBits(b);
-		result = prime * result + Float.floatToIntBits(k);
-		result = prime * result + Float.floatToIntBits(r);
-		result = prime * result + Float.floatToIntBits(y);
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		RYBKColor other = (RYBKColor) obj;
-		if (Float.floatToIntBits(b) != Float.floatToIntBits(other.b))
-			return false;
-		if (Float.floatToIntBits(k) != Float.floatToIntBits(other.k))
-			return false;
-		if (Float.floatToIntBits(r) != Float.floatToIntBits(other.r))
-			return false;
-		if (Float.floatToIntBits(y) != Float.floatToIntBits(other.y))
-			return false;
-		return true;
-	}
 
 	public RYBKColor fromDye(DyeColor dye) {
 		return DYE_MAP.get(dye);

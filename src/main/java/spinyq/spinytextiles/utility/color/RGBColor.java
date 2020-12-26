@@ -1,6 +1,5 @@
 package spinyq.spinytextiles.utility.color;
 
-import java.util.Objects;
 import java.util.Random;
 
 /**
@@ -127,27 +126,6 @@ public class RGBColor {
 	@Override
 	public String toString() {
 		return "Color [r=" + r + ", g=" + g + ", b=" + b + "]";
-	}
-	
-	
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(b, g, r);
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		RGBColor other = (RGBColor) obj;
-		return Float.floatToIntBits(b) == Float.floatToIntBits(other.b)
-				&& Float.floatToIntBits(g) == Float.floatToIntBits(other.g)
-				&& Float.floatToIntBits(r) == Float.floatToIntBits(other.r);
 	}
 
 	/**
