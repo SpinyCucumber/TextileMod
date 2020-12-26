@@ -1,8 +1,11 @@
 package spinyq.spinytextiles.utility.textile;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -17,7 +20,7 @@ public class Fabric implements IGarmentComponent {
 	
 	// Pattern cannot be changed by users
 	private FabricPattern pattern;
-	private Map<String, RYBKColor> colors = new HashMap<>();
+	private Map<FabricLayer, RYBKColor> colors = new HashMap<>();
 	
 	// Needed for deserialization
 	public Fabric() { }
@@ -26,16 +29,16 @@ public class Fabric implements IGarmentComponent {
 		this.pattern = pattern;
 	}
 	
-	public void setColor(String layer, RYBKColor color) {
+	public void setColor(FabricLayer layer, RYBKColor color) {
 		colors.put(layer, color);
 	}
 	
-	public RYBKColor getColor(String layer) {
+	public RYBKColor getColor(FabricLayer layer) {
 		return colors.get(layer);
 	}
 	
 	public RYBKColor getColor(int index) {
-		return getColor(pattern.getLayers().get(index));
+		return getColor(pattern.getLayer(index));
 	}
 
 	@Override
@@ -44,7 +47,10 @@ public class Fabric implements IGarmentComponent {
 		// Write registry name of pattern to nbt
 		NBTHelper.putRegistryEntry(nbt, TAG_PATTERN, pattern);
 		// Write colors
-		NBTHelper.putMap(nbt, TAG_COLORS, colors);
+		List<RYBKColor> colorList = pattern.getLayerStream()
+				.map(colors::get)
+				.collect(Collectors.toList());
+		NBTHelper.putCollection(nbt, TAG_COLORS, colorList);
 		// Done
 		return nbt;
 	}
@@ -54,7 +60,9 @@ public class Fabric implements IGarmentComponent {
 		// Retrieve the fabric's pattern by looking up registry name
 		pattern = NBTHelper.getRegistryEntry(nbt, TAG_PATTERN, PATTERN_REGISTRY);
 		// Retrieve the colors
-		colors = NBTHelper.getMap(HashMap::new, RYBKColor::new, nbt, TAG_COLORS);
+		List<RYBKColor> colorList = NBTHelper.getCollection(ArrayList::new, RYBKColor::new, nbt, TAG_COLORS);
+		pattern.getIndexStream().forEach(
+				(index) -> colors.put(pattern.getLayer(index), colorList.get(index)));
 	}
 
 	public FabricPattern getPattern() {

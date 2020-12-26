@@ -1,6 +1,7 @@
 package spinyq.spinytextiles.utility.textile;
 
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableList;
@@ -22,6 +23,10 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 
 	public Stream<FabricLayer> getLayerStream() {
 		return layers.stream().map(Supplier::get);
+	}
+	
+	public IntStream getIndexStream() {
+		return IntStream.range(0, layers.size());
 	}
 	
 	public FabricLayer getLayer(int index) {
