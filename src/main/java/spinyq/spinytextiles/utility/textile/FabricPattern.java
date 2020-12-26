@@ -1,5 +1,6 @@
 package spinyq.spinytextiles.utility.textile;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -19,6 +20,9 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 	
 	// An ordered list of the fabric layers
 	private final ImmutableList<Supplier<FabricLayer>> layers;
+	// If all the layers of a fabric are the same color, this is the
+	// pattern that this fabric pattern "reduces" to
+	private final Optional<Supplier<FabricPattern>> monochromePattern;
 	private String translationKey;
 
 	public Stream<FabricLayer> getLayerStream() {
@@ -37,13 +41,20 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 		return layers.get(index).get();
 	}
 
-	private FabricPattern(ImmutableList<Supplier<FabricLayer>> layers) {
+	private FabricPattern(ImmutableList<Supplier<FabricLayer>> layers,
+			Optional<Supplier<FabricPattern>> monochromePattern) {
 		this.layers = layers;
+		this.monochromePattern = monochromePattern;
+	}
+	
+	@SafeVarargs
+	public FabricPattern(Supplier<FabricPattern> monochromePattern, Supplier<FabricLayer>...layers) {
+		this(ImmutableList.copyOf(layers), Optional.of(monochromePattern));
 	}
 	
 	@SafeVarargs
 	public FabricPattern(Supplier<FabricLayer>...layers) {
-		this(ImmutableList.copyOf(layers));
+		this(ImmutableList.copyOf(layers), Optional.empty());
 	}
 	
 	/**
@@ -61,6 +72,10 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 	 */
 	public String getDescriptionTranslationKey() {
 		return getTranslationKey() + ".description";
+	}
+
+	public Optional<FabricPattern> getMonochromePattern() {
+		return monochromePattern.map(Supplier::get);
 	}
 
 }
