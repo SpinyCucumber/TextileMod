@@ -28,7 +28,7 @@ public class ModFabricPatterns {
 	public static void createRegistries(RegistryEvent.NewRegistry event) {
 		// Create registry
 		new RegistryBuilder<FabricPattern>().setType(FabricPattern.class)
-				.setName(new ResourceLocation(TextileMod.MODID, "fabric_pattern"))
+				.setName(new ResourceLocation(TextileMod.MODID, "fabricpattern"))
 				.create();
 		// Hook up deferred register
 		FABRIC_PATTERNS.register(FMLJavaModLoadingContext.get().getModEventBus());
