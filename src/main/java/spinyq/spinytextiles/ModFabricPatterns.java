@@ -27,7 +27,12 @@ public class ModFabricPatterns {
 			DIAGONAL_STRIPES = FABRIC_PATTERNS.register("diagonal_stripes",
 					() -> new FabricPattern(SOLID, ModFabricLayers.BASE, ModFabricLayers.DIAGONAL_STRIPES)),
 			DOTS = FABRIC_PATTERNS.register("dots",
-					() -> new FabricPattern(SOLID, ModFabricLayers.BASE, ModFabricLayers.DOTS));
+					() -> new FabricPattern(SOLID, ModFabricLayers.BASE, ModFabricLayers.DOTS)),
+			GINGHAM = FABRIC_PATTERNS.register("gingham",
+					() -> new FabricPattern(SOLID,
+							ModFabricLayers.BASE,
+							ModFabricLayers.HORIZONTAL_STRIPES_TRANSLUCENT,
+							ModFabricLayers.VERTICAL_STRIPES_TRANSLUCENT));
 
 	@SubscribeEvent
 	public static void createRegistries(RegistryEvent.NewRegistry event) {
