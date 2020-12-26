@@ -32,7 +32,9 @@ public class ModFabricPatterns {
 					() -> new FabricPattern(SOLID,
 							ModFabricLayers.BASE,
 							ModFabricLayers.HORIZONTAL_STRIPES_TRANSLUCENT,
-							ModFabricLayers.VERTICAL_STRIPES_TRANSLUCENT));
+							ModFabricLayers.VERTICAL_STRIPES_TRANSLUCENT)),
+			CHECKERBOARD = FABRIC_PATTERNS.register("checkerboard",
+					() -> new FabricPattern(SOLID, ModFabricLayers.BASE, ModFabricLayers.CHECKERBOARD));
 
 	@SubscribeEvent
 	public static void createRegistries(RegistryEvent.NewRegistry event) {

@@ -91,6 +91,7 @@
 	"fabricpattern.spinytextiles.diagonal_stripes.description": "Diagonal Striped",
 	"fabricpattern.spinytextiles.dots.description": "Dotted",
 	"fabricpattern.spinytextiles.gingham.description": "Gingham",
+	"fabricpattern.spinytextiles.checkerboard.description": "Checkered",
 
     "fabriclayer.spinytextiles.base": "Base",
     "fabriclayer.spinytextiles.horizontal_stripes": "Horizontal Stripes",
@@ -99,6 +100,7 @@
     "fabriclayer.spinytextiles.vertical_stripes_translucent": "Vertical Stripes",
     "fabriclayer.spinytextiles.diagonal_stripes": "Diagonal Stripes",
     "fabriclayer.spinytextiles.dots": "Dots",
+    "fabriclayer.spinytextiles.checkerboard": "Checkerboard",
 
     "item.spinytextiles.fabric": "%s Fabric",
     "item.spinytextiles.fabric.color_info": "%s: %s", 
