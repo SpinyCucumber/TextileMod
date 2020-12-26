@@ -25,7 +25,7 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 		return layers.stream().map(Supplier::get);
 	}
 	
-	public IntStream getIndexStream() {
+	public IntStream getLayerIndexStream() {
 		return IntStream.range(0, layers.size());
 	}
 	

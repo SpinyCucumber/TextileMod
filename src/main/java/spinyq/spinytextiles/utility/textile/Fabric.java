@@ -33,6 +33,10 @@ public class Fabric implements IGarmentComponent {
 		colors.put(layer, color);
 	}
 	
+	public void setColor(int index, RYBKColor color) {
+		setColor(pattern.getLayer(index), color);
+	}
+	
 	public RYBKColor getColor(FabricLayer layer) {
 		return colors.get(layer);
 	}
@@ -61,7 +65,7 @@ public class Fabric implements IGarmentComponent {
 		pattern = NBTHelper.getRegistryEntry(nbt, TAG_PATTERN, PATTERN_REGISTRY);
 		// Retrieve the colors
 		List<RYBKColor> colorList = NBTHelper.getCollection(ArrayList::new, RYBKColor::new, nbt, TAG_COLORS);
-		pattern.getIndexStream().forEach(
+		pattern.getLayerIndexStream().forEach(
 				(index) -> colors.put(pattern.getLayer(index), colorList.get(index)));
 	}
 

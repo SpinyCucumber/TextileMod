@@ -47,7 +47,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 	private static final ImmutableList<RYBKColor> DEFAULT_COLORS = ImmutableList.of(new RYBKColor(0f, 0f, 0f, 0f),
 			new RYBKColor(0f, 0f, 1f, 0.5f));
 	
-	private Map<String, CalculatedValue<ColorWord>> closestColorWordMap = new HashMap<>();
+	private Map<Integer, CalculatedValue<ColorWord>> closestColorWordMap = new HashMap<>();
 	// The costs to dye/bleach a fabric item, applied for each layer
 	private int layerDyeCost = 1, layerBleachCost = 1;
 	
@@ -146,7 +146,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		boolean success = false;
 		// Iterate over each layer in the pattern
 		FabricPattern pattern = fabric.getPattern();
-		for (String layer : pattern.getLayers()) {
+		pattern.getLayerStream().forEach((layer) -> {
 			// Get current color of layer
 			// Subtract from each component of current color to get new color
 			RYBKColor oldColor = fabric.getColor(layer);
@@ -162,7 +162,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 				// so we know to recalculate it
 				getClosestColorWord(layer).markDirty(stack.getStack());
 			}
-		}
+		});
 		// If we successfully bleached a layer, create a new itemstack
 		// with the updated fabric info and give it to the player
 		if (success) {
@@ -212,22 +212,22 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 	// We use CalculatedValue because it automatically caches the value for us,
 	// so we don't have to recompute it each time, as determining the
 	// closest color is a slightly expensive operation.
-	private CalculatedValue<ColorWord> getClosestColorWord(String layer) {
+	private CalculatedValue<ColorWord> getClosestColorWord(int layerIndex) {
 		// Try to look up our calculated value.
 		// If it doesn't exist, we have to create it.
 		// We also store it in the cache after creating it.
-		CalculatedValue<ColorWord> value = closestColorWordMap.get(layer);
+		CalculatedValue<ColorWord> value = closestColorWordMap.get(layerIndex);
 		if (value == null) {
-			String tag = StringUtils.capitalize(layer) + "ColorWord";
+			String tag = "ColorWord" + String.valueOf(layerIndex);
 			value = NBTHelper.createCalculatedEnumValue(
 					tag, ColorWord.class,
 					(item) -> {
 						// Get color of layer, then get closest color word to color
 						Fabric fabric = getFabric(item);
-						return ColorWord.getClosest(fabric.getColor(layer));
+						return ColorWord.getClosest(fabric.getColor(layerIndex));
 					});
 			// Store the calculated value in our map
-			closestColorWordMap.put(layer, value);
+			closestColorWordMap.put(layerIndex, value);
 		}
 		// Finally, use the calculated value to retrieve the closest color word
 		return value;
@@ -238,12 +238,10 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		Fabric fabric = new Fabric(pattern);
 		// For every layer in the pattern, make the fabric use a default color
 		// If there are more layers than colors cycle through the colors
-		int i = 0;
-		for (String layer : pattern.getLayers()) {
-			RYBKColor color = DEFAULT_COLORS.get(i % DEFAULT_COLORS.size()).copy();
-			fabric.setColor(layer, color);
-			i++;
-		}
+		pattern.getLayerIndexStream().forEach((layerIndex) -> {
+			RYBKColor color = DEFAULT_COLORS.get(layerIndex % DEFAULT_COLORS.size()).copy();
+			fabric.setColor(layerIndex, color);
+		});
 		// Construct a new itemstack and set the fabric
 		ItemStack item = new ItemStack(this);
 		setFabric(item, fabric);

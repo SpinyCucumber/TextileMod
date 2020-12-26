@@ -149,12 +149,12 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 			// Construct the list of layers
 			// A template is applied to each layer to create the look of a fabric item.
 			// For each layer, we also some "detail" quads for some added style.
-			return pattern.getIndexStream()
-					.mapToObj((index) -> {
-						Material texture = pattern.getLayer(index).getTexture();
+			return pattern.getLayerIndexStream()
+					.mapToObj((layerIndex) -> {
+						Material texture = pattern.getLayer(layerIndex).getTexture();
 						return Stream.of(
-								new TemplateLayer(texture, getTemplateTexture(owner), index),
-								new TemplateLayer(getDetailTexture(owner), texture, index));
+								new TemplateLayer(texture, getTemplateTexture(owner), layerIndex),
+								new TemplateLayer(getDetailTexture(owner), texture, layerIndex));
 					})
 					.flatMap(Function.identity())
 					.collect(Collectors.toList());
