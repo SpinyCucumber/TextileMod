@@ -45,7 +45,9 @@ public class Fabric implements IGarmentComponent {
 			if (newPattern.isPresent()) {
 				// Create a new fabric with the new pattern, with all colors
 				// set to the monochrome color
-				Fabric fabric = new Fabric(newPattern);
+				Fabric fabric = new Fabric(newPattern.get());
+				fabric.setColor(monochrome.get());
+				return fabric;
 			}
 		}
 		return this;
@@ -65,6 +67,14 @@ public class Fabric implements IGarmentComponent {
 	
 	public RYBKColor getLayerColor(int index) {
 		return getLayerColor(pattern.getLayer(index));
+	}
+	
+	/**
+	 * Sets all layers of this fabric to the given color.
+	 * @param color The new color
+	 */
+	public void setColor(RYBKColor color) {
+		pattern.getLayerStream().forEach((layer) -> setLayerColor(layer, color));
 	}
 
 	@Override
