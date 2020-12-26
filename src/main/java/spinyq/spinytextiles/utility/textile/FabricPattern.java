@@ -1,5 +1,8 @@
 package spinyq.spinytextiles.utility.textile;
 
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
 import com.google.common.collect.ImmutableList;
 
 import net.minecraft.util.Util;
@@ -7,26 +10,30 @@ import net.minecraft.util.Util;
 /**
  * A pattern used to make fabric in the loom.
  * Consists of multiple layers, represented by a name.
- * FabricTextureManager maps each layer to a texture.
- * FabricInfo represents a single "fabric" and additionally assigns a color to each layer.
+ * Fabric represents a single "fabric" and additionally assigns a color to each layer.
  * @author Elijah Hilty
  *
  */
 public class FabricPattern extends AbstractPattern<FabricPattern> {
 	
 	// An ordered list of the fabric layers
-	private final ImmutableList<String> layers;
+	private final ImmutableList<Supplier<FabricLayer>> layers;
 	private String translationKey;
 
-	public ImmutableList<String> getLayers() {
-		return layers;
+	public Stream<FabricLayer> getLayerStream() {
+		return layers.stream().map(Supplier::get);
+	}
+	
+	public FabricLayer getLayer(int index) {
+		return layers.get(index).get();
 	}
 
-	private FabricPattern(ImmutableList<String> layers) {
+	private FabricPattern(ImmutableList<Supplier<FabricLayer>> layers) {
 		this.layers = layers;
 	}
 	
-	public FabricPattern(String...layers) {
+	@SafeVarargs
+	public FabricPattern(Supplier<FabricLayer>...layers) {
 		this(ImmutableList.copyOf(layers));
 	}
 	
@@ -45,10 +52,6 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 	 */
 	public String getDescriptionTranslationKey() {
 		return getTranslationKey() + ".description";
-	}
-	
-	public String getLayerTranslationKey(String layer) {
-		return "fabriclayer." + layer;
 	}
 
 }
