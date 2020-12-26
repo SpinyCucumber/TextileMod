@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import net.minecraft.client.util.ITooltipFlag;
@@ -47,6 +48,9 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 			new RYBKColor(0f, 0f, 1f, 0.5f));
 	
 	private Map<String, CalculatedValue<ColorWord>> closestColorWordMap = new HashMap<>();
+	// The costs to dye/bleach a fabric item, applied for each layer
+	private int layerDyeCost = 1, layerBleachCost = 1;
+	
 	public Fabric getFabric(ItemStack stack) {
 		return NBTHelper.getOrNull(Fabric::new, stack.getOrCreateTag(), FABRIC_TAG);
 	}
@@ -93,18 +97,82 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 			}, this);
 	}
 	
+	// TODO Possible improvement: For both dyeing and bleaching, combine consecutive layers
+	// into a single layer if they have the same color. There would be a list of rules about
+	// what kind of layers can do this, but it would make sense from a user perspective.
+	// When layers are combined, we would need to find a pattern that matches the new list of layers.
 	@Override
-	public boolean dye(ContainedItemStack<PlayerInventory> object, IDyeProvider provider) {
-		// TODO Auto-generated method stub
-		// Make sure to mark color words as dirty if applicable
-		return false;
+	public boolean dye(ContainedItemStack<PlayerInventory> stack, IDyeProvider provider) {
+		// Only attempt to dye if we have fabric info attached
+		Fabric fabric = getFabric(stack.getStack());
+		if (fabric == null) return false;
+		boolean success = false;
+		// Iterate over each layer in the pattern
+		FabricPattern pattern = fabric.getPattern();
+		for (String layer : pattern.getLayers()) {
+			// Get current color of layer
+			// Add dye color to existing color to get new color of layer
+			RYBKColor oldColor = fabric.getColor(layer);
+			RYBKColor newColor = provider.getColor().plus(oldColor).clamp();
+			// Skip layer if new color didn't change
+			if (Objects.equal(oldColor, newColor)) continue;
+			// Attempt to pay for dye
+			// If the provider has enough dye, proceed to dye the layer
+			if (provider.drain(layerDyeCost)) {
+				fabric.setColor(layer, newColor);
+				success = true;
+				// Also mark the layer's closest color word as dirty,
+				// so we know to recalculate it
+				getClosestColorWord(layer).markDirty(stack.getStack());
+			}
+		}
+		// If we successfully dyed a layer, create a new itemstack
+		// with the updated fabric info and give it to the player
+		if (success) {
+			// Only dye one item at a time
+			ItemStack dyedFabricItem = stack.getStack().split(1);
+			setFabric(dyedFabricItem, fabric);
+			stack.getInventory().addItemStackToInventory(dyedFabricItem);
+		}
+		// Return whether we were successful
+		return success;
 	}
 
 	@Override
-	public boolean bleach(ContainedItemStack<PlayerInventory> object, IBleachProvider provider) {
-		// TODO Auto-generated method stub
-		// Make sure to mark color words as dirty if applicable
-		return false;
+	public boolean bleach(ContainedItemStack<PlayerInventory> stack, IBleachProvider provider) {
+		// Only attempt to bleach if we have fabric info attached
+		Fabric fabric = getFabric(stack.getStack());
+		if (fabric == null) return false;
+		boolean success = false;
+		// Iterate over each layer in the pattern
+		FabricPattern pattern = fabric.getPattern();
+		for (String layer : pattern.getLayers()) {
+			// Get current color of layer
+			// Subtract from each component of current color to get new color
+			RYBKColor oldColor = fabric.getColor(layer);
+			RYBKColor newColor = oldColor.minus(new RYBKColor(provider.getBleachLevel())).clamp();
+			// Skip layer if new color didn't change
+			if (Objects.equal(oldColor, newColor)) continue;
+			// Attempt to pay for bleach
+			// If the provider has enough bleach, proceed to bleach the layer
+			if (provider.drain(layerBleachCost)) {
+				fabric.setColor(layer, newColor);
+				success = true;
+				// Also mark the layer's closest color word as dirty,
+				// so we know to recalculate it
+				getClosestColorWord(layer).markDirty(stack.getStack());
+			}
+		}
+		// If we successfully bleached a layer, create a new itemstack
+		// with the updated fabric info and give it to the player
+		if (success) {
+			// Only bleach one item at a time
+			ItemStack bleachedFabricItem = stack.getStack().split(1);
+			setFabric(bleachedFabricItem, fabric);
+			stack.getInventory().addItemStackToInventory(bleachedFabricItem);
+		}
+		// Return whether we were successful
+		return success;
 	}
 	
 	@Override
@@ -116,6 +184,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		}
 	}
 	
+	// Adds additional information to the fabric item's tooltip
 	@Override
 	@OnlyIn(Dist.CLIENT)
 	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
@@ -128,7 +197,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 			FabricPattern pattern = fabric.getPattern();
 			String colorInfoTranslationKey = getTranslationKey() + ".color_info";
 			for (String layer : pattern.getLayers()) {
-				ColorWord closestColorWord = getClosestColorWord(stack, layer);
+				ColorWord closestColorWord = getClosestColorWord(layer).get(stack);
 				// Construct tooltip line
 				// We pass the layer's name and the color's name as parameters
 				tooltip.add(new TranslationTextComponent(colorInfoTranslationKey,
@@ -143,7 +212,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 	// We use CalculatedValue because it automatically caches the value for us,
 	// so we don't have to recompute it each time, as determining the
 	// closest color is a slightly expensive operation.
-	private ColorWord getClosestColorWord(ItemStack stack, String layer) {
+	private CalculatedValue<ColorWord> getClosestColorWord(String layer) {
 		// Try to look up our calculated value.
 		// If it doesn't exist, we have to create it.
 		// We also store it in the cache after creating it.
@@ -161,7 +230,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 			closestColorWordMap.put(layer, value);
 		}
 		// Finally, use the calculated value to retrieve the closest color word
-		return value.get(stack);
+		return value;
 	}
 
 	private ItemStack createDefaultFabricItem(FabricPattern pattern) {
