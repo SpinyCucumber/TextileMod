@@ -23,7 +23,7 @@ public class FabricLayer extends ForgeRegistryEntry<FabricLayer> {
 	public Material getTexture() {
 		// Construct new resource location then create material
 		ResourceLocation textureLocation = new ResourceLocation(
-				getRegistryName().getNamespace(), "fabric/" + getRegistryName().getPath());
+				getRegistryName().getNamespace(), "fabriclayer/" + getRegistryName().getPath());
 		return new Material(ATLAS_LOCATION, textureLocation);
 	}
 	
