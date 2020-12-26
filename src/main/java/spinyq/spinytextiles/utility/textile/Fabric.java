@@ -2,13 +2,15 @@ package spinyq.spinytextiles.utility.textile;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -18,6 +20,8 @@ import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 
 public class Fabric implements IGarmentComponent {
 
+	private static final Logger LOGGER = LogManager.getLogger();
+	
 	private static final String TAG_PATTERN = "Pattern", TAG_COLORS = "Colors";
 	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
 	
@@ -33,8 +37,10 @@ public class Fabric implements IGarmentComponent {
 	}
 	
 	public Fabric reduceColors() {
+		LOGGER.info("Reducing colors...");
 		// Determine if the fabric is monochrome
 		Optional<RYBKColor> monochrome = getMonochrome();
+		LOGGER.info("Monochrome: {}", monochrome);
 		// If the fabric is monochrome, look up what pattern we should
 		// switch to using the fabric pattern
 		// Otherwise simply return the same fabric
@@ -42,6 +48,7 @@ public class Fabric implements IGarmentComponent {
 			// Only construct a new fabric if the fabric pattern
 			// supports it
 			Optional<FabricPattern> newPattern = pattern.getMonochromePattern();
+			LOGGER.info("New pattern: {}", newPattern.map(FabricPattern::getRegistryName));
 			if (newPattern.isPresent()) {
 				// Create a new fabric with the new pattern, with all colors
 				// set to the monochrome color
@@ -133,12 +140,16 @@ public class Fabric implements IGarmentComponent {
 	 * this method returns that color.
 	 */
 	private Optional<RYBKColor> getMonochrome() {
-		Stream<RYBKColor> colorStream = pattern.getLayerStream().map(this::getLayerColor);
+		Iterator<RYBKColor> colorIterator = pattern.getLayerStream()
+				.map(this::getLayerColor)
+				.iterator();
 		// Get the first color
-		RYBKColor toMatch = colorStream.findFirst().get();
+		RYBKColor toMatch = colorIterator.next();
 		// If any other color doesn't match the first color, fail
 		// Otherwise return the color
-		if (!colorStream.allMatch(Predicate.isEqual(toMatch))) return Optional.empty();
+		while (colorIterator.hasNext()) {
+			if (!Objects.equals(toMatch, colorIterator.next())) return Optional.empty();
+		}
 		return Optional.of(toMatch);
 	}
 
