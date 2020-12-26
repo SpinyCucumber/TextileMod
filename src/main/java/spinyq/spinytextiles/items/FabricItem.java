@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
@@ -88,10 +86,8 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 				// Only return a color if the fabric info is non-null
 				// If it is null, return -1 (white)
 				if (fabric != null) {
-					// Look up the layer name using the tint index
-					String layer = fabric.getPattern().getLayers().get(tintIndex);
-					// Use the layer name to get the color
-					return fabric.getColor(layer).toRGB(new RGBColor(), null).toInt();
+					// Look up the color using the tint index
+					return fabric.getColor(tintIndex).toRGB(new RGBColor(), null).toInt();
 				}
 				return -1;
 			}, this);
@@ -109,21 +105,21 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		boolean success = false;
 		// Iterate over each layer in the pattern
 		FabricPattern pattern = fabric.getPattern();
-		for (String layer : pattern.getLayers()) {
+		for (int layerIndex = 0; layerIndex < pattern.getMaxLayerIndex(); layerIndex++) {
 			// Get current color of layer
 			// Add dye color to existing color to get new color of layer
-			RYBKColor oldColor = fabric.getColor(layer);
+			RYBKColor oldColor = fabric.getColor(layerIndex);
 			RYBKColor newColor = provider.getColor().plus(oldColor).clamp();
 			// Skip layer if new color didn't change
 			if (Objects.equal(oldColor, newColor)) continue;
 			// Attempt to pay for dye
 			// If the provider has enough dye, proceed to dye the layer
 			if (provider.drain(layerDyeCost)) {
-				fabric.setColor(layer, newColor);
-				success = true;
+				fabric.setColor(layerIndex, newColor);
+				success = Boolean.FALSE;
 				// Also mark the layer's closest color word as dirty,
 				// so we know to recalculate it
-				getClosestColorWord(layer).markDirty(stack.getStack());
+				getClosestColorWord(layerIndex).markDirty(stack.getStack());
 			}
 		}
 		// If we successfully dyed a layer, create a new itemstack
@@ -146,23 +142,23 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		boolean success = false;
 		// Iterate over each layer in the pattern
 		FabricPattern pattern = fabric.getPattern();
-		pattern.getLayerStream().forEach((layer) -> {
+		for (int layerIndex = 0; layerIndex < pattern.getMaxLayerIndex(); layerIndex++) {
 			// Get current color of layer
 			// Subtract from each component of current color to get new color
-			RYBKColor oldColor = fabric.getColor(layer);
+			RYBKColor oldColor = fabric.getColor(layerIndex);
 			RYBKColor newColor = oldColor.minus(new RYBKColor(provider.getBleachLevel())).clamp();
 			// Skip layer if new color didn't change
 			if (Objects.equal(oldColor, newColor)) continue;
 			// Attempt to pay for bleach
 			// If the provider has enough bleach, proceed to bleach the layer
 			if (provider.drain(layerBleachCost)) {
-				fabric.setColor(layer, newColor);
+				fabric.setColor(layerIndex, newColor);
 				success = true;
 				// Also mark the layer's closest color word as dirty,
 				// so we know to recalculate it
-				getClosestColorWord(layer).markDirty(stack.getStack());
+				getClosestColorWord(layerIndex).markDirty(stack.getStack());
 			}
-		});
+		}
 		// If we successfully bleached a layer, create a new itemstack
 		// with the updated fabric info and give it to the player
 		if (success) {
@@ -196,15 +192,15 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 			// Use the closest color word to create a translation text component
 			FabricPattern pattern = fabric.getPattern();
 			String colorInfoTranslationKey = getTranslationKey() + ".color_info";
-			for (String layer : pattern.getLayers()) {
-				ColorWord closestColorWord = getClosestColorWord(layer).get(stack);
+			pattern.getLayerIndexStream().forEach((layerIndex) -> {
+				ColorWord closestColorWord = getClosestColorWord(layerIndex).get(stack);
 				// Construct tooltip line
 				// We pass the layer's name and the color's name as parameters
 				tooltip.add(new TranslationTextComponent(colorInfoTranslationKey,
-						new TranslationTextComponent(pattern.getLayerTranslationKey(layer)),
+						new TranslationTextComponent(pattern.getLayer(layerIndex).getTranslationKey()),
 						new TranslationTextComponent(closestColorWord.getTranslationKey()))
 						.applyTextStyles(TextFormatting.GRAY));
-			}
+			});
 		}
 	}
 

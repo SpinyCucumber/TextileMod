@@ -29,6 +29,10 @@ public class FabricPattern extends AbstractPattern<FabricPattern> {
 		return IntStream.range(0, layers.size());
 	}
 	
+	public int getMaxLayerIndex() {
+		return layers.size();
+	}
+	
 	public FabricLayer getLayer(int index) {
 		return layers.get(index).get();
 	}
