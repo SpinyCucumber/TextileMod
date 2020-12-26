@@ -148,7 +148,7 @@ public class Fabric implements IGarmentComponent {
 		// If any other color doesn't match the first color, fail
 		// Otherwise return the color
 		while (colorIterator.hasNext()) {
-			if (!Objects.equals(toMatch, colorIterator.next())) return Optional.empty();
+			if (!toMatch.equalsRGB(colorIterator.next())) return Optional.empty();
 		}
 		return Optional.of(toMatch);
 	}

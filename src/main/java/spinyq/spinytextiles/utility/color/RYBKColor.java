@@ -270,6 +270,15 @@ public class RYBKColor implements INBTSerializable<IntNBT> {
 		return this;
 	}
 	
+	/**
+	 * Checks whether the RGB rendering of this color
+	 * matches the RGB rendering of another.
+	 * @param other The other RYBK color
+	 */
+	public boolean equalsRGB(RYBKColor other) {
+		return toRGB(new RGBColor(), null).equals(other.toRGB(new RGBColor(), null));
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
