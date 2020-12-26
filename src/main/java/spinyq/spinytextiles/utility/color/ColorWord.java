@@ -17,28 +17,27 @@ public enum ColorWord {
 	BROWN(new RYBKColor(1.0f, 1.0f, 1.0f, 0.0f));
 
 	public final RYBKColor color;
+	private String translationKey;
 
 	private ColorWord(RYBKColor color) {
 		this.color = color;
 	}
 
 	/**
-	 * Returns a friendly name.
-	 * 
-	 * @return
+	 * Returns a translation key which can be translated
+	 * to the name of this color.
 	 */
-	public String getName() {
-		return this.toString().toLowerCase();
+	public String getTranslationKey() {
+		if (translationKey == null) translationKey = "color." + toString().toLowerCase();
+		return translationKey;
 	}
 	
 	/**
 	 * Returns a translation key which can be
 	 * used to describe the color an object.
-	 * This isn't applicable in all languages.
-	 * @return
 	 */
-	public String getTranslationKey() {
-		return "color.spinytextiles." + getName();
+	public String getDescriptionTranslationKey() {
+		return getTranslationKey() + ".description";
 	}
 
 	public static ColorWord getClosest(RYBKColor to) {
