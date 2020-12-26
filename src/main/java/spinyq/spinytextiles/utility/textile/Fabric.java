@@ -145,10 +145,14 @@ public class Fabric implements IGarmentComponent {
 				.iterator();
 		// Get the first color
 		RYBKColor toMatch = colorIterator.next();
+		LOGGER.info("Color to match: {}", toMatch);
 		// If any other color doesn't match the first color, fail
 		// Otherwise return the color
 		while (colorIterator.hasNext()) {
-			if (!toMatch.equalsRGB(colorIterator.next())) return Optional.empty();
+			RYBKColor next = colorIterator.next();
+			boolean match = toMatch.equalsRGB(next);
+			LOGGER.info("Comparing: {} Match: {}", next, match);
+			if (!match) return Optional.empty();
 		}
 		return Optional.of(toMatch);
 	}
