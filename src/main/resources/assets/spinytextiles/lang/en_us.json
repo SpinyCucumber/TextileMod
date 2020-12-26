@@ -91,9 +91,11 @@
 	"fabricpattern.spinytextiles.diagonal_stripes.description": "Diagonal Striped",
 	"fabricpattern.spinytextiles.dots.description": "Dotted",
 
-    "fabriclayer.base": "Base",
-    "fabriclayer.stripes": "Stripes",
-    "fabriclayer.dots": "Dots",
+    "fabriclayer.spinytextiles.base": "Base",
+    "fabriclayer.spinytextiles.horizontal_stripes": "Stripes",
+    "fabriclayer.spinytextiles.vertical_stripes": "Stripes",
+    "fabriclayer.spinytextiles.diagonal_stripes": "Stripes",
+    "fabriclayer.spinytextiles.dots": "Dots",
 
     "item.spinytextiles.fabric": "%s Fabric",
     "item.spinytextiles.fabric.color_info": "%s: %s", 
