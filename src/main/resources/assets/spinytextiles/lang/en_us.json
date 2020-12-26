@@ -94,6 +94,8 @@
     "fabriclayer.spinytextiles.base": "Base",
     "fabriclayer.spinytextiles.horizontal_stripes": "Stripes",
     "fabriclayer.spinytextiles.vertical_stripes": "Stripes",
+    "fabriclayer.spinytextiles.horizontal_stripes_translucent": "Stripes",
+    "fabriclayer.spinytextiles.vertical_stripes_translucent": "Stripes",
     "fabriclayer.spinytextiles.diagonal_stripes": "Stripes",
     "fabriclayer.spinytextiles.dots": "Dots",
 

@@ -21,6 +21,8 @@ public class ModFabricLayers {
 	public static final RegistryObject<FabricLayer> BASE = FABRIC_LAYERS.register("base", FabricLayer::new),
 			HORIZONTAL_STRIPES = FABRIC_LAYERS.register("horizontal_stripes", FabricLayer::new),
 			VERTICAL_STRIPES = FABRIC_LAYERS.register("vertical_stripes", FabricLayer::new),
+			HORIZONTAL_STRIPES_TRANSLUCENT = FABRIC_LAYERS.register("horizontal_stripes_translucent", FabricLayer::new),
+			VERTICAL_STRIPES_TRANSLUCENT = FABRIC_LAYERS.register("vertical_stripes_translucent", FabricLayer::new),
 			DIAGONAL_STRIPES = FABRIC_LAYERS.register("diagonal_stripes", FabricLayer::new),
 			DOTS = FABRIC_LAYERS.register("dots", FabricLayer::new);
 
