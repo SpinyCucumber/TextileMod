@@ -18,7 +18,7 @@ import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 
-public class Fabric implements IGarmentComponent {
+public class Fabric implements IClothingComponent {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 	

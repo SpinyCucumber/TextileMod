@@ -10,7 +10,7 @@ import spinyq.spinytextiles.utility.color.RYBKColor;
  * @author Elijah Hilty
  *
  */
-public class Fiber implements IGarmentComponent {
+public class Fiber implements IClothingComponent {
 	
 	private static final String COLOR_TAG = "Color", AMOUNT_TAG = "Amount";
 	
