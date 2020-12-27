@@ -37,10 +37,10 @@ public class Fabric implements IClothingComponent {
 	}
 	
 	public Fabric reduceColors() {
-		LOGGER.info("Reducing colors...");
+		LOGGER.trace("Reducing colors...");
 		// Determine if the fabric is monochrome
 		Optional<RYBKColor> monochrome = getMonochrome();
-		LOGGER.info("Monochrome: {}", monochrome);
+		LOGGER.trace("Monochrome: {}", monochrome);
 		// If the fabric is monochrome, look up what pattern we should
 		// switch to using the fabric pattern
 		// Otherwise simply return the same fabric
@@ -48,7 +48,7 @@ public class Fabric implements IClothingComponent {
 			// Only construct a new fabric if the fabric pattern
 			// supports it
 			Optional<FabricPattern> newPattern = pattern.getMonochromePattern();
-			LOGGER.info("New pattern: {}", newPattern.map(FabricPattern::getRegistryName));
+			LOGGER.trace("New pattern: {}", newPattern.map(FabricPattern::getRegistryName));
 			if (newPattern.isPresent()) {
 				// Create a new fabric with the new pattern, with all colors
 				// set to the monochrome color
@@ -145,13 +145,13 @@ public class Fabric implements IClothingComponent {
 				.iterator();
 		// Get the first color
 		RYBKColor toMatch = colorIterator.next();
-		LOGGER.info("Color to match: {}", toMatch);
+		LOGGER.trace("Color to match: {}", toMatch);
 		// If any other color doesn't match the first color, fail
 		// Otherwise return the color
 		while (colorIterator.hasNext()) {
 			RYBKColor next = colorIterator.next();
 			boolean match = toMatch.equalsRGB(next);
-			LOGGER.info("Comparing: {} Match: {}", next, match);
+			LOGGER.trace("Comparing: {} Match: {}", next, match);
 			if (!match) return Optional.empty();
 		}
 		return Optional.of(toMatch);
