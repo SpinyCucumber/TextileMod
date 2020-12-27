@@ -15,6 +15,7 @@
 - [ ] TemplateItemModel rewrite
 - [ ] Proper versioning
 - [x] Fabric Item
+	- [ ] IMPROVEMENT Allow changing RenderType to allow translucent textures in the GUI and using seperate atlas textures
 	- [x] Create FabricLayer object
 	- [x] Ability to dye and bleach
 	- [x] More info on tooltips
