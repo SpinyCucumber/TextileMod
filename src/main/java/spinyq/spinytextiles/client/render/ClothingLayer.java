@@ -28,6 +28,7 @@ public class ClothingLayer<T extends LivingEntity, M extends BipedModel<T>> exte
 	// This handles attaching the ClotherLayer to all of the player renderers.
 	@SubscribeEvent
 	public static void onClientSetup(FMLClientSetupEvent event) {
+		LOGGER.info("Creating ClothingLayer renderers...");
 		// Retrieve the entity renderer manager
 		EntityRendererManager renderManager = event.getMinecraftSupplier().get().getRenderManager();
 		// For each player renderer, attach a new clothing layer
@@ -44,7 +45,9 @@ public class ClothingLayer<T extends LivingEntity, M extends BipedModel<T>> exte
 	public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T entitylivingbaseIn,
 			float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw,
 			float headPitch) {
-		LOGGER.info("Rendering!");
+		// TODO Check if each of the entity's equipped items is a ClothingItem.
+		// Then, for each clothing item, get the appropriate model using a class such as
+		// ClothingModelManager.
 	}
 
 }
