@@ -1,10 +1,10 @@
 package spinyq.spinytextiles.items;
 
-import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.ITextComponent;
 
 public class ClothingItem extends Item {
 
@@ -13,12 +13,15 @@ public class ClothingItem extends Item {
 	}
 
 	@Override
-	public <A extends BipedModel<?>> A getArmorModel(LivingEntity entityLiving, ItemStack itemStack,
-			EquipmentSlotType armorSlot, A _default) {
-		// TODO Auto-generated method stub
-		// Should look up a model from a cache
-		// Could cache models based on garment pattern and minimum number of quad layers?
-		return super.getArmorModel(entityLiving, itemStack, armorSlot, _default);
+	public boolean canEquip(ItemStack stack, EquipmentSlotType armorType, Entity entity) {
+		// TODO
+		return super.canEquip(stack, armorType, entity);
+	}
+
+	@Override
+	public ITextComponent getDisplayName(ItemStack stack) {
+		// TODO
+		return super.getDisplayName(stack);
 	}
 	
 }

@@ -39,11 +39,12 @@
 	- https://github.com/MinecraftForge/MinecraftForge/blob/1.15.x/src/main/resources/assets/forge/models/item/bucket.json
 	- https://github.com/MinecraftForge/MinecraftForge/src/test/java/net/minecraftforge/debug/client/model/NewModelLoaderTest.java
 - [ ] Clothing
-	- [ ] Model loading and caching
+	- [ ] Clothing items
+		- We will also have to handle rendering of clothing items. Since it's difficult to change item model textures on-the-fly, we might have to go with a cache approach. Either that, or find away to change textures. Either way, we will probably have a ClothingItemModel class.
+	- [ ] Model loading
 		- We can load block models from files and mark them to be registered using modelmanager. This can be done by creating an IFutureReloadListener, and hooking it up to Minecraft. It's not clear whether block models can support changing textures, however.
 		- We should definitely cache models using some scheme. So we will probably need a ClothingModelManager class.
-		- If we can choose what textures the model uses at render-time, then we can generate just a few models
-		for each garment.
+		- If we can choose what textures the model uses at render-time, then we can generate just a few models for each garment.
 	- [ ] Clothing rendering
 		- Vanilla Minecraft renders armor using LivingRenderer and ArmorLayer. LivingRenderer has a list of LayerRenderers, which ArmorLayer extends. LayerRenderers are rendered in LivingRenderer's render method. LayerRenderers can be added to a LivingRenderer using LivingRenderer.addLayer. There is a single LivingRender for each type of player "skin", which refer to the different Alyx and Steve models. These can be accessed from EntityRendererManager, using getSkinMap(), which maps "skins" to player renderers.
 			- The PlayerRenderers are created during the EntityRendererManager constructor, which is called during the Minecraft constructor as The Minecraft instance has a single EntityRendererManager. It would probably be safe to attach more layer renderers during FMLClientSetup.
