@@ -44,6 +44,9 @@
 		- We might also be able to use ItemTileEntityRenderer, which allows items to define custom rendering. It looks like this can be specified using Item.Properties. This way, we could look up a clothing model and use the right textures whenever we are rendering a clothing item.
 	- [ ] Model loading
 		- We can load block models from files and mark them to be registered using modelmanager. This can be done by creating an IFutureReloadListener, and hooking it up to Minecraft. It's not clear whether block models can support changing textures, however.
+			- Block models declare a list of textures that can be used for different parts. Faces of parts declare a texture which can be either be a full resource location or an the name of one of the BlockModel's textures, preceded by a hash. These different formats are converted to a Material using BlockModel.resolveTextureName.
+			- Changing the UV coordinates of a model isn't easy, and it shouldn't really be done in the first place. Rather, we need to change what texture we use when rendering the model. This makes using atlas textures difficult. The other solution would be baking models for each combination of fabric layer and clothing, which would be infeasible for clothing with many parts, and seems like a waste of memory.
+			- Upon baking, a block model is turned into BakedQuads. These are constructed using a TextureAtlasSprite. TextureAtlasSprite doesn't actually control what texture is currently bound, so we could switch textures out. This feels hacky, however. BakedQuads are piped into IVertexConsumers using IForgeVertexBuilder.addVertexData for rendering.
 		- We should definitely cache models using some scheme. So we will probably need a ClothingModelManager class.
 		- If we can choose what textures the model uses at render-time, then we can generate just a few models for each garment.
 	- [ ] Clothing rendering
