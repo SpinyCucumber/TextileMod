@@ -39,8 +39,19 @@
 	- https://github.com/MinecraftForge/MinecraftForge/blob/1.15.x/src/main/resources/assets/forge/models/item/bucket.json
 	- https://github.com/MinecraftForge/MinecraftForge/src/test/java/net/minecraftforge/debug/client/model/NewModelLoaderTest.java
 - [ ] Clothing
-	- ArmorLayer might be a good place to start.
-	- Forge provides a method in Item called getArmorModel, which allows items to handle their own armor rendering. This could allow a "clothing" item to define its own model. Armor is rendered using a BipedModel. BipedModel defines its own geometry, but it could probably be subclassed.
+	- [ ] Model loading and caching
+		- We can load block models from files and mark them to be registered using modelmanager. This can be done by creating an IFutureReloadListener, and hooking it up to Minecraft. It's not clear whether block models can support changing textures, however.
+		- We should definitely cache models using some scheme. So we will probably need a ClothingModelManager class.
+		- If we can choose what textures the model uses at render-time, then we can generate just a few models
+		for each garment.
+	- [ ] Clothing rendering
+		- Vanilla Minecraft renders armor using LivingRenderer and ArmorLayer. LivingRenderer has a list of LayerRenderers, which ArmorLayer extends. LayerRenderers are rendered in LivingRenderer's render method. LayerRenderers can be added to a LivingRenderer using LivingRenderer.addLayer. There is a single LivingRender for each type of player "skin", which refer to the different Alyx and Steve models. These can be accessed from EntityRendererManager, using getSkinMap(), which maps "skins" to player renderers.
+			- The PlayerRenderers are created during the EntityRendererManager constructor, which is called during the Minecraft constructor as The Minecraft instance has a single EntityRendererManager. It would probably be safe to attach more layer renderers during FMLClientSetup.
+			- To render our clothing, we could attach a "ClothingLayerRenderer" to each PlayerRenderer that would handle rendering clothing.
+		- The texture to use when rendering an armor layer is determined by ArmorLayer.getArmorResource. The format of the texture location looks something like "minecraft:textures/models/armor/iron_layer_1", where the number at the end is 2 for leggings and 1 for all other parts. The location can also have a suffix such as "_overlay" specified by the type field of getArmorResource, which is used by leather armor to render layers with different colors.
+		- ArmorLayer only has support for two different layers, so we probably won't end up using it. We will probably end up having to subclass LayerRenderer. 
+		- The BipedModel used to render a part of armor is determined in ArmorLayer.renderModelPart. This calls a forge method IForgeItem.getArmorModel, which allows items to define their own BipedModel.
+		- BipedModel defines its own geometry, but it could probably be subclassed.
 - [x] Fix Brush Recipe
 - [x] Pattern Registry
 - [ ] Module System
