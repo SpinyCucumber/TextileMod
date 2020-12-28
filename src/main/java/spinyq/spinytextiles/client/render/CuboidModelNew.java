@@ -9,7 +9,6 @@ import java.util.function.Function;
 import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.client.renderer.TransformationMatrix;
-import net.minecraft.client.renderer.Vector3f;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.IModelTransform;
@@ -59,23 +58,42 @@ public class CuboidModelNew implements IModelGeometry<CuboidModelNew> {
 		// Start constructing a new simple baked model
 		SimpleBakedModel.Builder builder = new SimpleBakedModel.Builder(owner, overrides);
 		// Construct the position and for each corner on the cube
-		Vector3f[] vertices = new Vector3f[8];
-		for (int x = 0; x <= 1; x++) {
-			for (int y = 0; y <= 1; y++) {
-				for (int z = 0; z <= 1; z++) {
-					int index = getIndex(x, y, z);
-					float posX = (x == 0) ? minX : maxX;
-					float posY = (y == 0) ? minY : maxY;
-					float posZ = (z == 0) ? minZ : maxZ;
-					vertices[index] = new Vector3f(posX, posY, posZ);
-				}
-			}
-		}
 		// Add quads for each face
 		for (Direction side : Direction.values()) {
-			Vec3i directionVec = side.getDirectionVec(),
-					perpVec0 = getPerpendicular(directionVec),
+			// Get the texture for the side
+			// If the side doesn't have a texture, skip this side
+			Material texture = getSideTexture(side);
+			if (texture == null)
+				continue;
+			// Get the sprite
+			TextureAtlasSprite sprite = spriteGetter.apply(texture);
+			// For each side, get the normal, and the two vectors perpendicular
+			// to the normal.
+			Vec3i directionVec = side.getDirectionVec(), perpVec0 = getPerpendicular(directionVec),
 					perpVec1 = getPerpendicular(perpVec0);
+			// Iterate over the four corners of the face
+			// to construct the four corners of the quad
+			PositionTextureVertex[] corners = new PositionTextureVertex[4];
+			for (int u = -1; u <= 1; u += 2) {
+				for (int v = -1; v <= 1; v += 2) {
+					PositionTextureVertex corner = new PositionTextureVertex();
+					// Get the position of the corner in "cube space"
+					// This means each component is either going to be -1 or 1
+					Vec3i posCube = add(directionVec, add(scale(perpVec0, u), scale(perpVec1, v)));
+					// Next, get the actual position of the corner
+					corner.x = (posCube.getX() == -1) ? minX : maxX;
+					corner.y = (posCube.getY() == -1) ? minY : maxY;
+					corner.z = (posCube.getZ() == -1) ? minZ : maxZ;
+					// Next, get the uv coordinates of the corner
+					// We need to use the sprite to do this
+					corner.u = (u == -1) ? sprite.getMinU() : sprite.getMaxU();
+					corner.v = (v == -1) ? sprite.getMinV() : sprite.getMaxV();
+					corners[getCornerIndex(u, v)] = corner;
+				}
+			}
+			// Finally, construct a quad using the four corners
+			BakedQuad quad = buildQuad(modelTransform.getRotation(), side, sprite, 0, corners);
+			builder.addFaceQuad(side, quad);
 		}
 		// Finished
 		return builder.build();
@@ -87,27 +105,31 @@ public class CuboidModelNew implements IModelGeometry<CuboidModelNew> {
 		// Return all side textures
 		return sideTextures.values();
 	}
-	
-	private static int getIndex(int x, int y, int z) {
-		return 4*x + 2*y + z;
+
+	private static int getCornerIndex(int x, int y) {
+		return 2 * x + y;
 	}
-	
+
 	private static Vec3i getPerpendicular(Vec3i vec) {
 		return new Vec3i(vec.getZ(), vec.getX(), vec.getY());
 	}
 
+	private static Vec3i add(Vec3i left, Vec3i right) {
+		return new Vec3i(left.getX() + right.getX(), left.getY() + right.getY(), left.getZ() + right.getZ());
+	}
+
+	private static Vec3i scale(Vec3i vec, int scale) {
+		return new Vec3i(scale * vec.getX(), scale * vec.getY(), scale * vec.getZ());
+	}
+
 	private static class PositionTextureVertex {
 
-		public Vector3f position;
-		public float textureU;
-		public float textureV;
+		public float x, y, z, u, v;
 
 	}
 
 	private static BakedQuad buildQuad(TransformationMatrix transform, Direction side, TextureAtlasSprite sprite,
-			int tint, float x0, float y0, float z0, float u0, float v0, float x1, float y1, float z1, float u1,
-			float v1, float x2, float y2, float z2, float u2, float v2, float x3, float y3, float z3, float u3,
-			float v3) {
+			int tint, PositionTextureVertex[] vertices) {
 		BakedQuadBuilder builder = new BakedQuadBuilder(sprite);
 
 		builder.setQuadTint(tint);
@@ -116,21 +138,18 @@ public class CuboidModelNew implements IModelGeometry<CuboidModelNew> {
 		boolean hasTransform = !transform.isIdentity();
 		IVertexConsumer consumer = hasTransform ? new TRSRTransformer(builder, transform) : builder;
 
-		putVertex(consumer, side, x0, y0, z0, u0, v0);
-		putVertex(consumer, side, x1, y1, z1, u1, v1);
-		putVertex(consumer, side, x2, y2, z2, u2, v2);
-		putVertex(consumer, side, x3, y3, z3, u3, v3);
+		for (PositionTextureVertex vertex : vertices)
+			putVertex(consumer, side, vertex);
 
 		return builder.build();
 	}
 
-	private static void putVertex(IVertexConsumer consumer, Direction side, float x, float y, float z, float u,
-			float v) {
+	private static void putVertex(IVertexConsumer consumer, Direction side, PositionTextureVertex vertex) {
 		VertexFormat format = consumer.getVertexFormat();
 		for (int e = 0; e < format.getElements().size(); e++) {
 			switch (format.getElements().get(e).getUsage()) {
 			case POSITION:
-				consumer.put(e, x, y, z, 1f);
+				consumer.put(e, vertex.x, vertex.y, vertex.z, 1f);
 				break;
 			case COLOR:
 				consumer.put(e, 1f, 1f, 1f, 1f);
@@ -143,7 +162,7 @@ public class CuboidModelNew implements IModelGeometry<CuboidModelNew> {
 				break;
 			case UV:
 				if (format.getElements().get(e).getIndex() == 0) {
-					consumer.put(e, u, v, 0f, 1f);
+					consumer.put(e, vertex.u, vertex.v, 0f, 1f);
 					break;
 				}
 				// else fallthrough to default
