@@ -1,12 +1,17 @@
 package spinyq.spinytextiles.client.render;
 
 import java.util.Collection;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
 
+import net.minecraft.client.renderer.Vector3f;
 import net.minecraft.client.renderer.model.BakedQuad;
+import net.minecraft.client.renderer.model.BlockFaceUV;
 import net.minecraft.client.renderer.model.BlockPart;
 import net.minecraft.client.renderer.model.BlockPartFace;
 import net.minecraft.client.renderer.model.FaceBakery;
@@ -28,8 +33,28 @@ public class CuboidModelNew implements IModelGeometry<CuboidModelNew> {
 
 	private static final FaceBakery FACE_BAKERY = new FaceBakery();
 
-	private BlockPart blockPart;
+	private final BlockPart blockPart;
 
+	public CuboidModelNew(Vector3f from, Vector3f to, Map<Direction, String> textureNames) {
+		// Create map of block faces
+		Map<Direction, BlockPartFace> blockFaces = new EnumMap<>(Direction.class);
+		for (Entry<Direction, String> entry : textureNames.entrySet()) {
+			blockFaces.put(entry.getKey(), createFace(entry.getKey(), entry.getValue()));
+		}
+		// Construct block part
+		blockPart = new BlockPart(from, to, blockFaces, null, true);
+	}
+	
+	public CuboidModelNew(Vector3f from, Vector3f to, String textureName) {
+		// Create map of block faces
+		Map<Direction, BlockPartFace> blockFaces = new EnumMap<>(Direction.class);
+		for (Direction dir : Direction.values()) {
+			blockFaces.put(dir, createFace(dir, textureName));
+		}
+		// Construct block part
+		blockPart = new BlockPart(from, to, blockFaces, null, true);
+	}
+	
 	@Override
 	public IBakedModel bake(IModelConfiguration owner, ModelBakery bakery,
 			Function<Material, TextureAtlasSprite> spriteGetter, IModelTransform modelTransform,
@@ -63,11 +88,19 @@ public class CuboidModelNew implements IModelGeometry<CuboidModelNew> {
 	}
 
 	@SuppressWarnings("deprecation")
-	public Material resolveTextureName(String nameIn) {
+	private Material resolveTextureName(String nameIn) {
 		// Simply construct a new material using the block atlas
 		return new Material(AtlasTexture.LOCATION_BLOCKS_TEXTURE, new ResourceLocation(nameIn));
 	}
-
+	
+	private BlockPartFace createFace(Direction direction, String textureName) {
+		// Use the opposite direction as the cullface
+		// Use full texture, no rotation for UV coordinates
+		BlockFaceUV uv = new BlockFaceUV(new float[] {0f,0f,16f,16f}, 0);
+		Direction cullFace = direction.getOpposite();
+		return new BlockPartFace(cullFace, 0, textureName, uv);
+	}
+	
 	private static BakedQuad bakeFace(BlockPart partIn, BlockPartFace partFaceIn, TextureAtlasSprite spriteIn,
 			Direction directionIn, IModelTransform transformIn, ResourceLocation locationIn) {
 		return FACE_BAKERY.bakeQuad(partIn.positionFrom, partIn.positionTo, partFaceIn, spriteIn, directionIn,
