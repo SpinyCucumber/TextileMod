@@ -7,6 +7,8 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.TransformationMatrix;
+import net.minecraft.client.renderer.model.Material;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
@@ -16,13 +18,12 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
+import spinyq.spinytextiles.client.render.CuboidModelNew.BakedCuboid;
 import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
 import spinyq.spinytextiles.tiles.BasinTile.FilledState;
 import spinyq.spinytextiles.utility.FunctionHelper;
 import spinyq.spinytextiles.utility.FunctionHelper.Result;
-import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RGBColor;
 
 @OnlyIn(Dist.CLIENT)
@@ -37,37 +38,41 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 		@Override
 		public void visit(FilledState state) {
-			throw new Result(new RGBAColor(WATER_COLOR));
+			throw new Result(WATER_COLOR);
 		}
 
 		@Override
 		public void visit(FilledState.DyeState state) {
-			throw new Result(state.getColor().toRGBA(new RGBAColor(), WATER_COLOR));
+			throw new Result(state.getColor().toRGB(new RGBColor(), WATER_COLOR));
 		}
 
 	};
 	
-	private final CuboidModel[] fluidModels = new CuboidModel[STAGES];
+	private final BakedCuboid[] fluidModels = new BakedCuboid[STAGES];
 
-	private CuboidModel getFluidModel(int stage, AtlasTexture texture) {
-		CuboidModel model = new CuboidModel();
+	@SuppressWarnings("deprecation")
+	private CuboidModelNew getFluidModel(int stage) {
+		CuboidModelNew model = new CuboidModelNew();
 		// Set the model's texture
-		model.setTexture(texture.getSprite(Fluids.WATER.getAttributes().getStillTexture()));
+		model.setTexture(new Material(
+				AtlasTexture.LOCATION_BLOCKS_TEXTURE,
+				Fluids.WATER.getAttributes().getStillTexture()));
 		// Set the model dimensions
-		model.minX = 0.125 - .01;
-		model.minY = 0.2 - .01;
-		model.minZ = 0.125 - .01;
+		model.minX = 0.125f - .01f;
+		model.minY = 0.2f - .01f;
+		model.minZ = 0.125f - .01f;
 
-		model.maxX = 0.875 + .01;
-		model.maxY = 0.2 + ((float) stage / (float) STAGES) * 0.75 + .01;
-		model.maxZ = 0.875 + .01;
+		model.maxX = 0.875f + .01f;
+		model.maxY = 0.2f + ((float) stage / (float) STAGES) * 0.75f + .01f;
+		model.maxZ = 0.875f + .01f;
 		// Done
 		return model;
 	}
 
-	private void generateFluidModels(AtlasTexture texture) {
+	private void bakeFluidModels() {
 		for (int stage = 0; stage < STAGES; stage++) {
-			fluidModels[stage] = getFluidModel(stage, texture);
+			CuboidModelNew model = getFluidModel(stage);
+			fluidModels[stage] = model.bake(TransformationMatrix.identity());
 		}
 	}
 
@@ -77,11 +82,10 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 		FMLJavaModLoadingContext.get().getModEventBus().register(this);
 	}
 
-	@SuppressWarnings("deprecation")
 	@SubscribeEvent
 	public void onModelBake(ModelBakeEvent event) {
 		LOGGER.info("Generating Fluid Models...");
-		generateFluidModels(event.getModelManager().getAtlasTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE));
+		bakeFluidModels();
 	}
 
 	@Override
@@ -95,13 +99,13 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 				// Calculate stage and model
 				int stage = (int) Math
 						.floor((float) (STAGES - 1) * (float) state.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
-				CuboidModel model = fluidModels[stage];
+				BakedCuboid model = fluidModels[stage];
 				// Calculate water color
-				RGBAColor color = FunctionHelper.getResult(() -> basin.accept(COLOR_CALCULATOR));
+				RGBColor color = FunctionHelper.getResult(() -> basin.accept(COLOR_CALCULATOR));
 				// Allocate buffer
 				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 				// Render model
-				CuboidRenderer.INSTANCE.renderCube(model, matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
+				model.render(matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
 			}
 			
 		};

@@ -1,35 +1,44 @@
 package spinyq.spinytextiles.client.render;
 
-import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
 
-import com.mojang.datafixers.util.Pair;
+import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.client.renderer.TransformationMatrix;
 import net.minecraft.client.renderer.model.BakedQuad;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.model.IModelTransform;
-import net.minecraft.client.renderer.model.IUnbakedModel;
-import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.model.Material;
-import net.minecraft.client.renderer.model.ModelBakery;
-import net.minecraft.client.renderer.model.SimpleBakedModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3i;
-import net.minecraftforge.client.model.IModelConfiguration;
-import net.minecraftforge.client.model.geometry.IModelGeometry;
 import net.minecraftforge.client.model.pipeline.BakedQuadBuilder;
 import net.minecraftforge.client.model.pipeline.IVertexConsumer;
 import net.minecraftforge.client.model.pipeline.TRSRTransformer;
+import spinyq.spinytextiles.utility.color.RGBColor;
 
-public class CuboidModelNew implements IModelGeometry<CuboidModelNew> {
+public class CuboidModelNew {
 
+	public static class BakedCuboid {
+		
+		private ImmutableList<BakedQuad> quads;
+
+		private BakedCuboid(ImmutableList<BakedQuad> quads) {
+			this.quads = quads;
+		}
+		
+		public void render(MatrixStack stack, IVertexBuilder buffer, RGBColor color,
+				int combinedLightIn, int combinedOverlayIn) {
+			MatrixStack.Entry entry = stack.getLast();
+			for (BakedQuad quad : quads) {
+				buffer.addQuad(entry, quad, color.r, color.g, color.b, combinedLightIn, combinedOverlayIn);
+			}
+		}
+		
+	}
+	
 	public float minX, minY, minZ;
 	public float maxX, maxY, maxZ;
 
@@ -50,13 +59,9 @@ public class CuboidModelNew implements IModelGeometry<CuboidModelNew> {
 		}
 	}
 
-	@Override
-	public IBakedModel bake(IModelConfiguration owner, ModelBakery bakery,
-			Function<Material, TextureAtlasSprite> spriteGetter, IModelTransform modelTransform,
-			ItemOverrideList overrides, ResourceLocation modelLocation) {
-		// This code is adapted from BlockModel
-		// Start constructing a new simple baked model
-		SimpleBakedModel.Builder builder = new SimpleBakedModel.Builder(owner, overrides);
+	public BakedCuboid bake(TransformationMatrix transform) {
+		// Start constructing quads
+		ImmutableList.Builder<BakedQuad> builder = new ImmutableList.Builder<>();
 		// Construct the position and for each corner on the cube
 		// Add quads for each face
 		for (Direction side : Direction.values()) {
@@ -66,7 +71,7 @@ public class CuboidModelNew implements IModelGeometry<CuboidModelNew> {
 			if (texture == null)
 				continue;
 			// Get the sprite
-			TextureAtlasSprite sprite = spriteGetter.apply(texture);
+			TextureAtlasSprite sprite = texture.getSprite();
 			// For each side, get the normal, and the two vectors perpendicular
 			// to the normal.
 			Vec3i directionVec = side.getDirectionVec(), perpVec0 = getPerpendicular(directionVec),
@@ -92,18 +97,10 @@ public class CuboidModelNew implements IModelGeometry<CuboidModelNew> {
 				}
 			}
 			// Finally, construct a quad using the four corners
-			BakedQuad quad = buildQuad(modelTransform.getRotation(), side, sprite, 0, corners);
-			builder.addFaceQuad(side, quad);
+			builder.add(buildQuad(transform, side, sprite, 0, corners));
 		}
 		// Finished
-		return builder.build();
-	}
-
-	@Override
-	public Collection<Material> getTextures(IModelConfiguration owner,
-			Function<ResourceLocation, IUnbakedModel> modelGetter, Set<Pair<String, String>> missingTextureErrors) {
-		// Return all side textures
-		return sideTextures.values();
+		return new BakedCuboid(builder.build());
 	}
 
 	private static int getCornerIndex(int x, int y) {
