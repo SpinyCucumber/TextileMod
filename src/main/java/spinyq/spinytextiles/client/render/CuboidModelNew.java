@@ -104,13 +104,13 @@ public class CuboidModelNew {
 	}
 
 	public BakedCuboid bake(TransformationMatrix transform) {
-		LOGGER.info("Baking cuboid model...");
+		LOGGER.trace("Baking cuboid model...");
 		// Start constructing quads
 		ImmutableList.Builder<BakedQuad> builder = new ImmutableList.Builder<>();
 		// Construct the position and for each corner on the cube
 		// Add quads for each face
 		for (Direction side : Direction.values()) {
-			LOGGER.info("Baking side: {}", side);
+			LOGGER.trace("Baking side: {}", side);
 			// Get the texture for the side
 			// If the side doesn't have a texture, skip this side
 			Material texture = getSideTexture(side);
@@ -118,7 +118,7 @@ public class CuboidModelNew {
 				continue;
 			// Get the sprite
 			TextureAtlasSprite sprite = texture.getSprite();
-			LOGGER.info("Using sprite: {}", sprite);
+			LOGGER.trace("Using sprite: {}", sprite);
 			// For each side, get the normal, and the two vectors perpendicular
 			// to the normal.
 			Vec3i directionVec = side.getDirectionVec(), perpVec0 = getPerpendicular(directionVec),
@@ -129,12 +129,12 @@ public class CuboidModelNew {
 			int index = 0;
 
 			for (Vec2i corner : CORNERS) {
-				LOGGER.info("Creating vertex for corner: {}", corner);
+				LOGGER.trace("Creating vertex for corner: {}", corner);
 				PositionTextureVertex vertex = new PositionTextureVertex();
 				// Get the position of the vertex in "cube space"
 				// This means each component is either going to be -1 or 1
 				Vec3i posCube = add(directionVec, add(scale(perpVec0, corner.x), scale(perpVec1, corner.y)));
-				LOGGER.info("Cube position: {}", posCube);
+				LOGGER.trace("Cube position: {}", posCube);
 				// Next, get the actual position of the vertex
 				vertex.x = (posCube.getX() == -1) ? minX : maxX;
 				vertex.y = (posCube.getY() == -1) ? minY : maxY;
@@ -143,7 +143,7 @@ public class CuboidModelNew {
 				// We need to use the sprite to do this
 				vertex.u = (corner.x == -1) ? sprite.getMinU() : sprite.getMaxU();
 				vertex.v = (corner.y == -1) ? sprite.getMinV() : sprite.getMaxV();
-				LOGGER.info("Completed vertex: {}", vertex);
+				LOGGER.trace("Completed vertex: {}", vertex);
 				vertices[index++] = vertex;
 			}
 			// Finally, construct a quad using the four vertices
@@ -202,7 +202,6 @@ public class CuboidModelNew {
 					consumer.put(e, vertex.u, vertex.v, 0f, 1f);
 					break;
 				}
-				// else fallthrough to default
 			default:
 				consumer.put(e);
 				break;
