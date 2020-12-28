@@ -32,7 +32,6 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	private static final Logger LOGGER = LogManager.getLogger();
 	
 	private static final RGBColor WATER_COLOR = new RGBColor().fromIntString("0x3F76E4");
-	private static final int STAGES = 8;
 
 	private static final BasinStateVisitor COLOR_CALCULATOR = new BasinStateVisitor() {
 
@@ -48,10 +47,10 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 	};
 	
-	private final BakedCuboid[] fluidModels = new BakedCuboid[STAGES];
+	private final BakedCuboid[] fluidModels = new BakedCuboid[BasinTile.MAX_WATER_LEVEL];
 
 	@SuppressWarnings("deprecation")
-	private CuboidModelNew getFluidModel(int stage) {
+	private CuboidModelNew createFluidModel(int waterLevel) {
 		CuboidModelNew model = new CuboidModelNew();
 		// Set the model's texture
 		model.setTexture(new Material(
@@ -63,19 +62,22 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 		model.minZ = 0.125f - .01f;
 
 		model.maxX = 0.875f + .01f;
-		model.maxY = 0.2f + ((float) stage / (float) STAGES) * 0.75f + .01f;
+		model.maxY = 0.2f + ((float) waterLevel / (float) BasinTile.MAX_WATER_LEVEL) * 0.75f + .01f;
 		model.maxZ = 0.875f + .01f;
 		// Done
 		return model;
 	}
 
 	private void bakeFluidModels() {
-		for (int stage = 0; stage < STAGES; stage++) {
-			CuboidModelNew model = getFluidModel(stage);
-			fluidModels[stage] = model.bake(TransformationMatrix.identity());
+		// Doesn't make sense to bake a model for no water
+		// so we skip waterLevel = 0
+		// Max water level is inclusive
+		for (int waterLevel = 1; waterLevel <= BasinTile.MAX_WATER_LEVEL; waterLevel++) {
+			CuboidModelNew model = createFluidModel(waterLevel);
+			fluidModels[waterLevel - 1] = model.bake(TransformationMatrix.identity());
 		}
 	}
-
+	
 	public BasinRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
 		super(rendererDispatcherIn);
 		// Register ourselves to receive events.
@@ -84,7 +86,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 	@SubscribeEvent
 	public void onModelBake(ModelBakeEvent event) {
-		LOGGER.info("Generating Fluid Models...");
+		LOGGER.info("Baking Fluid Models...");
 		bakeFluidModels();
 	}
 
@@ -96,16 +98,18 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 			@Override
 			public void visit(FilledState state) {
-				// Calculate stage and model
-				int stage = (int) Math
-						.floor((float) (STAGES - 1) * (float) state.getWaterLevel() / (float) BasinTile.MAX_WATER_LEVEL);
-				BakedCuboid model = fluidModels[stage];
-				// Calculate water color
-				RGBColor color = FunctionHelper.getResult(() -> basin.accept(COLOR_CALCULATOR));
-				// Allocate buffer
-				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
-				// Render model
-				model.render(matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
+				// Only render if we have some water
+				int waterLevel = state.getWaterLevel();
+				if (waterLevel > 0) {
+					// Get model
+					BakedCuboid model = fluidModels[state.getWaterLevel() - 1];
+					// Calculate water color
+					RGBColor color = FunctionHelper.getResult(() -> basin.accept(COLOR_CALCULATOR));
+					// Allocate buffer
+					IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
+					// Render model
+					model.render(matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
+				}
 			}
 			
 		};
