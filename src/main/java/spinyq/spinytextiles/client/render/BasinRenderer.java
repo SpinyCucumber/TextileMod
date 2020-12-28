@@ -32,7 +32,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	private static final Logger LOGGER = LogManager.getLogger();
 	
 	private static final RGBColor WATER_COLOR = new RGBColor().fromIntString("0x3F76E4");
-	private static final int STAGES = 200;
+	private static final int STAGES = 8;
 
 	private static final BasinStateVisitor COLOR_CALCULATOR = new BasinStateVisitor() {
 
