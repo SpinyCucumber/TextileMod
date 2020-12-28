@@ -12,6 +12,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.client.renderer.TransformationMatrix;
+import net.minecraft.client.renderer.Vector3f;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.Material;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -50,13 +51,16 @@ public class CuboidModelNew {
 	@OnlyIn(Dist.CLIENT)
 	private static class PositionTextureVertex {
 
-		public float x, y, z, u, v;
+		public Vector3f pos;
+		public float u, v;
+
+		private PositionTextureVertex() {
+			pos = new Vector3f();
+		}
 
 		public String toString() {
 			return MoreObjects.toStringHelper(this)
-					.add("x", x)
-					.add("y", y)
-					.add("z", z)
+					.add("pos", pos)
 					.add("u", u)
 					.add("v", v)
 					.toString();
@@ -104,13 +108,13 @@ public class CuboidModelNew {
 	}
 
 	public BakedCuboid bake(TransformationMatrix transform) {
-		LOGGER.trace("Baking cuboid model...");
+		LOGGER.info("Baking cuboid model...");
 		// Start constructing quads
 		ImmutableList.Builder<BakedQuad> builder = new ImmutableList.Builder<>();
 		// Construct the position and for each corner on the cube
 		// Add quads for each face
 		for (Direction side : Direction.values()) {
-			LOGGER.trace("Baking side: {}", side);
+			LOGGER.info("Baking side: {}", side);
 			// Get the texture for the side
 			// If the side doesn't have a texture, skip this side
 			Material texture = getSideTexture(side);
@@ -118,32 +122,38 @@ public class CuboidModelNew {
 				continue;
 			// Get the sprite
 			TextureAtlasSprite sprite = texture.getSprite();
-			LOGGER.trace("Using sprite: {}", sprite);
+			LOGGER.info("Using sprite: {}", sprite);
 			// For each side, get the normal, and the two vectors perpendicular
 			// to the normal.
-			Vec3i directionVec = side.getDirectionVec(), perpVec0 = getPerpendicular(directionVec),
-					perpVec1 = getPerpendicular(perpVec0);
+			Vec3i directionVec = side.getDirectionVec(), axis0 = getPerpendicular(directionVec),
+					axis1 = getPerpendicular(axis0);
+			LOGGER.info("Normal vector: {} Axis A: {} Axis B: {}", directionVec, axis0, axis1);
 			// Iterate over the four corners of the face
 			// to construct the four vertices of the quad
 			PositionTextureVertex[] vertices = new PositionTextureVertex[4];
 			int index = 0;
 
 			for (Vec2i corner : CORNERS) {
-				LOGGER.trace("Creating vertex for corner: {}", corner);
+				LOGGER.info("Creating vertex for corner: {}", corner);
 				PositionTextureVertex vertex = new PositionTextureVertex();
 				// Get the position of the vertex in "cube space"
 				// This means each component is either going to be -1 or 1
-				Vec3i posCube = add(directionVec, add(scale(perpVec0, corner.x), scale(perpVec1, corner.y)));
-				LOGGER.trace("Cube position: {}", posCube);
+				Vec3i posCube = add(directionVec, add(scale(axis0, corner.x), scale(axis1, corner.y)));
+				LOGGER.info("Cube position: {}", posCube);
 				// Next, get the actual position of the vertex
-				vertex.x = (posCube.getX() == -1) ? minX : maxX;
-				vertex.y = (posCube.getY() == -1) ? minY : maxY;
-				vertex.z = (posCube.getZ() == -1) ? minZ : maxZ;
+				vertex.pos.setX((posCube.getX() == -1) ? minX : maxX);
+				vertex.pos.setY((posCube.getY() == -1) ? minY : maxY);
+				vertex.pos.setZ((posCube.getZ() == -1) ? minZ : maxZ);
 				// Next, get the uv coordinates of the vertex
-				// We need to use the sprite to do this
-				vertex.u = (corner.x == -1) ? sprite.getMinU() : sprite.getMaxU();
-				vertex.v = (corner.y == -1) ? sprite.getMinV() : sprite.getMaxV();
-				LOGGER.trace("Completed vertex: {}", vertex);
+				// We project the vertex position onto the face to get the uv coordinates
+				// We have to multiply the uv by 16 since Minecraft is weird
+				float u = 16f * project(vertex.pos, axis0);
+				float v = 16f * project(vertex.pos, axis1);
+				vertex.u = sprite.getInterpolatedU(u);
+				vertex.v = sprite.getInterpolatedV(v);
+				LOGGER.info("Using u: {} and v: {}", u, v);
+				
+				LOGGER.info("Completed vertex: {}", vertex);
 				vertices[index++] = vertex;
 			}
 			// Finally, construct a quad using the four vertices
@@ -163,6 +173,10 @@ public class CuboidModelNew {
 
 	private static Vec3i scale(Vec3i vec, int scale) {
 		return new Vec3i(scale * vec.getX(), scale * vec.getY(), scale * vec.getZ());
+	}
+	
+	private static float project(Vector3f vec, Vec3i onto) {
+		return vec.getX() * onto.getX() + vec.getY() + onto.getY() + vec.getZ() + onto.getZ();
 	}
 
 	private static BakedQuad buildQuad(TransformationMatrix transform, Direction side, TextureAtlasSprite sprite,
@@ -186,7 +200,7 @@ public class CuboidModelNew {
 		for (int e = 0; e < format.getElements().size(); e++) {
 			switch (format.getElements().get(e).getUsage()) {
 			case POSITION:
-				consumer.put(e, vertex.x, vertex.y, vertex.z, 1f);
+				consumer.put(e, vertex.pos.getX(), vertex.pos.getY(), vertex.pos.getZ(), 1f);
 				break;
 			case COLOR:
 				consumer.put(e, 1f, 1f, 1f, 1f);
