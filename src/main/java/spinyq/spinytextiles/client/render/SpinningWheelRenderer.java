@@ -25,6 +25,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
 import spinyq.spinytextiles.client.model.CuboidModel;
 import spinyq.spinytextiles.client.model.CuboidModel.BakedCuboid;
+import spinyq.spinytextiles.client.model.CuboidModel.UVList;
 import spinyq.spinytextiles.tiles.SpinningWheelTile;
 import spinyq.spinytextiles.tiles.SpinningWheelTile.BaseState;
 import spinyq.spinytextiles.tiles.SpinningWheelTile.SpinningWheelStateVisitor;
@@ -40,13 +41,15 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 
 	private static final Logger LOGGER = LogManager.getLogger();
 	@SuppressWarnings("deprecation")
-	private static final Material THREAD_TEXTURE = new Material(
-			AtlasTexture.LOCATION_BLOCKS_TEXTURE,
+	private static final Material THREAD_TEXTURE = new Material(AtlasTexture.LOCATION_BLOCKS_TEXTURE,
 			new ResourceLocation("minecraft:block/white_wool"));
-	
+	private static final Direction[] THREAD_MODEL_SIDES = new Direction[] { Direction.DOWN, Direction.UP,
+			Direction.SOUTH, Direction.NORTH };
+
 	private BakedCuboid threadModel;
 
-	// If the wheel is spinning, interpolate between previous and current threads to get a smooth animation.
+	// If the wheel is spinning, interpolate between previous and current threads to
+	// get a smooth animation.
 	// Otherwise, simply use the most current thread info.
 	private static final SpinningWheelStateVisitor COLOR_CALCULATOR = new SpinningWheelStateVisitor() {
 
@@ -82,18 +85,20 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 	private void generateModel() {
 		// Create a cuboid model
 		CuboidModel cuboid = new CuboidModel();
-		// Set the texture of certain sides
-		cuboid.getFace(Direction.DOWN).setTexture(THREAD_TEXTURE);
-		cuboid.getFace(Direction.UP).setTexture(THREAD_TEXTURE);
-		cuboid.getFace(Direction.SOUTH).setTexture(THREAD_TEXTURE);
-		cuboid.getFace(Direction.NORTH).setTexture(THREAD_TEXTURE);
+		// Set the texture of the sides
+		// Also set the UV of each side
+		UVList uv = new UVList(0f,0f,1f,16f);
+		for (Direction side : THREAD_MODEL_SIDES) {
+			cuboid.getFace(side).setTexture(THREAD_TEXTURE);
+			cuboid.getFace(side).setUV(uv);
+		}
 		// Set the model dimensions
 		// Minimal offset to prevent depth-fighting with spinning wheel model
 		cuboid.setFromPosition(new Vector3f(7.5f / 16f, 2f / 16f - 0.0002f, 1f / 16f - 0.0002f));
 		cuboid.setToPosition(new Vector3f(8.5f / 16f, 16f / 16f + 0.0002f, 15f / 16f + 0.0002f));
 		// Finally, bake the model
 		// Make sure the model is centered so it rotates correctly
-		threadModel = cuboid.bake(new TransformationMatrix(new Vector3f(-0.5f,-0.5f,-0.5f), null, null, null));
+		threadModel = cuboid.bake(new TransformationMatrix(new Vector3f(-0.5f, -0.5f, -0.5f), null, null, null));
 		// Done
 	}
 

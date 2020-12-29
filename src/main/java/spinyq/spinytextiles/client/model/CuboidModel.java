@@ -61,13 +61,64 @@ public class CuboidModel {
 	private static final Vec2f[] CORNERS = new Vec2f[] { new Vec2f(0, 0), new Vec2f(1, 0), new Vec2f(1, 1),
 			new Vec2f(0, 1) };
 
+	public static final UVProvider FULL_UV = new UVList(0f,0f,16f,16f);
+	public static final UVProvider AUTO_UV = new UVProvider() {
+
+		@Override
+		public void provideUV(Direction side, TextureAtlasSprite sprite, PositionTextureVertex[] vertices, Vec2f[] corners) {
+			CoordinatePlane uvPlane = SIDE_PLANES.get(side).copy();
+			uvPlane.scale(16f);
+			for (int i = 0; i < corners.length; i++) {
+				Vec2f uv = uvPlane.project(vertices[i].pos);
+				vertices[i].u = sprite.getInterpolatedU(uv.x);
+				vertices[i].v = sprite.getInterpolatedU(uv.y);
+			}
+		}
+		
+	};
+
+	@OnlyIn(Dist.CLIENT)
+	public interface UVProvider {
+		
+		void provideUV(Direction side, TextureAtlasSprite sprite, PositionTextureVertex[] vertices, Vec2f[] corners);
+		
+	}
+	
+	@OnlyIn(Dist.CLIENT)
+	public static class UVList implements UVProvider {
+
+		private float minU, minV, maxU, maxV;
+		
+		public UVList(float minU, float minV, float maxU, float maxV) {
+			this.minU = minU;
+			this.minV = minV;
+			this.maxU = maxU;
+			this.maxV = maxV;
+		}
+
+		@Override
+		public void provideUV(Direction side, TextureAtlasSprite sprite, PositionTextureVertex[] vertices, Vec2f[] corners) {
+			float sizeU = maxU - minU, sizeV = maxV - minV;
+			for (int i = 0; i < corners.length; i++) {
+				vertices[i].u = sprite.getInterpolatedU((sizeU * corners[i].x) + minU);
+				vertices[i].v = sprite.getInterpolatedU((sizeV * corners[i].y) + minV);
+			}
+		}
+		
+	}
+	
 	@OnlyIn(Dist.CLIENT)
 	public static class CuboidFace {
 		
 		private Material texture;
+		private UVProvider uv = FULL_UV;
 		
 		public void setTexture(Material texture) {
 			this.texture = texture;
+		}
+		
+		public void setUV(UVProvider uv) {
+			this.uv = uv;
 		}
 		
 	}
@@ -91,7 +142,6 @@ public class CuboidModel {
 	
 	}
 	
-
 	@OnlyIn(Dist.CLIENT)
 	public static class CoordinatePlane {
 
@@ -162,6 +212,7 @@ public class CuboidModel {
 		public String toString() {
 			return MoreObjects.toStringHelper(this).add("pos", pos).add("u", u).add("v", v).toString();
 		}
+		
 	}
 
 	private Vector3f fromPosition, toPosition;
@@ -212,13 +263,10 @@ public class CuboidModel {
 			PositionTextureVertex[] vertices = new PositionTextureVertex[4];
 			// Create the coordinate plane for this side
 			// Get the coordinate plane associated with the side and transform it
-			CoordinatePlane sidePlane = SIDE_PLANES.get(side);
-			CoordinatePlane positionPlane = sidePlane.copy(), uvPlane = sidePlane.copy();
+			CoordinatePlane positionPlane = SIDE_PLANES.get(side).copy();
 			positionPlane.scale(size);
 			positionPlane.translate(fromPosition);
-			uvPlane.scale(16f);
 			LOGGER.trace("Position plane: {}", positionPlane);
-			LOGGER.trace("UV plane: {}", uvPlane);
 			for (int i = 0; i < CORNERS.length; i++) {
 				Vec2f corner = CORNERS[i];
 				LOGGER.trace("Creating vertex for corner: {}", corner);
@@ -226,15 +274,10 @@ public class CuboidModel {
 				vertices[i] = new PositionTextureVertex();
 				// Get the position of the vertex
 				vertices[i].pos = positionPlane.map(corner);
-				// Next, get the uv coordinates of the vertex
-				// We project the vertex position onto the face to get the uv coordinates
-				// We have to multiply the uv by 16 since Minecraft is weird
-				Vec2f uv = uvPlane.project(vertices[i].pos);
-				vertices[i].u = sprite.getInterpolatedU(uv.x);
-				vertices[i].v = sprite.getInterpolatedV(uv.y);
-				LOGGER.trace("Using u: {} and v: {}", uv.x, uv.y);
 				LOGGER.trace("Completed vertex: {}", vertices[i]);
 			}
+			// Let the face handle providing UV
+			face.uv.provideUV(side, sprite, vertices, CORNERS);
 			// Finally, construct a quad using the four vertices
 			builder.add(buildQuad(transform, side, sprite, 0, vertices));
 		}

@@ -60,8 +60,11 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	private CuboidModel createFluidModel(int waterLevel) {
 		CuboidModel cuboid = new CuboidModel();
 		// Set the texture for each face
+		// Also set each face to use UV coordinates
+		// based on the size of the cuboid
 		for (Direction side : Direction.values()) {
 			cuboid.getFace(side).setTexture(WATER_TEXTURE);
+			cuboid.getFace(side).setUV(CuboidModel.AUTO_UV);
 		}
 		// Set the model dimensions
 		float height = ((float) waterLevel / (float) BasinTile.MAX_WATER_LEVEL) * 0.75f;
