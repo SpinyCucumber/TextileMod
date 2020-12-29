@@ -1,10 +1,14 @@
 package spinyq.spinytextiles.client.render;
 
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.EnumMap;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.system.MemoryStack;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -15,9 +19,11 @@ import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.client.renderer.TransformationMatrix;
 import net.minecraft.client.renderer.Vector3f;
+import net.minecraft.client.renderer.Vector4f;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.Material;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.Vec2f;
@@ -26,27 +32,28 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.model.pipeline.BakedQuadBuilder;
 import net.minecraftforge.client.model.pipeline.IVertexConsumer;
 import net.minecraftforge.client.model.pipeline.TRSRTransformer;
-import spinyq.spinytextiles.utility.color.RGBColor;
+import spinyq.spinytextiles.utility.color.RGBAColor;
 
 @OnlyIn(Dist.CLIENT)
 public class CuboidModelNew {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	private static final Map<Direction, CoordinatePlane> SIDE_PLANES = Maps.immutableEnumMap(
-			new ImmutableMap.Builder<Direction, CoordinatePlane>()
-			.put(Direction.DOWN, new CoordinatePlane(new Vector3f(0f,0f,0f), Direction.EAST, Direction.SOUTH))
-			.put(Direction.UP, new CoordinatePlane(new Vector3f(0f,1f,1f), Direction.EAST, Direction.NORTH))
-			.put(Direction.NORTH, new CoordinatePlane(new Vector3f(1f,1f,1f), Direction.WEST, Direction.DOWN))
-			.put(Direction.SOUTH, new CoordinatePlane(new Vector3f(0f,1f,0f), Direction.EAST, Direction.DOWN))
-			.put(Direction.WEST, new CoordinatePlane(new Vector3f(0f,1f,1f), Direction.NORTH, Direction.DOWN))
-			.put(Direction.EAST, new CoordinatePlane(new Vector3f(1f,1f,0f), Direction.SOUTH, Direction.DOWN))
-			.build());
-	
-	private static final Vec2f[] CORNERS = new Vec2f[] { new Vec2f(0,0), new Vec2f(1,0), new Vec2f(1,1),
-	new Vec2f(0,1) };
+	private static final Map<Direction, CoordinatePlane> SIDE_PLANES = Maps
+			.immutableEnumMap(new ImmutableMap.Builder<Direction, CoordinatePlane>()
+					.put(Direction.DOWN, new CoordinatePlane(new Vector3f(0f, 0f, 0f), Direction.EAST, Direction.SOUTH))
+					.put(Direction.UP, new CoordinatePlane(new Vector3f(0f, 1f, 1f), Direction.EAST, Direction.NORTH))
+					.put(Direction.NORTH, new CoordinatePlane(new Vector3f(1f, 1f, 1f), Direction.WEST, Direction.DOWN))
+					.put(Direction.SOUTH, new CoordinatePlane(new Vector3f(0f, 1f, 0f), Direction.EAST, Direction.DOWN))
+					.put(Direction.WEST, new CoordinatePlane(new Vector3f(0f, 1f, 1f), Direction.NORTH, Direction.DOWN))
+					.put(Direction.EAST, new CoordinatePlane(new Vector3f(1f, 1f, 0f), Direction.SOUTH, Direction.DOWN))
+					.build());
 
+	private static final Vec2f[] CORNERS = new Vec2f[] { new Vec2f(0, 0), new Vec2f(1, 0), new Vec2f(1, 1),
+			new Vec2f(0, 1) };
+
+	@OnlyIn(Dist.CLIENT)
 	public static class CoordinatePlane {
-		
+
 		private Vector3f origin, xAxis, yAxis;
 
 		private CoordinatePlane(Vector3f origin, Vector3f xAxis, Vector3f yAxis) {
@@ -58,7 +65,7 @@ public class CuboidModelNew {
 		private CoordinatePlane(Vector3f origin, Direction xAxis, Direction yAxis) {
 			this(origin, xAxis.toVector3f(), yAxis.toVector3f());
 		}
-		
+
 		public Vector3f map(Vec2f coords) {
 			Vector3f xPart = xAxis.copy();
 			Vector3f yPart = yAxis.copy();
@@ -69,32 +76,32 @@ public class CuboidModelNew {
 			point.add(yPart);
 			return point;
 		}
-		
+
 		public Vec2f project(Vector3f vectorIn) {
 			Vector3f vec = vectorIn.copy();
 			vec.sub(origin);
 			return new Vec2f(xAxis.dot(vec), yAxis.dot(vec));
 		}
-		
+
 		public CoordinatePlane copy() {
 			return new CoordinatePlane(origin.copy(), xAxis.copy(), yAxis.copy());
 		}
-		
+
 		public void translate(Vector3f vec) {
 			origin.add(vec);
 		}
-		
+
 		public void scale(Vector3f vec) {
 			origin.mul(vec.getX(), vec.getY(), vec.getZ());
 			xAxis.mul(vec.getX(), vec.getY(), vec.getZ());
 			yAxis.mul(vec.getX(), vec.getY(), vec.getZ());
 		}
-		
+
 		public void scale(float s) {
 			xAxis.mul(s);
 			yAxis.mul(s);
 		}
-		
+
 		public String toString() {
 			return MoreObjects.toStringHelper(this)
 					.add("origin", origin)
@@ -102,9 +109,9 @@ public class CuboidModelNew {
 					.add("yAxis", yAxis)
 					.toString();
 		}
-		
+
 	}
-	
+
 	@OnlyIn(Dist.CLIENT)
 	public static class BakedCuboid {
 
@@ -114,11 +121,11 @@ public class CuboidModelNew {
 			this.quads = quads;
 		}
 
-		public void render(MatrixStack stack, IVertexBuilder buffer, RGBColor color, int combinedLightIn,
+		public void render(MatrixStack stack, IVertexBuilder buffer, RGBAColor color, int combinedLightIn,
 				int combinedOverlayIn) {
 			MatrixStack.Entry entry = stack.getLast();
 			for (BakedQuad quad : quads) {
-				buffer.addQuad(entry, quad, color.r, color.g, color.b, combinedLightIn, combinedOverlayIn);
+				renderQuad(buffer, quad, entry, color, combinedLightIn, combinedOverlayIn);
 			}
 		}
 
@@ -131,11 +138,7 @@ public class CuboidModelNew {
 		public float u, v;
 
 		public String toString() {
-			return MoreObjects.toStringHelper(this)
-					.add("pos", pos)
-					.add("u", u)
-					.add("v", v)
-					.toString();
+			return MoreObjects.toStringHelper(this).add("pos", pos).add("u", u).add("v", v).toString();
 		}
 	}
 
@@ -156,7 +159,7 @@ public class CuboidModelNew {
 			sideTextures.put(side, texture);
 		}
 	}
-	
+
 	public Vector3f getSize() {
 		Vector3f result = positionTo.copy();
 		result.sub(positionFrom);
@@ -255,6 +258,37 @@ public class CuboidModelNew {
 			default:
 				consumer.put(e);
 				break;
+			}
+		}
+	}
+	
+	// Adapted from IVertexBuilder to allow for alpha
+	private static void renderQuad(IVertexBuilder buffer, BakedQuad quad, MatrixStack.Entry entry, RGBAColor color, int combinedLightIn,
+				int combinedOverlayIn) {
+		int[] aint = quad.getVertexData();
+		Vector3f vector3f = quad.getFace().toVector3f();
+		vector3f.transform(entry.getNormal());
+		int numVertices = aint.length / 8;
+
+		try (MemoryStack memorystack = MemoryStack.stackPush()) {
+			ByteBuffer bytebuffer = memorystack.malloc(DefaultVertexFormats.BLOCK.getSize());
+			IntBuffer intbuffer = bytebuffer.asIntBuffer();
+
+			for (int i = 0; i < numVertices; ++i) {
+				((Buffer) intbuffer).clear();
+				intbuffer.put(aint, i * 8, 8);
+				float f = bytebuffer.getFloat(0);
+				float f1 = bytebuffer.getFloat(4);
+				float f2 = bytebuffer.getFloat(8);
+
+				int l = buffer.applyBakedLighting(combinedLightIn, bytebuffer);
+				float f9 = bytebuffer.getFloat(16);
+				float f10 = bytebuffer.getFloat(20);
+				Vector4f vector4f = new Vector4f(f, f1, f2, 1.0F);
+				vector4f.transform(entry.getMatrix());
+				buffer.applyBakedNormals(vector3f, bytebuffer, entry.getNormal());
+				buffer.addVertex(vector4f.getX(), vector4f.getY(), vector4f.getZ(), color.r, color.g, color.b, color.a, f9, f10,
+						combinedOverlayIn, l, vector3f.getX(), vector3f.getY(), vector3f.getZ());
 			}
 		}
 	}

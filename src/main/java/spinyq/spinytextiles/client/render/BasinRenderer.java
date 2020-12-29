@@ -24,6 +24,7 @@ import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
 import spinyq.spinytextiles.tiles.BasinTile.FilledState;
 import spinyq.spinytextiles.utility.FunctionHelper;
 import spinyq.spinytextiles.utility.FunctionHelper.Result;
+import spinyq.spinytextiles.utility.color.RGBAColor;
 import spinyq.spinytextiles.utility.color.RGBColor;
 
 @OnlyIn(Dist.CLIENT)
@@ -108,7 +109,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 					// Allocate buffer
 					IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 					// Render model
-					model.render(matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
+					model.render(matrixStackIn, buffer, new RGBAColor(color, 1.0f), combinedLightIn, combinedOverlayIn);
 				}
 			}
 			
