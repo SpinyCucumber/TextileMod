@@ -73,8 +73,8 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 		// so we skip waterLevel = 0
 		// Max water level is inclusive
 		for (int waterLevel = 1; waterLevel <= BasinTile.MAX_WATER_LEVEL; waterLevel++) {
-			CuboidModelNew model = createFluidModel(waterLevel);
-			fluidModels[waterLevel - 1] = model.bake(TransformationMatrix.identity());
+			CuboidModelNew cuboid = createFluidModel(waterLevel);
+			fluidModels[waterLevel - 1] = cuboid.bake(TransformationMatrix.identity());
 		}
 	}
 	

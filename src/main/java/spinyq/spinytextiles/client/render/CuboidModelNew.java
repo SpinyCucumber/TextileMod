@@ -195,6 +195,8 @@ public class CuboidModelNew {
 			for (int i = 0; i < CORNERS.length; i++) {
 				Vec2f corner = CORNERS[i];
 				LOGGER.trace("Creating vertex for corner: {}", corner);
+				// Initialize vertex
+				vertices[i] = new PositionTextureVertex();
 				// Get the position of the vertex
 				vertices[i].pos = positionPlane.map(corner);
 				// Next, get the uv coordinates of the vertex
