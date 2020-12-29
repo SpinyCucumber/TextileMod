@@ -121,7 +121,7 @@ public class CuboidModelNew {
 			this.quads = quads;
 		}
 
-		public void render(MatrixStack stack, IVertexBuilder buffer, RGBAColor color, int combinedLightIn,
+		public void render(IVertexBuilder buffer, MatrixStack stack, RGBAColor color, int combinedLightIn,
 				int combinedOverlayIn) {
 			MatrixStack.Entry entry = stack.getLast();
 			for (BakedQuad quad : quads) {

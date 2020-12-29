@@ -131,7 +131,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 				// Allocate buffer
 				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 				// Render model
-				threadModel.render(matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
+				threadModel.render(buffer, matrixStackIn, color, combinedLightIn, combinedOverlayIn);
 				// Undo rotation
 				matrixStackIn.pop();
 			}

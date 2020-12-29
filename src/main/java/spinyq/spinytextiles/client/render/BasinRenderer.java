@@ -109,7 +109,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 					// Allocate buffer
 					IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 					// Render model
-					model.render(matrixStackIn, buffer, new RGBAColor(color, 1.0f), combinedLightIn, combinedOverlayIn);
+					model.render(buffer, matrixStackIn, new RGBAColor(color, 1.0f), combinedLightIn, combinedOverlayIn);
 				}
 			}
 			
