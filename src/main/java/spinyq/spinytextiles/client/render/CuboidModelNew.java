@@ -38,12 +38,12 @@ public class CuboidModelNew {
 			.put(Direction.UP, new CoordinatePlane(new Vector3f(0f,1f,1f), Direction.EAST, Direction.NORTH))
 			.put(Direction.NORTH, new CoordinatePlane(new Vector3f(1f,1f,1f), Direction.WEST, Direction.DOWN))
 			.put(Direction.SOUTH, new CoordinatePlane(new Vector3f(0f,1f,0f), Direction.EAST, Direction.DOWN))
-			.put(Direction.WEST, new CoordinatePlane(new Vector3f(0f,1f,1f), Direction.SOUTH, Direction.DOWN))
-			.put(Direction.EAST, new CoordinatePlane(new Vector3f(1f,1f,0f), Direction.NORTH, Direction.DOWN))
+			.put(Direction.WEST, new CoordinatePlane(new Vector3f(0f,1f,1f), Direction.NORTH, Direction.DOWN))
+			.put(Direction.EAST, new CoordinatePlane(new Vector3f(1f,1f,0f), Direction.SOUTH, Direction.DOWN))
 			.build());
 	
-	private static final Vec2i[] CORNERS = new Vec2i[] { new Vec2i(0,0), new Vec2i(1,0), new Vec2i(1,1),
-	new Vec2i(0,1) };
+	private static final Vec2f[] CORNERS = new Vec2f[] { new Vec2f(0,0), new Vec2f(1,0), new Vec2f(1,1),
+	new Vec2f(0,1) };
 
 	public static class CoordinatePlane {
 		
@@ -59,11 +59,11 @@ public class CuboidModelNew {
 			this(origin, xAxis.toVector3f(), yAxis.toVector3f());
 		}
 		
-		public Vector3f map(Vec2i vec) {
+		public Vector3f map(Vec2f coords) {
 			Vector3f xPart = xAxis.copy();
 			Vector3f yPart = yAxis.copy();
-			xPart.mul(vec.x);
-			yPart.mul(vec.y);
+			xPart.mul(coords.x);
+			yPart.mul(coords.y);
 			Vector3f point = origin.copy();
 			point.add(xPart);
 			point.add(yPart);
@@ -85,6 +85,7 @@ public class CuboidModelNew {
 		}
 		
 		public void scale(Vector3f vec) {
+			origin.mul(vec.getX(), vec.getY(), vec.getZ());
 			xAxis.mul(vec.getX(), vec.getY(), vec.getZ());
 			yAxis.mul(vec.getX(), vec.getY(), vec.getZ());
 		}
@@ -138,24 +139,7 @@ public class CuboidModelNew {
 		}
 	}
 
-	@OnlyIn(Dist.CLIENT)
-	private static class Vec2i {
-
-		public int x, y;
-
-		private Vec2i(int x, int y) {
-			this.x = x;
-			this.y = y;
-		}
-
-		public String toString() {
-			return MoreObjects.toStringHelper(this).add("x", x).add("y", y).toString();
-		}
-
-	}
-
 	public Vector3f positionFrom = new Vector3f(), positionTo = new Vector3f();
-
 	private Map<Direction, Material> sideTextures = new EnumMap<>(Direction.class);
 
 	public Material getSideTexture(Direction side) {
@@ -199,31 +183,28 @@ public class CuboidModelNew {
 			// Iterate over the four corners of the face
 			// to construct the four vertices of the quad
 			PositionTextureVertex[] vertices = new PositionTextureVertex[4];
-			int index = 0;
 			// Create the coordinate plane for this side
 			// Get the coordinate plane associated with the side and transform it
-			CoordinatePlane sidePlane = SIDE_PLANES.get(side).copy();
+			CoordinatePlane sidePlane = SIDE_PLANES.get(side);
 			CoordinatePlane positionPlane = sidePlane.copy(), uvPlane = sidePlane.copy();
 			positionPlane.scale(size);
 			positionPlane.translate(positionFrom);
 			uvPlane.scale(16f);
 			LOGGER.info("Position plane: {}", positionPlane);
 			LOGGER.info("UV plane: {}", uvPlane);
-			for (Vec2i corner : CORNERS) {
+			for (int i = 0; i < CORNERS.length; i++) {
+				Vec2f corner = CORNERS[i];
 				LOGGER.info("Creating vertex for corner: {}", corner);
-				PositionTextureVertex vertex = new PositionTextureVertex();
 				// Get the position of the vertex
-				vertex.pos = positionPlane.map(corner);
+				vertices[i].pos = positionPlane.map(corner);
 				// Next, get the uv coordinates of the vertex
 				// We project the vertex position onto the face to get the uv coordinates
 				// We have to multiply the uv by 16 since Minecraft is weird
-				Vec2f uv = uvPlane.project(vertex.pos);
-				vertex.u = sprite.getInterpolatedU(uv.x);
-				vertex.v = sprite.getInterpolatedV(uv.y);
+				Vec2f uv = uvPlane.project(vertices[i].pos);
+				vertices[i].u = sprite.getInterpolatedU(uv.x);
+				vertices[i].v = sprite.getInterpolatedV(uv.y);
 				LOGGER.info("Using u: {} and v: {}", uv.x, uv.y);
-				
-				LOGGER.info("Completed vertex: {}", vertex);
-				vertices[index++] = vertex;
+				LOGGER.info("Completed vertex: {}", vertices[i]);
 			}
 			// Finally, construct a quad using the four vertices
 			builder.add(buildQuad(transform, side, sprite, 0, vertices));
