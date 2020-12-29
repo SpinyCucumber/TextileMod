@@ -62,6 +62,9 @@ public class CuboidModel {
 			new Vec2f(0, 1) };
 
 	public static final UVProvider FULL_UV = new UVList(0f,0f,16f,16f);
+	// Provides UV coordinates using the size and position of the cuboid.
+	// The works by projecting the position of each vertex onto a plane, and
+	// getting the UV coordinates from that plane.
 	public static final UVProvider AUTO_UV = new UVProvider() {
 
 		@Override
@@ -77,6 +80,11 @@ public class CuboidModel {
 		
 	};
 
+	/**
+	 * Provides the UV coordinates for each corner on the face
+	 * of a cuboid.
+	 * @author SpinyQ
+	 */
 	@OnlyIn(Dist.CLIENT)
 	public interface UVProvider {
 		
@@ -84,6 +92,13 @@ public class CuboidModel {
 		
 	}
 	
+	/**
+	 * Allows clients to provide their own UV coordinates for each corner
+	 * on the face of a cuboid.
+	 * UV coordinates in Minecraft are generally between 0 and 16.
+	 * @author SpinyQ
+	 *
+	 */
 	@OnlyIn(Dist.CLIENT)
 	public static class UVList implements UVProvider {
 
