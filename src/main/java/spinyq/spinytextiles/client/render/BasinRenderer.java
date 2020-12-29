@@ -51,21 +51,21 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 	@SuppressWarnings("deprecation")
 	private CuboidModelNew createFluidModel(int waterLevel) {
-		CuboidModelNew model = new CuboidModelNew();
+		CuboidModelNew cuboid = new CuboidModelNew();
 		// Set the model's texture
-		model.setTexture(new Material(
+		cuboid.setTexture(new Material(
 				AtlasTexture.LOCATION_BLOCKS_TEXTURE,
 				Fluids.WATER.getAttributes().getStillTexture()));
 		// Set the model dimensions
-		model.positionFrom.setX(0.125f - .01f);
-		model.positionFrom.setY(0.2f - .01f);
-		model.positionFrom.setZ(0.125f - .01f);
+		cuboid.positionFrom.setX(0.125f - .01f);
+		cuboid.positionFrom.setY(0.2f - .01f);
+		cuboid.positionFrom.setZ(0.125f - .01f);
 
-		model.positionTo.setX(0.875f + .01f);
-		model.positionTo.setY(0.2f + ((float) waterLevel / (float) BasinTile.MAX_WATER_LEVEL) * 0.75f + .01f);
-		model.positionTo.setZ(0.875f + .01f);
+		cuboid.positionTo.setX(0.875f + .01f);
+		cuboid.positionTo.setY(0.2f + ((float) waterLevel / (float) BasinTile.MAX_WATER_LEVEL) * 0.75f + .01f);
+		cuboid.positionTo.setZ(0.875f + .01f);
 		// Done
-		return model;
+		return cuboid;
 	}
 
 	private void bakeFluidModels() {

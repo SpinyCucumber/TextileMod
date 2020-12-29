@@ -8,6 +8,8 @@ import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Quaternion;
+import net.minecraft.client.renderer.TransformationMatrix;
+import net.minecraft.client.renderer.model.Material;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
@@ -20,7 +22,7 @@ import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
-import spinyq.spinytextiles.client.render.CuboidRenderer.CuboidModel;
+import spinyq.spinytextiles.client.render.CuboidModelNew.BakedCuboid;
 import spinyq.spinytextiles.tiles.SpinningWheelTile;
 import spinyq.spinytextiles.tiles.SpinningWheelTile.BaseState;
 import spinyq.spinytextiles.tiles.SpinningWheelTile.SpinningWheelStateVisitor;
@@ -35,8 +37,12 @@ import spinyq.spinytextiles.utility.textile.Fiber;
 public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile> {
 
 	private static final Logger LOGGER = LogManager.getLogger();
+	@SuppressWarnings("deprecation")
+	private static final Material THREAD_TEXTURE = new Material(
+			AtlasTexture.LOCATION_BLOCKS_TEXTURE,
+			new ResourceLocation("minecraft:block/white_wool"));
 	
-	private CuboidModel threadModel;
+	private BakedCuboid threadModel;
 
 	// If the wheel is spinning, interpolate between previous and current threads to get a smooth animation.
 	// Otherwise, simply use the most current thread info.
@@ -71,22 +77,25 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 	/**
 	 * Generates a thread model to display on top of the spinning wheel.
 	 */
-	private void generateModel(AtlasTexture texture) {
-		threadModel = new CuboidModel();
-		// Set the model's texture
-		threadModel.setTexture(texture.getSprite(new ResourceLocation("minecraft:block/white_wool")));
+	private void generateModel() {
+		// Create a cuboid model
+		CuboidModelNew cuboid = new CuboidModelNew();
+		// Set the texture of certain sides
+		cuboid.setSideTexture(Direction.DOWN, THREAD_TEXTURE);
+		cuboid.setSideTexture(Direction.UP, THREAD_TEXTURE);
+		cuboid.setSideTexture(Direction.SOUTH, THREAD_TEXTURE);
+		cuboid.setSideTexture(Direction.NORTH, THREAD_TEXTURE);
 		// Set the model dimensions
 		// Make sure the model is centered so it rotates correctly
-		threadModel.minX = 7.5 / 16.0 - 0.5;
-		threadModel.minY = 2.0 / 16.0 - 0.01 - 0.5;
-		threadModel.minZ = 1.0 / 16.0 - 0.01 - 0.5;
+		cuboid.positionFrom.setX(7.5f / 16f - 0.5f);
+		cuboid.positionFrom.setY(2f / 16f - 0.01f - 0.5f);
+		cuboid.positionFrom.setZ(1f / 16f - 0.01f - 0.5f);
 
-		threadModel.maxX = 8.5 / 16.0 - 0.5;
-		threadModel.maxY = 16.0 / 16.0 + 0.01 - 0.5;
-		threadModel.maxZ = 15.0 / 16.0 + 0.01 - 0.5;
-		// Disable side faces
-		threadModel.setSideRender(Direction.EAST, false);
-		threadModel.setSideRender(Direction.WEST, false);
+		cuboid.positionTo.setX(8f / 16f - 0.5f);
+		cuboid.positionTo.setX(16f / 16f + 0.01f - 0.5f);
+		cuboid.positionTo.setX(15f / 16f + 0.01f - 0.5f);
+		// Finally, bake the model
+		threadModel = cuboid.bake(TransformationMatrix.identity());
 		// Done
 	}
 
@@ -96,11 +105,10 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 		FMLJavaModLoadingContext.get().getModEventBus().register(this);
 	}
 
-	@SuppressWarnings("deprecation")
 	@SubscribeEvent
 	public void onModelBake(ModelBakeEvent event) {
-		LOGGER.info("Generating Spinning Wheel Model...");
-		generateModel(event.getModelManager().getAtlasTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE));
+		LOGGER.info("Baking Spinning Wheel Model...");
+		generateModel();
 	}
 
 	@Override
@@ -123,8 +131,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 				// Allocate buffer
 				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 				// Render model
-				CuboidRenderer.INSTANCE
-						.renderCube(threadModel, matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
+				threadModel.render(matrixStackIn, buffer, color, combinedLightIn, combinedOverlayIn);
 				// Undo rotation
 				matrixStackIn.pop();
 			}
