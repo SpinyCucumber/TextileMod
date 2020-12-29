@@ -1,4 +1,4 @@
-package spinyq.spinytextiles.client.render;
+package spinyq.spinytextiles.client.model;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -35,7 +35,7 @@ import net.minecraftforge.client.model.pipeline.TRSRTransformer;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 
 @OnlyIn(Dist.CLIENT)
-public class CuboidModelNew {
+public class CuboidModel {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 	private static final Map<Direction, CoordinatePlane> SIDE_PLANES = Maps

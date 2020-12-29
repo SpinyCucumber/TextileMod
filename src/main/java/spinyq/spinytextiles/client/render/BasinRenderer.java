@@ -18,7 +18,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import spinyq.spinytextiles.client.render.CuboidModelNew.BakedCuboid;
+import spinyq.spinytextiles.client.model.CuboidModel;
+import spinyq.spinytextiles.client.model.CuboidModel.BakedCuboid;
 import spinyq.spinytextiles.tiles.BasinTile;
 import spinyq.spinytextiles.tiles.BasinTile.BasinStateVisitor;
 import spinyq.spinytextiles.tiles.BasinTile.FilledState;
@@ -51,8 +52,8 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	private final BakedCuboid[] fluidModels = new BakedCuboid[BasinTile.MAX_WATER_LEVEL];
 
 	@SuppressWarnings("deprecation")
-	private CuboidModelNew createFluidModel(int waterLevel) {
-		CuboidModelNew cuboid = new CuboidModelNew();
+	private CuboidModel createFluidModel(int waterLevel) {
+		CuboidModel cuboid = new CuboidModel();
 		// Set the model's texture
 		cuboid.setTexture(new Material(
 				AtlasTexture.LOCATION_BLOCKS_TEXTURE,
@@ -74,7 +75,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 		// so we skip waterLevel = 0
 		// Max water level is inclusive
 		for (int waterLevel = 1; waterLevel <= BasinTile.MAX_WATER_LEVEL; waterLevel++) {
-			CuboidModelNew cuboid = createFluidModel(waterLevel);
+			CuboidModel cuboid = createFluidModel(waterLevel);
 			fluidModels[waterLevel - 1] = cuboid.bake(TransformationMatrix.identity());
 		}
 	}

@@ -23,7 +23,8 @@ import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.blocks.SpinningWheelBlock;
-import spinyq.spinytextiles.client.render.CuboidModelNew.BakedCuboid;
+import spinyq.spinytextiles.client.model.CuboidModel;
+import spinyq.spinytextiles.client.model.CuboidModel.BakedCuboid;
 import spinyq.spinytextiles.tiles.SpinningWheelTile;
 import spinyq.spinytextiles.tiles.SpinningWheelTile.BaseState;
 import spinyq.spinytextiles.tiles.SpinningWheelTile.SpinningWheelStateVisitor;
@@ -80,7 +81,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 	 */
 	private void generateModel() {
 		// Create a cuboid model
-		CuboidModelNew cuboid = new CuboidModelNew();
+		CuboidModel cuboid = new CuboidModel();
 		// Set the texture of certain sides
 		cuboid.setSideTexture(Direction.DOWN, THREAD_TEXTURE);
 		cuboid.setSideTexture(Direction.UP, THREAD_TEXTURE);
