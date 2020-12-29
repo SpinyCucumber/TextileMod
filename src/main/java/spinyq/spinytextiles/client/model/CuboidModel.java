@@ -72,7 +72,7 @@ public class CuboidModel {
 			for (int i = 0; i < corners.length; i++) {
 				Vec2f uv = uvPlane.project(vertices[i].pos);
 				vertices[i].u = sprite.getInterpolatedU(uv.x);
-				vertices[i].v = sprite.getInterpolatedU(uv.y);
+				vertices[i].v = sprite.getInterpolatedV(uv.y);
 			}
 		}
 		
@@ -114,7 +114,7 @@ public class CuboidModel {
 			float sizeU = maxU - minU, sizeV = maxV - minV;
 			for (int i = 0; i < corners.length; i++) {
 				vertices[i].u = sprite.getInterpolatedU((sizeU * corners[i].x) + minU);
-				vertices[i].v = sprite.getInterpolatedU((sizeV * corners[i].y) + minV);
+				vertices[i].v = sprite.getInterpolatedV((sizeV * corners[i].y) + minV);
 			}
 		}
 		
