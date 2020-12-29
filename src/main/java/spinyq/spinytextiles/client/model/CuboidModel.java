@@ -201,7 +201,7 @@ public class CuboidModel {
 			LOGGER.trace("Baking side: {}", side);
 			// Get the face for the side
 			// If we don't have any data for the side, don't render it
-			CuboidFace face = getFace(side);
+			CuboidFace face = faces.get(side);
 			if (face == null)
 				continue;
 			// Get the sprite
