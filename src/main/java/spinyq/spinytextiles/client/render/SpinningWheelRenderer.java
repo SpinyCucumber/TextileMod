@@ -9,6 +9,7 @@ import com.mojang.blaze3d.vertex.IVertexBuilder;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Quaternion;
 import net.minecraft.client.renderer.TransformationMatrix;
+import net.minecraft.client.renderer.Vector3f;
 import net.minecraft.client.renderer.model.Material;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
@@ -86,16 +87,16 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 		cuboid.setSideTexture(Direction.SOUTH, THREAD_TEXTURE);
 		cuboid.setSideTexture(Direction.NORTH, THREAD_TEXTURE);
 		// Set the model dimensions
-		// Make sure the model is centered so it rotates correctly
-		cuboid.positionFrom.setX(7.5f / 16f - 0.5f);
-		cuboid.positionFrom.setY(2f / 16f - 0.01f - 0.5f);
-		cuboid.positionFrom.setZ(1f / 16f - 0.01f - 0.5f);
+		cuboid.positionFrom.setX(7.5f / 16f);
+		cuboid.positionFrom.setY(2f / 16f - 0.01f);
+		cuboid.positionFrom.setZ(1f / 16f - 0.01f);
 
-		cuboid.positionTo.setX(8f / 16f - 0.5f);
-		cuboid.positionTo.setX(16f / 16f + 0.01f - 0.5f);
-		cuboid.positionTo.setX(15f / 16f + 0.01f - 0.5f);
+		cuboid.positionTo.setX(8.5f / 16f);
+		cuboid.positionTo.setY(16f / 16f + 0.01f);
+		cuboid.positionTo.setZ(15f / 16f + 0.01f);
 		// Finally, bake the model
-		threadModel = cuboid.bake(TransformationMatrix.identity());
+		// Make sure the model is centered so it rotates correctly
+		threadModel = cuboid.bake(new TransformationMatrix(new Vector3f(-0.5f,-0.5f,-0.5f), null, null, null));
 		// Done
 	}
 

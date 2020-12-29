@@ -167,14 +167,14 @@ public class CuboidModelNew {
 	}
 
 	public BakedCuboid bake(TransformationMatrix transform) {
-		LOGGER.trace("Baking cuboid model...");
+		LOGGER.info("Baking cuboid model...");
 		// Start constructing quads
 		ImmutableList.Builder<BakedQuad> builder = new ImmutableList.Builder<>();
 		// Construct the position and for each corner on the cube
 		// Add quads for each face
 		Vector3f size = getSize();
 		for (Direction side : Direction.values()) {
-			LOGGER.trace("Baking side: {}", side);
+			LOGGER.info("Baking side: {}", side);
 			// Get the texture for the side
 			// If the side doesn't have a texture, skip this side
 			Material texture = getSideTexture(side);
@@ -182,7 +182,7 @@ public class CuboidModelNew {
 				continue;
 			// Get the sprite
 			TextureAtlasSprite sprite = texture.getSprite();
-			LOGGER.trace("Using sprite: {}", sprite);
+			LOGGER.info("Using sprite: {}", sprite);
 			// Iterate over the four corners of the face
 			// to construct the four vertices of the quad
 			PositionTextureVertex[] vertices = new PositionTextureVertex[4];
@@ -193,11 +193,11 @@ public class CuboidModelNew {
 			positionPlane.scale(size);
 			positionPlane.translate(positionFrom);
 			uvPlane.scale(16f);
-			LOGGER.trace("Position plane: {}", positionPlane);
-			LOGGER.trace("UV plane: {}", uvPlane);
+			LOGGER.info("Position plane: {}", positionPlane);
+			LOGGER.info("UV plane: {}", uvPlane);
 			for (int i = 0; i < CORNERS.length; i++) {
 				Vec2f corner = CORNERS[i];
-				LOGGER.trace("Creating vertex for corner: {}", corner);
+				LOGGER.info("Creating vertex for corner: {}", corner);
 				// Initialize vertex
 				vertices[i] = new PositionTextureVertex();
 				// Get the position of the vertex
@@ -208,8 +208,8 @@ public class CuboidModelNew {
 				Vec2f uv = uvPlane.project(vertices[i].pos);
 				vertices[i].u = sprite.getInterpolatedU(uv.x);
 				vertices[i].v = sprite.getInterpolatedV(uv.y);
-				LOGGER.trace("Using u: {} and v: {}", uv.x, uv.y);
-				LOGGER.trace("Completed vertex: {}", vertices[i]);
+				LOGGER.info("Using u: {} and v: {}", uv.x, uv.y);
+				LOGGER.info("Completed vertex: {}", vertices[i]);
 			}
 			// Finally, construct a quad using the four vertices
 			builder.add(buildQuad(transform, side, sprite, 0, vertices));
