@@ -83,19 +83,14 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 		// Create a cuboid model
 		CuboidModel cuboid = new CuboidModel();
 		// Set the texture of certain sides
-		cuboid.setSideTexture(Direction.DOWN, THREAD_TEXTURE);
-		cuboid.setSideTexture(Direction.UP, THREAD_TEXTURE);
-		cuboid.setSideTexture(Direction.SOUTH, THREAD_TEXTURE);
-		cuboid.setSideTexture(Direction.NORTH, THREAD_TEXTURE);
+		cuboid.getFace(Direction.DOWN).setTexture(THREAD_TEXTURE);
+		cuboid.getFace(Direction.UP).setTexture(THREAD_TEXTURE);
+		cuboid.getFace(Direction.SOUTH).setTexture(THREAD_TEXTURE);
+		cuboid.getFace(Direction.NORTH).setTexture(THREAD_TEXTURE);
 		// Set the model dimensions
 		// Minimal offset to prevent depth-fighting with spinning wheel model
-		cuboid.positionFrom.setX(7.5f / 16f);
-		cuboid.positionFrom.setY(2f / 16f - 0.0002f);
-		cuboid.positionFrom.setZ(1f / 16f - 0.0002f);
-
-		cuboid.positionTo.setX(8.5f / 16f);
-		cuboid.positionTo.setY(16f / 16f + 0.0002f);
-		cuboid.positionTo.setZ(15f / 16f + 0.0002f);
+		cuboid.setFromPosition(new Vector3f(7.5f / 16f, 2f / 16f - 0.0002f, 1f / 16f - 0.0002f));
+		cuboid.setToPosition(new Vector3f(8.5f / 16f, 16f / 16f + 0.0002f, 15f / 16f + 0.0002f));
 		// Finally, bake the model
 		// Make sure the model is centered so it rotates correctly
 		threadModel = cuboid.bake(new TransformationMatrix(new Vector3f(-0.5f,-0.5f,-0.5f), null, null, null));

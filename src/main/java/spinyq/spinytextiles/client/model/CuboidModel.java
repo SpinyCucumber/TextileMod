@@ -62,6 +62,37 @@ public class CuboidModel {
 			new Vec2f(0, 1) };
 
 	@OnlyIn(Dist.CLIENT)
+	public static class CuboidFace {
+		
+		private Material texture;
+		
+		public void setTexture(Material texture) {
+			this.texture = texture;
+		}
+		
+	}
+	
+	@OnlyIn(Dist.CLIENT)
+	public static class BakedCuboid {
+	
+		private ImmutableList<BakedQuad> quads;
+	
+		private BakedCuboid(ImmutableList<BakedQuad> quads) {
+			this.quads = quads;
+		}
+	
+		public void render(IVertexBuilder buffer, MatrixStack stack, RGBAColor color, int combinedLightIn,
+				int combinedOverlayIn) {
+			MatrixStack.Entry entry = stack.getLast();
+			for (BakedQuad quad : quads) {
+				renderQuad(buffer, quad, entry, color, combinedLightIn, combinedOverlayIn);
+			}
+		}
+	
+	}
+	
+
+	@OnlyIn(Dist.CLIENT)
 	public static class CoordinatePlane {
 
 		private Vector3f origin, xAxis, yAxis;
@@ -123,25 +154,6 @@ public class CuboidModel {
 	}
 
 	@OnlyIn(Dist.CLIENT)
-	public static class BakedCuboid {
-
-		private ImmutableList<BakedQuad> quads;
-
-		private BakedCuboid(ImmutableList<BakedQuad> quads) {
-			this.quads = quads;
-		}
-
-		public void render(IVertexBuilder buffer, MatrixStack stack, RGBAColor color, int combinedLightIn,
-				int combinedOverlayIn) {
-			MatrixStack.Entry entry = stack.getLast();
-			for (BakedQuad quad : quads) {
-				renderQuad(buffer, quad, entry, color, combinedLightIn, combinedOverlayIn);
-			}
-		}
-
-	}
-
-	@OnlyIn(Dist.CLIENT)
 	private static class PositionTextureVertex {
 
 		public Vector3f pos;
@@ -152,27 +164,29 @@ public class CuboidModel {
 		}
 	}
 
-	public Vector3f positionFrom = new Vector3f(), positionTo = new Vector3f();
-	private Map<Direction, Material> sideTextures = new EnumMap<>(Direction.class);
+	private Vector3f fromPosition, toPosition;
+	private Map<Direction, CuboidFace> faces = new EnumMap<>(Direction.class);
 
-	public Material getSideTexture(Direction side) {
-		return sideTextures.get(side);
+	public void setFromPosition(Vector3f fromPosition) {
+		this.fromPosition = fromPosition;
 	}
 
-	public void setSideTexture(Direction side, Material texture) {
-		sideTextures.put(side, texture);
+	public void setToPosition(Vector3f toPosition) {
+		this.toPosition = toPosition;
 	}
 
-	// Sets all side textures to this texture.
-	public void setTexture(Material texture) {
-		for (Direction side : Direction.values()) {
-			sideTextures.put(side, texture);
+	public CuboidFace getFace(Direction direction) {
+		CuboidFace face = faces.get(direction);
+		if (face == null) {
+			face = new CuboidFace();
+			faces.put(direction, face);
 		}
+		return face;
 	}
 
 	public Vector3f getSize() {
-		Vector3f result = positionTo.copy();
-		result.sub(positionFrom);
+		Vector3f result = toPosition.copy();
+		result.sub(fromPosition);
 		return result;
 	}
 
@@ -185,13 +199,13 @@ public class CuboidModel {
 		Vector3f size = getSize();
 		for (Direction side : Direction.values()) {
 			LOGGER.trace("Baking side: {}", side);
-			// Get the texture for the side
-			// If the side doesn't have a texture, skip this side
-			Material texture = getSideTexture(side);
-			if (texture == null)
+			// Get the face for the side
+			// If we don't have any data for the side, don't render it
+			CuboidFace face = getFace(side);
+			if (face == null)
 				continue;
 			// Get the sprite
-			TextureAtlasSprite sprite = texture.getSprite();
+			TextureAtlasSprite sprite = face.texture.getSprite();
 			LOGGER.trace("Using sprite: {}", sprite);
 			// Iterate over the four corners of the face
 			// to construct the four vertices of the quad
@@ -201,7 +215,7 @@ public class CuboidModel {
 			CoordinatePlane sidePlane = SIDE_PLANES.get(side);
 			CoordinatePlane positionPlane = sidePlane.copy(), uvPlane = sidePlane.copy();
 			positionPlane.scale(size);
-			positionPlane.translate(positionFrom);
+			positionPlane.translate(fromPosition);
 			uvPlane.scale(16f);
 			LOGGER.trace("Position plane: {}", positionPlane);
 			LOGGER.trace("UV plane: {}", uvPlane);

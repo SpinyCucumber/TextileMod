@@ -8,11 +8,13 @@ import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.TransformationMatrix;
+import net.minecraft.client.renderer.Vector3f;
 import net.minecraft.client.renderer.model.Material;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.fluid.Fluids;
+import net.minecraft.util.Direction;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelBakeEvent;
@@ -32,8 +34,12 @@ import spinyq.spinytextiles.utility.color.RGBColor;
 public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	
+
 	private static final RGBColor WATER_COLOR = new RGBColor().fromIntString("0x3F76E4");
+	@SuppressWarnings("deprecation")
+	private static final Material WATER_TEXTURE = new Material(
+			AtlasTexture.LOCATION_BLOCKS_TEXTURE,
+			Fluids.WATER.getAttributes().getStillTexture());
 
 	private static final BasinStateVisitor COLOR_CALCULATOR = new BasinStateVisitor() {
 
@@ -48,24 +54,19 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 		}
 
 	};
-	
+
 	private final BakedCuboid[] fluidModels = new BakedCuboid[BasinTile.MAX_WATER_LEVEL];
 
-	@SuppressWarnings("deprecation")
 	private CuboidModel createFluidModel(int waterLevel) {
 		CuboidModel cuboid = new CuboidModel();
-		// Set the model's texture
-		cuboid.setTexture(new Material(
-				AtlasTexture.LOCATION_BLOCKS_TEXTURE,
-				Fluids.WATER.getAttributes().getStillTexture()));
+		// Set the texture for each face
+		for (Direction side : Direction.values()) {
+			cuboid.getFace(side).setTexture(WATER_TEXTURE);
+		}
 		// Set the model dimensions
-		cuboid.positionFrom.setX(0.125f - .01f);
-		cuboid.positionFrom.setY(0.2f - .01f);
-		cuboid.positionFrom.setZ(0.125f - .01f);
-
-		cuboid.positionTo.setX(0.875f + .01f);
-		cuboid.positionTo.setY(0.2f + ((float) waterLevel / (float) BasinTile.MAX_WATER_LEVEL) * 0.75f + .01f);
-		cuboid.positionTo.setZ(0.875f + .01f);
+		float height = ((float) waterLevel / (float) BasinTile.MAX_WATER_LEVEL) * 0.75f;
+		cuboid.setFromPosition(new Vector3f(0.125f - 0.01f, 0.2f - 0.01f, 0.125f - 0.01f));
+		cuboid.setToPosition(new Vector3f(0.875f + 0.01f, 0.2f + height + 0.01f, 0.875f + .01f));
 		// Done
 		return cuboid;
 	}
@@ -79,7 +80,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 			fluidModels[waterLevel - 1] = cuboid.bake(TransformationMatrix.identity());
 		}
 	}
-	
+
 	public BasinRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
 		super(rendererDispatcherIn);
 		// Register ourselves to receive events.
@@ -95,7 +96,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 	@Override
 	public void render(BasinTile basin, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer renderer,
 			int combinedLightIn, int combinedOverlayIn) {
-		
+
 		BasinStateVisitor blockRenderer = new BasinStateVisitor() {
 
 			@Override
@@ -113,9 +114,9 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 					model.render(buffer, matrixStackIn, new RGBAColor(color, 1.0f), combinedLightIn, combinedOverlayIn);
 				}
 			}
-			
+
 		};
-		
+
 		basin.accept(blockRenderer);
 	}
 
