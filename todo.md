@@ -60,7 +60,6 @@
 - [x] Fix Brush Recipe
 - [x] Pattern Registry
 - [x] CuboidModel Rewrite
-	- [ ] IMPROVEMENT Better UV support
 - [ ] Module System
 - [ ] More efficient nearest-neighbor search for ColorWord
 - [x] Better localization support

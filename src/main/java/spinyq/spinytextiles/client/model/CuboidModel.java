@@ -42,8 +42,6 @@ import spinyq.spinytextiles.utility.color.RGBAColor;
  * @author Elijah Hilty
  *
  */
-// TODO Better support for UVs. The current way of handling UV coordinates is sort of
-// vestigial, and can be unpredictable.
 @OnlyIn(Dist.CLIENT)
 public class CuboidModel {
 
