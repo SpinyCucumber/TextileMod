@@ -88,13 +88,14 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 		cuboid.setSideTexture(Direction.SOUTH, THREAD_TEXTURE);
 		cuboid.setSideTexture(Direction.NORTH, THREAD_TEXTURE);
 		// Set the model dimensions
+		// Minimal offset to prevent depth-fighting with spinning wheel model
 		cuboid.positionFrom.setX(7.5f / 16f);
-		cuboid.positionFrom.setY(2f / 16f - 0.01f);
-		cuboid.positionFrom.setZ(1f / 16f - 0.01f);
+		cuboid.positionFrom.setY(2f / 16f - 0.0002f);
+		cuboid.positionFrom.setZ(1f / 16f - 0.0002f);
 
 		cuboid.positionTo.setX(8.5f / 16f);
-		cuboid.positionTo.setY(16f / 16f + 0.01f);
-		cuboid.positionTo.setZ(15f / 16f + 0.01f);
+		cuboid.positionTo.setY(16f / 16f + 0.0002f);
+		cuboid.positionTo.setZ(15f / 16f + 0.0002f);
 		// Finally, bake the model
 		// Make sure the model is centered so it rotates correctly
 		threadModel = cuboid.bake(new TransformationMatrix(new Vector3f(-0.5f,-0.5f,-0.5f), null, null, null));

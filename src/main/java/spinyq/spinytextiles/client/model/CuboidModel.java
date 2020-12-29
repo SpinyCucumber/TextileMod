@@ -34,6 +34,16 @@ import net.minecraftforge.client.model.pipeline.IVertexConsumer;
 import net.minecraftforge.client.model.pipeline.TRSRTransformer;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 
+/**
+ * A boring cube model.
+ * Textures can be applied to different sides, similar to BlockModel.
+ * CuboidModels must be baked before they can be rendered. This makes
+ * rendering much faster.
+ * @author Elijah Hilty
+ *
+ */
+// TODO Better support for UVs. The current way of handling UV coordinates is sort of
+// vestigial, and can be unpredictable.
 @OnlyIn(Dist.CLIENT)
 public class CuboidModel {
 
@@ -167,14 +177,14 @@ public class CuboidModel {
 	}
 
 	public BakedCuboid bake(TransformationMatrix transform) {
-		LOGGER.info("Baking cuboid model...");
+		LOGGER.trace("Baking cuboid model...");
 		// Start constructing quads
 		ImmutableList.Builder<BakedQuad> builder = new ImmutableList.Builder<>();
 		// Construct the position and for each corner on the cube
 		// Add quads for each face
 		Vector3f size = getSize();
 		for (Direction side : Direction.values()) {
-			LOGGER.info("Baking side: {}", side);
+			LOGGER.trace("Baking side: {}", side);
 			// Get the texture for the side
 			// If the side doesn't have a texture, skip this side
 			Material texture = getSideTexture(side);
@@ -182,7 +192,7 @@ public class CuboidModel {
 				continue;
 			// Get the sprite
 			TextureAtlasSprite sprite = texture.getSprite();
-			LOGGER.info("Using sprite: {}", sprite);
+			LOGGER.trace("Using sprite: {}", sprite);
 			// Iterate over the four corners of the face
 			// to construct the four vertices of the quad
 			PositionTextureVertex[] vertices = new PositionTextureVertex[4];
@@ -193,11 +203,11 @@ public class CuboidModel {
 			positionPlane.scale(size);
 			positionPlane.translate(positionFrom);
 			uvPlane.scale(16f);
-			LOGGER.info("Position plane: {}", positionPlane);
-			LOGGER.info("UV plane: {}", uvPlane);
+			LOGGER.trace("Position plane: {}", positionPlane);
+			LOGGER.trace("UV plane: {}", uvPlane);
 			for (int i = 0; i < CORNERS.length; i++) {
 				Vec2f corner = CORNERS[i];
-				LOGGER.info("Creating vertex for corner: {}", corner);
+				LOGGER.trace("Creating vertex for corner: {}", corner);
 				// Initialize vertex
 				vertices[i] = new PositionTextureVertex();
 				// Get the position of the vertex
@@ -208,8 +218,8 @@ public class CuboidModel {
 				Vec2f uv = uvPlane.project(vertices[i].pos);
 				vertices[i].u = sprite.getInterpolatedU(uv.x);
 				vertices[i].v = sprite.getInterpolatedV(uv.y);
-				LOGGER.info("Using u: {} and v: {}", uv.x, uv.y);
-				LOGGER.info("Completed vertex: {}", vertices[i]);
+				LOGGER.trace("Using u: {} and v: {}", uv.x, uv.y);
+				LOGGER.trace("Completed vertex: {}", vertices[i]);
 			}
 			// Finally, construct a quad using the four vertices
 			builder.add(buildQuad(transform, side, sprite, 0, vertices));
