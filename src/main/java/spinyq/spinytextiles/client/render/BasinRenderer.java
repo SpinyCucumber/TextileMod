@@ -57,13 +57,13 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 				AtlasTexture.LOCATION_BLOCKS_TEXTURE,
 				Fluids.WATER.getAttributes().getStillTexture()));
 		// Set the model dimensions
-		model.minX = 0.125f - .01f;
-		model.minY = 0.2f - .01f;
-		model.minZ = 0.125f - .01f;
+		model.positionFrom.setX(0.125f - .01f);
+		model.positionFrom.setY(0.2f - .01f);
+		model.positionFrom.setZ(0.125f - .01f);
 
-		model.maxX = 0.875f + .01f;
-		model.maxY = 0.2f + ((float) waterLevel / (float) BasinTile.MAX_WATER_LEVEL) * 0.75f + .01f;
-		model.maxZ = 0.875f + .01f;
+		model.positionTo.setX(0.875f + .01f);
+		model.positionTo.setY(0.2f + ((float) waterLevel / (float) BasinTile.MAX_WATER_LEVEL) * 0.75f + .01f);
+		model.positionTo.setZ(0.875f + .01f);
 		// Done
 		return model;
 	}

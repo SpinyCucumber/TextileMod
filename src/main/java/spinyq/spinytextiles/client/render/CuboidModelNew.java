@@ -8,6 +8,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
@@ -18,7 +20,7 @@ import net.minecraft.client.renderer.model.Material;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.Vec2f;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.model.pipeline.BakedQuadBuilder;
@@ -29,6 +31,79 @@ import spinyq.spinytextiles.utility.color.RGBColor;
 @OnlyIn(Dist.CLIENT)
 public class CuboidModelNew {
 
+	private static final Logger LOGGER = LogManager.getLogger();
+	private static final Map<Direction, CoordinatePlane> SIDE_PLANES = Maps.immutableEnumMap(
+			new ImmutableMap.Builder<Direction, CoordinatePlane>()
+			.put(Direction.DOWN, new CoordinatePlane(new Vector3f(0f,0f,0f), Direction.EAST, Direction.SOUTH))
+			.put(Direction.UP, new CoordinatePlane(new Vector3f(0f,1f,1f), Direction.EAST, Direction.NORTH))
+			.put(Direction.NORTH, new CoordinatePlane(new Vector3f(1f,1f,1f), Direction.WEST, Direction.DOWN))
+			.put(Direction.SOUTH, new CoordinatePlane(new Vector3f(0f,1f,0f), Direction.EAST, Direction.DOWN))
+			.put(Direction.WEST, new CoordinatePlane(new Vector3f(0f,1f,1f), Direction.SOUTH, Direction.DOWN))
+			.put(Direction.EAST, new CoordinatePlane(new Vector3f(1f,1f,0f), Direction.NORTH, Direction.DOWN))
+			.build());
+	
+	private static final Vec2i[] CORNERS = new Vec2i[] { new Vec2i(0,0), new Vec2i(1,0), new Vec2i(1,1),
+	new Vec2i(0,1) };
+
+	public static class CoordinatePlane {
+		
+		private Vector3f origin, xAxis, yAxis;
+
+		private CoordinatePlane(Vector3f origin, Vector3f xAxis, Vector3f yAxis) {
+			this.origin = origin;
+			this.xAxis = xAxis;
+			this.yAxis = yAxis;
+		}
+
+		private CoordinatePlane(Vector3f origin, Direction xAxis, Direction yAxis) {
+			this(origin, xAxis.toVector3f(), yAxis.toVector3f());
+		}
+		
+		public Vector3f map(Vec2i vec) {
+			Vector3f xPart = xAxis.copy();
+			Vector3f yPart = yAxis.copy();
+			xPart.mul(vec.x);
+			yPart.mul(vec.y);
+			Vector3f point = origin.copy();
+			point.add(xPart);
+			point.add(yPart);
+			return point;
+		}
+		
+		public Vec2f project(Vector3f vectorIn) {
+			Vector3f vec = vectorIn.copy();
+			vec.sub(origin);
+			return new Vec2f(xAxis.dot(vec), yAxis.dot(vec));
+		}
+		
+		public CoordinatePlane copy() {
+			return new CoordinatePlane(origin.copy(), xAxis.copy(), yAxis.copy());
+		}
+		
+		public void translate(Vector3f vec) {
+			origin.add(vec);
+		}
+		
+		public void scale(Vector3f vec) {
+			xAxis.mul(vec.getX(), vec.getY(), vec.getZ());
+			yAxis.mul(vec.getX(), vec.getY(), vec.getZ());
+		}
+		
+		public void scale(float s) {
+			xAxis.mul(s);
+			yAxis.mul(s);
+		}
+		
+		public String toString() {
+			return MoreObjects.toStringHelper(this)
+					.add("origin", origin)
+					.add("xAxis", xAxis)
+					.add("yAxis", yAxis)
+					.toString();
+		}
+		
+	}
+	
 	@OnlyIn(Dist.CLIENT)
 	public static class BakedCuboid {
 
@@ -53,10 +128,6 @@ public class CuboidModelNew {
 
 		public Vector3f pos;
 		public float u, v;
-
-		private PositionTextureVertex() {
-			pos = new Vector3f();
-		}
 
 		public String toString() {
 			return MoreObjects.toStringHelper(this)
@@ -83,12 +154,7 @@ public class CuboidModelNew {
 
 	}
 
-	private static final Logger LOGGER = LogManager.getLogger();
-	private static final Vec2i[] CORNERS = new Vec2i[] { new Vec2i(-1, -1), new Vec2i(1, -1), new Vec2i(1, 1),
-			new Vec2i(-1, 1) };
-
-	public float minX, minY, minZ;
-	public float maxX, maxY, maxZ;
+	public Vector3f positionFrom = new Vector3f(), positionTo = new Vector3f();
 
 	private Map<Direction, Material> sideTextures = new EnumMap<>(Direction.class);
 
@@ -106,6 +172,12 @@ public class CuboidModelNew {
 			sideTextures.put(side, texture);
 		}
 	}
+	
+	public Vector3f getSize() {
+		Vector3f result = positionTo.copy();
+		result.sub(positionFrom);
+		return result;
+	}
 
 	public BakedCuboid bake(TransformationMatrix transform) {
 		LOGGER.info("Baking cuboid model...");
@@ -113,6 +185,7 @@ public class CuboidModelNew {
 		ImmutableList.Builder<BakedQuad> builder = new ImmutableList.Builder<>();
 		// Construct the position and for each corner on the cube
 		// Add quads for each face
+		Vector3f size = getSize();
 		for (Direction side : Direction.values()) {
 			LOGGER.info("Baking side: {}", side);
 			// Get the texture for the side
@@ -123,35 +196,31 @@ public class CuboidModelNew {
 			// Get the sprite
 			TextureAtlasSprite sprite = texture.getSprite();
 			LOGGER.info("Using sprite: {}", sprite);
-			// For each side, get the normal, and the two vectors perpendicular
-			// to the normal.
-			Vec3i directionVec = side.getDirectionVec(), axis0 = getPerpendicular(directionVec),
-					axis1 = getPerpendicular(axis0);
-			LOGGER.info("Normal vector: {} Axis A: {} Axis B: {}", directionVec, axis0, axis1);
 			// Iterate over the four corners of the face
 			// to construct the four vertices of the quad
 			PositionTextureVertex[] vertices = new PositionTextureVertex[4];
 			int index = 0;
-
+			// Create the coordinate plane for this side
+			// Get the coordinate plane associated with the side and transform it
+			CoordinatePlane sidePlane = SIDE_PLANES.get(side).copy();
+			CoordinatePlane positionPlane = sidePlane.copy(), uvPlane = sidePlane.copy();
+			positionPlane.scale(size);
+			positionPlane.translate(positionFrom);
+			uvPlane.scale(16f);
+			LOGGER.info("Position plane: {}", positionPlane);
+			LOGGER.info("UV plane: {}", uvPlane);
 			for (Vec2i corner : CORNERS) {
 				LOGGER.info("Creating vertex for corner: {}", corner);
 				PositionTextureVertex vertex = new PositionTextureVertex();
-				// Get the position of the vertex in "cube space"
-				// This means each component is either going to be -1 or 1
-				Vec3i posCube = add(directionVec, add(scale(axis0, corner.x), scale(axis1, corner.y)));
-				LOGGER.info("Cube position: {}", posCube);
-				// Next, get the actual position of the vertex
-				vertex.pos.setX((posCube.getX() == -1) ? minX : maxX);
-				vertex.pos.setY((posCube.getY() == -1) ? minY : maxY);
-				vertex.pos.setZ((posCube.getZ() == -1) ? minZ : maxZ);
+				// Get the position of the vertex
+				vertex.pos = positionPlane.map(corner);
 				// Next, get the uv coordinates of the vertex
 				// We project the vertex position onto the face to get the uv coordinates
 				// We have to multiply the uv by 16 since Minecraft is weird
-				float u = 16f * project(vertex.pos, axis0);
-				float v = 16f * project(vertex.pos, axis1);
-				vertex.u = sprite.getInterpolatedU(u);
-				vertex.v = sprite.getInterpolatedV(v);
-				LOGGER.info("Using u: {} and v: {}", u, v);
+				Vec2f uv = uvPlane.project(vertex.pos);
+				vertex.u = sprite.getInterpolatedU(uv.x);
+				vertex.v = sprite.getInterpolatedV(uv.y);
+				LOGGER.info("Using u: {} and v: {}", uv.x, uv.y);
 				
 				LOGGER.info("Completed vertex: {}", vertex);
 				vertices[index++] = vertex;
@@ -161,22 +230,6 @@ public class CuboidModelNew {
 		}
 		// Finished
 		return new BakedCuboid(builder.build());
-	}
-
-	private static Vec3i getPerpendicular(Vec3i vec) {
-		return new Vec3i(vec.getZ(), vec.getX(), vec.getY());
-	}
-
-	private static Vec3i add(Vec3i left, Vec3i right) {
-		return new Vec3i(left.getX() + right.getX(), left.getY() + right.getY(), left.getZ() + right.getZ());
-	}
-
-	private static Vec3i scale(Vec3i vec, int scale) {
-		return new Vec3i(scale * vec.getX(), scale * vec.getY(), scale * vec.getZ());
-	}
-	
-	private static float project(Vector3f vec, Vec3i onto) {
-		return vec.getX() * onto.getX() + vec.getY() + onto.getY() + vec.getZ() + onto.getZ();
 	}
 
 	private static BakedQuad buildQuad(TransformationMatrix transform, Direction side, TextureAtlasSprite sprite,
