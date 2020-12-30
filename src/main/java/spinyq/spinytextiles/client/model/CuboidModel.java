@@ -35,10 +35,10 @@ import net.minecraftforge.client.model.pipeline.TRSRTransformer;
 import spinyq.spinytextiles.utility.color.RGBAColor;
 
 /**
- * A boring cube model.
- * Textures can be applied to different sides, similar to BlockModel.
- * CuboidModels must be baked before they can be rendered. This makes
- * rendering much faster.
+ * A boring cube model. Textures can be applied to different sides, similar to
+ * BlockModel. CuboidModels must be baked before they can be rendered. This
+ * makes rendering much faster.
+ * 
  * @author Elijah Hilty
  *
  */
@@ -59,14 +59,27 @@ public class CuboidModel {
 	private static final Vec2f[] CORNERS = new Vec2f[] { new Vec2f(0, 0), new Vec2f(1, 0), new Vec2f(1, 1),
 			new Vec2f(0, 1) };
 
-	public static final UVProvider FULL_UV = new UVList(0f,0f,16f,16f);
+	public static final UVProvider FULL_UV = new UVProvider() {
+
+		@Override
+		public void provideUV(Direction side, TextureAtlasSprite sprite, PositionTextureVertex[] vertices,
+				Vec2f[] corners) {
+			float spriteSizeU = sprite.getMaxU() - sprite.getMinU(), spriteSizeV = sprite.getMaxV() - sprite.getMinV();
+			for (int i = 0; i < corners.length; i++) {
+				vertices[i].u = spriteSizeU * corners[i].x + sprite.getMinU();
+				vertices[i].v = spriteSizeV * corners[i].y + sprite.getMinV();
+			}
+		}
+
+	};
 	// Provides UV coordinates using the size and position of the cuboid.
 	// The works by projecting the position of each vertex onto a plane, and
 	// getting the UV coordinates from that plane.
 	public static final UVProvider AUTO_UV = new UVProvider() {
 
 		@Override
-		public void provideUV(Direction side, TextureAtlasSprite sprite, PositionTextureVertex[] vertices, Vec2f[] corners) {
+		public void provideUV(Direction side, TextureAtlasSprite sprite, PositionTextureVertex[] vertices,
+				Vec2f[] corners) {
 			CoordinatePlane uvPlane = SIDE_PLANES.get(side).copy();
 			uvPlane.scale(16f);
 			for (int i = 0; i < corners.length; i++) {
@@ -75,25 +88,25 @@ public class CuboidModel {
 				vertices[i].v = sprite.getInterpolatedV(uv.y);
 			}
 		}
-		
+
 	};
 
 	/**
-	 * Provides the UV coordinates for each corner on the face
-	 * of a cuboid.
+	 * Provides the UV coordinates for each corner on the face of a cuboid.
+	 * 
 	 * @author SpinyQ
 	 */
 	@OnlyIn(Dist.CLIENT)
 	public interface UVProvider {
-		
+
 		void provideUV(Direction side, TextureAtlasSprite sprite, PositionTextureVertex[] vertices, Vec2f[] corners);
-		
+
 	}
-	
+
 	/**
-	 * Allows clients to provide their own UV coordinates for each corner
-	 * on the face of a cuboid.
-	 * UV coordinates in Minecraft are generally between 0 and 16.
+	 * Allows clients to provide their own UV coordinates for each corner on the
+	 * face of a cuboid. For this class, UVs are measured in pixels.
+	 * 
 	 * @author SpinyQ
 	 *
 	 */
@@ -101,7 +114,7 @@ public class CuboidModel {
 	public static class UVList implements UVProvider {
 
 		private float minU, minV, maxU, maxV;
-		
+
 		public UVList(float minU, float minV, float maxU, float maxV) {
 			this.minU = minU;
 			this.minV = minV;
@@ -110,41 +123,49 @@ public class CuboidModel {
 		}
 
 		@Override
-		public void provideUV(Direction side, TextureAtlasSprite sprite, PositionTextureVertex[] vertices, Vec2f[] corners) {
-			float sizeU = maxU - minU, sizeV = maxV - minV;
+		public void provideUV(Direction side, TextureAtlasSprite sprite, PositionTextureVertex[] vertices,
+				Vec2f[] corners) {
+
+			float width = (float) sprite.getWidth(), height = (float) sprite.getHeight();
+			float spriteSizeU = sprite.getMaxU() - sprite.getMinU(), spriteSizeV = sprite.getMaxV() - sprite.getMinV();
+
+			float minUF = minU / width, minVF = minV / height, maxUF = maxU / width, maxVF = maxV / height;
+			float sizeUF = maxUF - minUF, sizeVF = maxVF - minVF;
+
 			for (int i = 0; i < corners.length; i++) {
-				vertices[i].u = sprite.getInterpolatedU((sizeU * corners[i].x) + minU);
-				vertices[i].v = sprite.getInterpolatedV((sizeV * corners[i].y) + minV);
+				float uF = sizeUF * corners[i].x + minUF, vF = sizeVF * corners[i].y + minVF;
+				vertices[i].u = spriteSizeU * uF + sprite.getMinU();
+				vertices[i].v = spriteSizeV * vF + sprite.getMinV();
 			}
 		}
-		
+
 	}
-	
+
 	@OnlyIn(Dist.CLIENT)
 	public static class CuboidFace {
-		
+
 		private Material texture;
 		private UVProvider uv = FULL_UV;
-		
+
 		public void setTexture(Material texture) {
 			this.texture = texture;
 		}
-		
+
 		public void setUV(UVProvider uv) {
 			this.uv = uv;
 		}
-		
+
 	}
-	
+
 	@OnlyIn(Dist.CLIENT)
 	public static class BakedCuboid {
-	
+
 		private ImmutableList<BakedQuad> quads;
-	
+
 		private BakedCuboid(ImmutableList<BakedQuad> quads) {
 			this.quads = quads;
 		}
-	
+
 		public void render(IVertexBuilder buffer, MatrixStack stack, RGBAColor color, int combinedLightIn,
 				int combinedOverlayIn) {
 			MatrixStack.Entry entry = stack.getLast();
@@ -152,9 +173,9 @@ public class CuboidModel {
 				renderQuad(buffer, quad, entry, color, combinedLightIn, combinedOverlayIn);
 			}
 		}
-	
+
 	}
-	
+
 	@OnlyIn(Dist.CLIENT)
 	public static class CoordinatePlane {
 
@@ -225,7 +246,7 @@ public class CuboidModel {
 		public String toString() {
 			return MoreObjects.toStringHelper(this).add("pos", pos).add("u", u).add("v", v).toString();
 		}
-		
+
 	}
 
 	private Vector3f fromPosition, toPosition;
@@ -341,10 +362,10 @@ public class CuboidModel {
 			}
 		}
 	}
-	
+
 	// Adapted from IVertexBuilder to allow for alpha
-	private static void renderQuad(IVertexBuilder buffer, BakedQuad quad, MatrixStack.Entry entry, RGBAColor color, int combinedLightIn,
-				int combinedOverlayIn) {
+	private static void renderQuad(IVertexBuilder buffer, BakedQuad quad, MatrixStack.Entry entry, RGBAColor color,
+			int combinedLightIn, int combinedOverlayIn) {
 		int[] aint = quad.getVertexData();
 		Vector3f vector3f = quad.getFace().toVector3f();
 		vector3f.transform(entry.getNormal());
@@ -367,8 +388,8 @@ public class CuboidModel {
 				Vector4f vector4f = new Vector4f(f, f1, f2, 1.0F);
 				vector4f.transform(entry.getMatrix());
 				buffer.applyBakedNormals(vector3f, bytebuffer, entry.getNormal());
-				buffer.addVertex(vector4f.getX(), vector4f.getY(), vector4f.getZ(), color.r, color.g, color.b, color.a, f9, f10,
-						combinedOverlayIn, l, vector3f.getX(), vector3f.getY(), vector3f.getZ());
+				buffer.addVertex(vector4f.getX(), vector4f.getY(), vector4f.getZ(), color.r, color.g, color.b, color.a,
+						f9, f10, combinedOverlayIn, l, vector3f.getX(), vector3f.getY(), vector3f.getZ());
 			}
 		}
 	}
