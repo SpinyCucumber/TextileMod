@@ -247,7 +247,7 @@ public class SpinningWheelTile extends TileEntity implements ITickableTileEntity
 			public ActionResultType onInteract(BlockInteraction interaction) {
 				// If we are finished spinning thread, allow the player to put the thread on a
 				// spindle item.
-				if (interaction.item == ModItems.SPINDLE_ITEM.get()) {
+				if (interaction.item == ModItems.SPOOL_ITEM.get()) {
 					if (!world.isRemote) {
 						// Consume one spindle
 						interaction.itemstack.shrink(1);
