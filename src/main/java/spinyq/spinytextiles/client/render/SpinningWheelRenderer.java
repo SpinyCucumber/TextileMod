@@ -28,6 +28,7 @@ import spinyq.spinytextiles.client.model.CuboidModel.BakedCuboid;
 import spinyq.spinytextiles.client.model.CuboidModel.UVList;
 import spinyq.spinytextiles.tiles.SpinningWheelTile;
 import spinyq.spinytextiles.tiles.SpinningWheelTile.BaseState;
+import spinyq.spinytextiles.tiles.SpinningWheelTile.BaseState.SpinningState;
 import spinyq.spinytextiles.tiles.SpinningWheelTile.SpinningWheelStateVisitor;
 import spinyq.spinytextiles.utility.FunctionHelper;
 import spinyq.spinytextiles.utility.FunctionHelper.Result;
@@ -41,17 +42,20 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 
 	private static final Logger LOGGER = LogManager.getLogger();
 	@SuppressWarnings("deprecation")
-	private static final Material THREAD_TEXTURE = new Material(AtlasTexture.LOCATION_BLOCKS_TEXTURE,
-			new ResourceLocation("minecraft:block/white_wool"));
+	private static final Material TEXTURE = new Material(AtlasTexture.LOCATION_BLOCKS_TEXTURE,
+			new ResourceLocation("spinytextiles:block/spinning_wheel")),
+			TEXTURE_SPINNING = new Material(AtlasTexture.LOCATION_BLOCKS_TEXTURE,
+					new ResourceLocation("spinytextiles:block/spinning_wheel_spinning"));
+	
 	private static final Direction[] THREAD_MODEL_SIDES = new Direction[] { Direction.DOWN, Direction.UP,
 			Direction.SOUTH, Direction.NORTH };
 
-	private BakedCuboid threadModel;
+	private BakedCuboid threadModel, threadModelSpinning;
 
 	// If the wheel is spinning, interpolate between previous and current threads to
 	// get a smooth animation.
 	// Otherwise, simply use the most current thread info.
-	private static final SpinningWheelStateVisitor COLOR_CALCULATOR = new SpinningWheelStateVisitor() {
+	private final SpinningWheelStateVisitor colorCalculator = new SpinningWheelStateVisitor() {
 
 		@Override
 		public void visit(BaseState state) {
@@ -78,18 +82,32 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 		}
 
 	};
+	
+	private final SpinningWheelStateVisitor threadModelGetter = new SpinningWheelStateVisitor() {
+
+		@Override
+		public void visit(BaseState state) {
+			throw new Result(threadModel);
+		}
+
+		@Override
+		public void visit(SpinningState state) {
+			throw new Result(threadModelSpinning);
+		}
+		
+	};
 
 	/**
-	 * Generates a thread model to display on top of the spinning wheel.
+	 * Creates a thread model to display on top of the spinning wheel.
 	 */
-	private void generateModel() {
+	private BakedCuboid bakeThreadModel(Material texture) {
 		// Create a cuboid model
 		CuboidModel cuboid = new CuboidModel();
 		// Set the texture of the sides
 		// Also set the UV of each side
-		UVList uv = new UVList(0f,0f,1f,16f);
+		UVList uv = new UVList(45f, 0f, 46f, 14f);
 		for (Direction side : THREAD_MODEL_SIDES) {
-			cuboid.getFace(side).setTexture(THREAD_TEXTURE);
+			cuboid.getFace(side).setTexture(texture);
 			cuboid.getFace(side).setUV(uv);
 		}
 		// Set the model dimensions
@@ -98,8 +116,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 		cuboid.setToPosition(new Vector3f(8.5f / 16f, 16f / 16f + 0.0002f, 15f / 16f + 0.0002f));
 		// Finally, bake the model
 		// Make sure the model is centered so it rotates correctly
-		threadModel = cuboid.bake(new TransformationMatrix(new Vector3f(-0.5f, -0.5f, -0.5f), null, null, null));
-		// Done
+		return cuboid.bake(new TransformationMatrix(new Vector3f(-0.5f, -0.5f, -0.5f), null, null, null));
 	}
 
 	public SpinningWheelRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
@@ -110,8 +127,9 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 
 	@SubscribeEvent
 	public void onModelBake(ModelBakeEvent event) {
-		LOGGER.info("Baking Spinning Wheel Model...");
-		generateModel();
+		LOGGER.info("Baking Spinning Wheel Thread Models...");
+		threadModel = bakeThreadModel(TEXTURE);
+		threadModelSpinning = bakeThreadModel(TEXTURE_SPINNING);
 	}
 
 	@Override
@@ -123,7 +141,7 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 			@Override
 			public void visit(BaseState state) {
 				// Get thread color
-				RGBAColor color = FunctionHelper.getResult(() -> tileEntityIn.accept(COLOR_CALCULATOR));
+				RGBAColor color = FunctionHelper.getResult(() -> tileEntityIn.accept(colorCalculator));
 				// Rotate based on blockstate
 				// Also have to center model
 				matrixStackIn.push();
@@ -131,10 +149,11 @@ public class SpinningWheelRenderer extends TileEntityRenderer<SpinningWheelTile>
 				Direction facing = tileEntityIn.getBlockState().get(SpinningWheelBlock.FACING);
 				Quaternion quat = new Quaternion(Direction.UP.toVector3f(), facing.getHorizontalAngle(), true);
 				matrixStackIn.rotate(quat);
-				// Allocate buffer
+				// Get the thread model based on current state
+				BakedCuboid model = FunctionHelper.getResult(() -> tileEntityIn.accept(threadModelGetter));
+				// Allocate buffer and render model
 				IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
-				// Render model
-				threadModel.render(buffer, matrixStackIn, color, combinedLightIn, combinedOverlayIn);
+				model.render(buffer, matrixStackIn, color, combinedLightIn, combinedOverlayIn);
 				// Undo rotation
 				matrixStackIn.pop();
 			}

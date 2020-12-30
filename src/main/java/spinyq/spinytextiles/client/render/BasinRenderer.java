@@ -41,7 +41,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 			AtlasTexture.LOCATION_BLOCKS_TEXTURE,
 			Fluids.WATER.getAttributes().getStillTexture());
 
-	private static final BasinStateVisitor COLOR_CALCULATOR = new BasinStateVisitor() {
+	private final BasinStateVisitor colorCalculator = new BasinStateVisitor() {
 
 		@Override
 		public void visit(FilledState state) {
@@ -110,7 +110,7 @@ public class BasinRenderer extends TileEntityRenderer<BasinTile> {
 					// Get model
 					BakedCuboid model = fluidModels[state.getWaterLevel() - 1];
 					// Calculate water color
-					RGBColor color = FunctionHelper.getResult(() -> basin.accept(COLOR_CALCULATOR));
+					RGBColor color = FunctionHelper.getResult(() -> basin.accept(colorCalculator));
 					// Allocate buffer
 					IVertexBuilder buffer = renderer.getBuffer(CuboidRenderType.resizableCuboid());
 					// Render model
