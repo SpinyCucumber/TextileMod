@@ -13,12 +13,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.registries.IForgeRegistry;
 import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 
-public class Fabric implements IClothingComponent {
+public class Fabric implements INBTSerializable<CompoundNBT> {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 	
