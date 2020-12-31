@@ -1,7 +1,6 @@
 package spinyq.spinytextiles.utility;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -309,23 +308,6 @@ public class NBTHelper {
 		}
 		else return null;
 	}
-
-	public static <K extends IForgeRegistryEntry<K>, V extends INBTSerializable<N>,
-	N extends INBT, M extends Map<K,V>> void putRegistryMap(
-			CompoundNBT nbt, String key, M map) {
-		// TODO
-	}
-	
-	public static <K extends IForgeRegistryEntry<K>, V extends INBTSerializable<N>,
-	N extends INBT, M extends Map<K,V>> M getRegistryMap(
-			CompoundNBT nbt, String key, IForgeRegistry<K> registry, Supplier<V> valueFactory,
-			Supplier<M> mapFactory) {
-		// Initialize map
-		M map = mapFactory.get();
-		// TODO
-		// Finished
-		return map;
-	}
 	
 	/**
 	 * Writes a registry entry to a compound NBT by writing the resource location
@@ -335,7 +317,6 @@ public class NBTHelper {
 	 * @param entry
 	 */
 	public static <T> void putRegistryEntry(CompoundNBT nbt, String key, IForgeRegistryEntry<T> entry) {
-		// TODO Find is Minecraft supports this already
 		nbt.putString(key, entry.getRegistryName().toString());
 	}
 	
@@ -347,7 +328,6 @@ public class NBTHelper {
 	 * @param registry The Forge Registry the contains the registry entry
 	 */
 	public static <T extends IForgeRegistryEntry<T>> T getRegistryEntry(CompoundNBT nbt, String key, IForgeRegistry<T> registry) {
-		// TODO Find is Minecraft supports this already
 		return registry.getValue(new ResourceLocation(nbt.getString(key)));
 	}
 	

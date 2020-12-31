@@ -1,18 +1,18 @@
 package spinyq.spinytextiles.utility.textile;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Map.Entry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.IntNBT;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.registries.IForgeRegistry;
 import spinyq.spinytextiles.utility.NBTHelper;
@@ -22,21 +22,23 @@ import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 public class Fabric implements INBTSerializable<CompoundNBT> {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	
+
 	private static final String TAG_PATTERN = "Pattern", TAG_COLORS = "Colors";
 	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
-	
+	private static final IForgeRegistry<FabricLayer> LAYER_REGISTRY = LazyForgeRegistry.of(FabricLayer.class);
+
 	// Pattern cannot be changed by users
 	private FabricPattern pattern;
 	private Map<FabricLayer, RYBKColor> colors = new HashMap<>();
-	
+
 	// Needed for deserialization
-	public Fabric() { }
-	
+	public Fabric() {
+	}
+
 	public Fabric(FabricPattern pattern) {
 		this.pattern = pattern;
 	}
-	
+
 	public Fabric reduceColors() {
 		LOGGER.trace("Reducing colors...");
 		// Determine if the fabric is monochrome
@@ -60,25 +62,26 @@ public class Fabric implements INBTSerializable<CompoundNBT> {
 		}
 		return this;
 	}
-	
+
 	public void setLayerColor(FabricLayer layer, RYBKColor color) {
 		colors.put(layer, color);
 	}
-	
+
 	public void setLayerColor(int index, RYBKColor color) {
 		setLayerColor(pattern.getLayer(index), color);
 	}
-	
+
 	public RYBKColor getLayerColor(FabricLayer layer) {
 		return colors.get(layer);
 	}
-	
+
 	public RYBKColor getLayerColor(int index) {
 		return getLayerColor(pattern.getLayer(index));
 	}
-	
+
 	/**
 	 * Sets all layers of this fabric to the given color.
+	 * 
 	 * @param color The new color
 	 */
 	public void setColor(RYBKColor color) {
@@ -91,10 +94,16 @@ public class Fabric implements INBTSerializable<CompoundNBT> {
 		// Write registry name of pattern to nbt
 		NBTHelper.putRegistryEntry(nbt, TAG_PATTERN, pattern);
 		// Write colors
-		List<RYBKColor> colorList = pattern.getLayerStream()
-				.map(colors::get)
-				.collect(Collectors.toList());
-		NBTHelper.putCollection(nbt, TAG_COLORS, colorList);
+		// Start constructing new compound NBT
+		CompoundNBT mapNBT = new CompoundNBT();
+		// For each entry in the map, write to the map nbt
+		for (Entry<FabricLayer, RYBKColor> entry : colors.entrySet()) {
+			// Get the key from the registry entry
+			String key = entry.getKey().getRegistryName().toString();
+			mapNBT.put(key, entry.getValue().serializeNBT());
+		}
+		// Put map nbt into the compound
+		nbt.put(TAG_COLORS, mapNBT);
 		// Done
 		return nbt;
 	}
@@ -104,9 +113,20 @@ public class Fabric implements INBTSerializable<CompoundNBT> {
 		// Retrieve the fabric's pattern by looking up registry name
 		pattern = NBTHelper.getRegistryEntry(nbt, TAG_PATTERN, PATTERN_REGISTRY);
 		// Retrieve the colors
-		List<RYBKColor> colorList = NBTHelper.getCollection(ArrayList::new, RYBKColor::new, nbt, TAG_COLORS);
-		pattern.getLayerIndexStream().forEach(
-				(index) -> colors.put(pattern.getLayer(index), colorList.get(index)));
+		colors.clear();
+		// Get the map NBT
+		CompoundNBT mapNBT = nbt.getCompound(TAG_COLORS);
+		// For each key in the map NBT, put the entry into the map
+		for (String key : mapNBT.keySet()) {
+			// Get the registry entry using the registry
+			FabricLayer fabricLayer = LAYER_REGISTRY.getValue(new ResourceLocation(key));
+			// Construct a new value and deserialize it
+			RYBKColor color = new RYBKColor();
+			color.deserializeNBT((IntNBT) mapNBT.get(key));
+			// Put into map
+			colors.put(fabricLayer, color);
+		}
+		// Finished
 	}
 
 	public FabricPattern getPattern() {
@@ -134,16 +154,14 @@ public class Fabric implements INBTSerializable<CompoundNBT> {
 	public String toString() {
 		return "Fabric [pattern=" + pattern.getRegistryName() + ", colors=" + colors + "]";
 	}
-	
+
 	/**
-	 * Returns an optional color that is only present if the
-	 * fabric is monochrome. That is, if all the layers are the same color,
-	 * this method returns that color.
+	 * Returns an optional color that is only present if the fabric is monochrome.
+	 * That is, if all the layers are the same color, this method returns that
+	 * color.
 	 */
 	private Optional<RYBKColor> getMonochrome() {
-		Iterator<RYBKColor> colorIterator = pattern.getLayerStream()
-				.map(this::getLayerColor)
-				.iterator();
+		Iterator<RYBKColor> colorIterator = pattern.getLayerStream().map(this::getLayerColor).iterator();
 		// Get the first color
 		RYBKColor toMatch = colorIterator.next();
 		LOGGER.trace("Color to match: {}", toMatch);
@@ -153,7 +171,8 @@ public class Fabric implements INBTSerializable<CompoundNBT> {
 			RYBKColor next = colorIterator.next();
 			boolean match = toMatch.equalsRGB(next);
 			LOGGER.trace("Comparing: {} Match: {}", next, match);
-			if (!match) return Optional.empty();
+			if (!match)
+				return Optional.empty();
 		}
 		return Optional.of(toMatch);
 	}
