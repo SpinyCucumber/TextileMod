@@ -23,7 +23,7 @@ public class Fabric implements INBTSerializable<CompoundNBT> {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	private static final String TAG_PATTERN = "Pattern", TAG_COLORS = "Colors";
+	private static final String PATTERN_TAG = "Pattern", COLORS_TAG = "Colors";
 	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
 	private static final IForgeRegistry<FabricLayer> LAYER_REGISTRY = LazyForgeRegistry.of(FabricLayer.class);
 
@@ -92,7 +92,7 @@ public class Fabric implements INBTSerializable<CompoundNBT> {
 	public CompoundNBT serializeNBT() {
 		CompoundNBT nbt = new CompoundNBT();
 		// Write registry name of pattern to nbt
-		NBTHelper.putRegistryEntry(nbt, TAG_PATTERN, pattern);
+		NBTHelper.putRegistryEntry(nbt, PATTERN_TAG, pattern);
 		// Write colors
 		// Start constructing new compound NBT
 		CompoundNBT mapNBT = new CompoundNBT();
@@ -103,7 +103,7 @@ public class Fabric implements INBTSerializable<CompoundNBT> {
 			mapNBT.put(key, entry.getValue().serializeNBT());
 		}
 		// Put map nbt into the compound
-		nbt.put(TAG_COLORS, mapNBT);
+		nbt.put(COLORS_TAG, mapNBT);
 		// Done
 		return nbt;
 	}
@@ -111,11 +111,11 @@ public class Fabric implements INBTSerializable<CompoundNBT> {
 	@Override
 	public void deserializeNBT(CompoundNBT nbt) {
 		// Retrieve the fabric's pattern by looking up registry name
-		pattern = NBTHelper.getRegistryEntry(nbt, TAG_PATTERN, PATTERN_REGISTRY);
+		pattern = NBTHelper.getRegistryEntry(nbt, PATTERN_TAG, PATTERN_REGISTRY);
 		// Retrieve the colors
 		colors.clear();
 		// Get the map NBT
-		CompoundNBT mapNBT = nbt.getCompound(TAG_COLORS);
+		CompoundNBT mapNBT = nbt.getCompound(COLORS_TAG);
 		// For each key in the map NBT, put the entry into the map
 		for (String key : mapNBT.keySet()) {
 			// Get the registry entry using the registry
