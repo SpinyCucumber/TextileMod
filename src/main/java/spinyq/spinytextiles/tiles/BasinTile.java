@@ -262,7 +262,7 @@ public class BasinTile extends TileEntity {
 			@Override
 			public void deserializeNBT(CompoundNBT nbt) {
 				// Read color
-				color = NBTHelper.get(RYBKColor::new, nbt, COLOR_TAG);
+				color = NBTHelper.get(nbt, COLOR_TAG, RYBKColor::new);
 			}
 
 			@Override

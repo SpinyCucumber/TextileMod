@@ -62,7 +62,7 @@ public class Fiber implements INBTSerializable<CompoundNBT> {
 
 	@Override
 	public void deserializeNBT(CompoundNBT nbt) {
-		color = NBTHelper.get(RYBKColor::new, nbt, COLOR_TAG);
+		color = NBTHelper.get(nbt, COLOR_TAG, RYBKColor::new);
 		amount = nbt.getInt(AMOUNT_TAG);
 	}
 	

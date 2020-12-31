@@ -26,7 +26,7 @@ import net.minecraftforge.registries.IForgeRegistryEntry;
  */
 public class NBTHelper {
 
-	public static final String TYPE_TAG = "Type", VALUE_TAG = "Value", DIRTY_TAG = "Dirty";
+	public static final String TYPE_TAG = "Type", KEY_TAG = "Key", VALUE_TAG = "Value", DIRTY_TAG = "Dirty";
 	
 	public static class ClassIdSpace {
 		
@@ -170,7 +170,7 @@ public class NBTHelper {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T extends INBTSerializable<K>, K extends INBT> T get(Supplier<T> supplier, CompoundNBT nbt, String key) {
+	public static <T extends INBTSerializable<K>, K extends INBT> T get(CompoundNBT nbt, String key, Supplier<T> supplier) {
 		T object = supplier.get();
 		object.deserializeNBT((K) nbt.get(key));
 		return object;
@@ -309,52 +309,21 @@ public class NBTHelper {
 		}
 		else return null;
 	}
-	
-	/**
-	 * Writes a map to a key of a CompoundNBT by creating another compound nbt and populating it with entries from the map.
-	 * @param <T> The type of the map's values
-	 * @param <K> The NBT type that the values serialize to
-	 * @param nbt The compound NBT
-	 * @param key The key that corresponds to the map
-	 * @param map The map
-	 */
-	public static <T extends INBTSerializable<K>, K extends INBT> void putMap(CompoundNBT nbt, String key, Map<String, T> map) {
-		// Create sub-tag
-		CompoundNBT mapNBT = new CompoundNBT();
-		// Write each entry in map to the new tag
-		map.entrySet().forEach((entry) -> {
-			mapNBT.put(entry.getKey(), entry.getValue().serializeNBT());
-		});
-		// Add sub-tag to main tag
-		nbt.put(key, mapNBT);
+
+	public static <K extends IForgeRegistryEntry<K>, V extends INBTSerializable<N>,
+	N extends INBT, M extends Map<K,V>> void putRegistryMap(
+			CompoundNBT nbt, String key, M map) {
+		// TODO
 	}
 	
-	/**
-	 * Reads a map from a key of a Compound NBT, where the map is stored as another compound NBT.
-	 * @param <M> The type of map
-	 * @param <T> The type of the map's values
-	 * @param <K> The NBT type that the values serialize to
-	 * @param mapFactory A factory to create the initial map
-	 * @param objectFactory A factory to create empty objects, which the map's values will be deserialized to
-	 * @param nbt The compound NBT
-	 * @param key The key containing the map
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public static <M extends Map<String, T>, T extends INBTSerializable<K>, K extends INBT> Map<String, T> getMap(Supplier<M> mapFactory, Supplier<T> objectFactory, CompoundNBT nbt, String key) {
-		// Create new map
+	public static <K extends IForgeRegistryEntry<K>, V extends INBTSerializable<N>,
+	N extends INBT, M extends Map<K,V>> M getRegistryMap(
+			CompoundNBT nbt, String key, IForgeRegistry<K> registry, Supplier<V> valueFactory,
+			Supplier<M> mapFactory) {
+		// Initialize map
 		M map = mapFactory.get();
-		// Get sub-tag
-		CompoundNBT mapNBT = nbt.getCompound(key);
-		// Populate map with entries in sub-tag
-		mapNBT.keySet().forEach((mapKey) -> {
-			// Create new object and deserialize value
-			T newObject = objectFactory.get();
-			newObject.deserializeNBT((K) mapNBT.get(mapKey));
-			// Add to map
-			map.put(mapKey, newObject);
-		});
-		// Done
+		// TODO
+		// Finished
 		return map;
 	}
 	
