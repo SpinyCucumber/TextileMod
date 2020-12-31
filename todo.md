@@ -39,6 +39,10 @@
 	- https://github.com/MinecraftForge/MinecraftForge/blob/1.15.x/src/main/resources/assets/forge/models/item/bucket.json
 	- https://github.com/MinecraftForge/MinecraftForge/src/test/java/net/minecraftforge/debug/client/model/NewModelLoaderTest.java
 - [ ] Clothing
+	- [ ] Structure
+		- Clothing parts describe an individual part of a larger clothing pattern. They are what is actually rendered, and can store/retrieve data on clothing pieces. One type of clothing part might be a fabric part, which renders a blocky model with a fabric texture.
+		- Clothing patterns are simply a group of clothing parts.
+		- Pieces of clothing have a single clothing pattern, and they can also store data for each clothing part in the pattern.
 	- [ ] Clothing items
 		- We will also have to handle rendering of clothing items. Since it's difficult to change item model textures on-the-fly, we might have to go with a cache approach. Either that, or find away to change textures. Either way, we will probably have a ClothingItemModel class.
 		- We might also be able to use ItemTileEntityRenderer, which allows items to define custom rendering. It looks like this can be specified using Item.Properties. This way, we could look up a clothing model and use the right textures whenever we are rendering a clothing item.
