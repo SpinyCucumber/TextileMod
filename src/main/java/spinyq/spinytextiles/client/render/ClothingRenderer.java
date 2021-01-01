@@ -1,5 +1,6 @@
 package spinyq.spinytextiles.client.render;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -23,7 +24,7 @@ public class ClothingRenderer implements IFutureReloadListener {
 	public interface IClothingPartRenderer<T extends ClothingPart> {
 		
 		void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T part, IClothing clothing);
-		void loadResources(T part);
+		void loadResources(IResourceManager resourceManager, T part) throws IOException;
 		
 	}
 	
@@ -51,9 +52,15 @@ public class ClothingRenderer implements IFutureReloadListener {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends ClothingPart> void loadClothingPart(T part) {
+	private <T extends ClothingPart> void loadClothingPart(IResourceManager resourceManager, T part) {
 		IClothingPartRenderer<T> renderer = (IClothingPartRenderer<T>) PART_RENDERERS.get(part.getClass());
-		if (renderer != null) renderer.loadResources(part);
+		if (renderer != null) {
+			try {
+				renderer.loadResources(resourceManager, part);
+			} catch (IOException e) {
+				throw new RuntimeException("Error while loading clothing part: " + part.getRegistryName(), e);
+			}
+		}
 	}
 	
 	@Override
@@ -64,7 +71,7 @@ public class ClothingRenderer implements IFutureReloadListener {
 		return CompletableFuture.runAsync(() -> {
 			// For each clothing part, let its renderer handle loading resources.
 			for (ClothingPart part : PART_REGISTRY.getValues()) {
-				loadClothingPart(part);
+				loadClothingPart(resourceManager, part);
 			}
 		}, backgroundExecutor)
 				// Mark that we are finished with our background tasks
