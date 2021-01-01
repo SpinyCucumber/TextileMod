@@ -23,12 +23,14 @@ public class NBTFabric implements IFabric, INBTSerializable<CompoundNBT> {
 	public NBTFabric() {
 	}
 
+	@Override
 	public void setLayerColor(FabricLayer layer, RYBKColor color) {
 		// Construct the key using the layer resource location
 		String key = layer.getRegistryName().toString();
 		NBTHelper.put(NBTHelper.getOrCreate(nbt, COLORS_TAG), key, color);
 	}
 
+	@Override
 	public RYBKColor getLayerColor(FabricLayer layer) {
 		// Construct the key using the layer resource location
 		String key = layer.getRegistryName().toString();
