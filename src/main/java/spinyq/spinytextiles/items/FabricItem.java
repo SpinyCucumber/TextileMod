@@ -237,6 +237,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		// Construct a new itemstack and start creating fabric
 		ItemStack item = new ItemStack(this);
 		IFabric fabric = getFabric(item);
+		fabric.setPattern(pattern);
 		// For every layer in the pattern, make the fabric use a default color
 		// If there are more layers than colors cycle through the colors
 		pattern.getLayerIndexStream().forEach((layerIndex) -> {
