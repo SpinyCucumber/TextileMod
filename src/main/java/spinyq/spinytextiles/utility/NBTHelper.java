@@ -99,7 +99,7 @@ public class NBTHelper {
 			T value;
 			// Check if dirty
 			// If the value is dirty, we have to recalculate it
-			CompoundNBT compound = getCompound(item);
+			CompoundNBT compound = item.getOrCreateChildTag(tag);
 			if (isDirty(item)) {
 				value = calculator.apply(item);
 				// Remove dirty flag
@@ -116,11 +116,11 @@ public class NBTHelper {
 
 		public void markDirty(ItemStack item) {
 			// Set the dirty flag
-			getCompound(item).putBoolean(DIRTY_TAG, true);
+			item.getOrCreateChildTag(tag).putBoolean(DIRTY_TAG, true);
 		}
 		
 		private boolean isDirty(ItemStack item) {
-			CompoundNBT compound = getCompound(item);
+			CompoundNBT compound = item.getOrCreateChildTag(tag);
 			boolean dirty;
 			if (!compound.contains(DIRTY_TAG)) {
 				dirty = true;
@@ -130,21 +130,6 @@ public class NBTHelper {
 				dirty = compound.getBoolean(DIRTY_TAG);
 			}
 			return dirty;
-		}
-		
-		// Gets the compound that contains data about the calculated value.
-		// Creates it if it doesn't exist.
-		private CompoundNBT getCompound(ItemStack item) {
-			CompoundNBT root = item.getOrCreateTag();
-			CompoundNBT nbt;
-			if (!root.contains(tag)) {
-				nbt = new CompoundNBT();
-				root.put(tag, nbt);
-			}
-			else {
-				nbt = root.getCompound(tag);
-			}
-			return nbt;
 		}
 		
 	}
@@ -307,6 +292,18 @@ public class NBTHelper {
 			return newObject;
 		}
 		else return null;
+	}
+	
+	public static CompoundNBT getOrCreate(CompoundNBT nbt, String key) {
+		CompoundNBT result;
+		if (!nbt.contains(key, 10)) {
+			result = new CompoundNBT();
+			nbt.put(key, result);
+		}
+		else {
+			result = nbt.getCompound(key);
+		}
+		return result;
 	}
 	
 	/**
