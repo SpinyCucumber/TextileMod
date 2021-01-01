@@ -1,5 +1,6 @@
 package spinyq.spinytextiles.utility.textile.fabric;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import spinyq.spinytextiles.utility.color.RYBKColor;
@@ -7,7 +8,7 @@ import spinyq.spinytextiles.utility.color.RYBKColor;
 public class Fabric implements IFabric {
 
 	private FabricPattern pattern;
-	private Map<FabricLayer, RYBKColor> colors;
+	private Map<FabricLayer, RYBKColor> colors = new HashMap<>();
 	
 	@Override
 	public void setPattern(FabricPattern pattern) {
