@@ -33,12 +33,11 @@ import spinyq.spinytextiles.utility.textile.Fabric;
 import spinyq.spinytextiles.utility.textile.FabricPattern;
 import spinyq.spinytextiles.utility.textile.IBleachProvider;
 import spinyq.spinytextiles.utility.textile.IDyeProvider;
+import spinyq.spinytextiles.utility.textile.IFabric;
+import spinyq.spinytextiles.utility.textile.NBTFabric;
 
-// TODO Improvement: add method for retrieving pattern
-// so we don't have to construct entire fabric info each time
 public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 
-	private static final String FABRIC_TAG = "Fabric";
 	private static final IForgeRegistry<FabricPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(FabricPattern.class);
 	// White and dark blue
 	private static final ImmutableList<RYBKColor> DEFAULT_COLORS = ImmutableList.of(new RYBKColor(0f, 0f, 0f, 0f),
@@ -50,12 +49,8 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 	// The costs to dye/bleach a fabric item, applied for each layer
 	private int layerDyeCost = 1, layerBleachCost = 1;
 	
-	public Fabric getFabric(ItemStack stack) {
-		return NBTHelper.getOrNull(Fabric::new, stack.getOrCreateTag(), FABRIC_TAG);
-	}
-	
-	public void setFabric(ItemStack stack, Fabric info) {
-		NBTHelper.put(stack.getOrCreateTag(), FABRIC_TAG, info);
+	public IFabric getFabric(ItemStack stack) {
+		return new NBTFabric(stack.getOrCreateTag());
 	}
 	
 	@Override
@@ -63,7 +58,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		// Construct some additional arugments to pass to the text component
 		// These are optionally used by the localization files to format stuff
 		// We pass the fabric pattern description but only if we have fabric info
-		Fabric fabric = getFabric(stack);
+		IFabric fabric = getFabric(stack);
 		if (fabric != null) {
 			FabricPattern pattern = fabric.getPattern();
 			return new TranslationTextComponent(getTranslationKey(stack),
@@ -83,7 +78,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 		// Register a color handler for all fabric items.
 		// The color handler makes it so each layer of the item is rendered with the right color.
 		event.getItemColors().register((stack, tintIndex) -> {
-				Fabric fabric = getFabric(stack);
+				IFabric fabric = getFabric(stack);
 				// Only return a color if the fabric info is non-null
 				// If it is null, return -1 (white)
 				if (fabric != null) {
@@ -96,9 +91,10 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 	
 	@Override
 	public boolean dye(ContainedItemStack<PlayerInventory> stack, IDyeProvider provider) {
-		// Only attempt to dye if we have fabric info attached
-		Fabric fabric = getFabric(stack.getStack());
-		if (fabric == null) return false;
+		// Retrieve the fabric info
+		// Make a copy of the fabric info so we don't actually modify the item
+		IFabric fabric = new Fabric();
+		fabric.set(getFabric(stack.getStack()));
 		// Iterate over each layer in the pattern, keeping
 		// track of whether we successfully dyed the layer
 		FabricPattern pattern = fabric.getPattern();
@@ -127,9 +123,9 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 			// This involves checking if the fabric is monochrome, and switching to
 			// different pattern if the fabric is monochrome.
 			// Only dye one item at a time
-			Fabric reducedFabric = fabric.reduceColors();
+			fabric.reduceColors();
 			ItemStack dyedFabricItem = stack.getStack().split(1);
-			setFabric(dyedFabricItem, reducedFabric);
+			getFabric(dyedFabricItem).set(fabric);
 			stack.getInventory().addItemStackToInventory(dyedFabricItem);
 		}
 		// Return whether we were successful
@@ -138,9 +134,10 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 
 	@Override
 	public boolean bleach(ContainedItemStack<PlayerInventory> stack, IBleachProvider provider) {
-		// Only attempt to bleach if we have fabric info attached
-		Fabric fabric = getFabric(stack.getStack());
-		if (fabric == null) return false;
+		// Retrieve the fabric info
+		// Make a copy of the fabric info so we don't actually modify the item
+		IFabric fabric = new Fabric();
+		fabric.set(getFabric(stack.getStack()));
 		// Iterate over each layer in the pattern, keeping
 		// track of whether we successfully bleached the layer
 		FabricPattern pattern = fabric.getPattern();
@@ -169,9 +166,9 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 			// This involves checking if the fabric is monochrome, and switching to
 			// different pattern if the fabric is monochrome.
 			// Only dye one item at a time
-			Fabric reducedFabric = fabric.reduceColors();
+			fabric.reduceColors();
 			ItemStack bleachedFabricItem = stack.getStack().split(1);
-			setFabric(bleachedFabricItem, reducedFabric);
+			getFabric(bleachedFabricItem).set(fabric);
 			stack.getInventory().addItemStackToInventory(bleachedFabricItem);
 		}
 		// Return whether we were successful
@@ -192,7 +189,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 	@OnlyIn(Dist.CLIENT)
 	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
 		// Only add more info if we have fabric data attached
-		Fabric fabric = getFabric(stack);
+		IFabric fabric = getFabric(stack);
 		if (fabric != null) {
 			// Iterate over each layer of the fabric's pattern
 			// For each layer, get the closest color word
@@ -226,7 +223,7 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 					tag, ColorWord.class,
 					(item) -> {
 						// Get color of layer, then get closest color word to color
-						Fabric fabric = getFabric(item);
+						IFabric fabric = getFabric(item);
 						return ColorWord.getClosest(fabric.getLayerColor(layerIndex));
 					});
 			// Store the calculated value in our map
@@ -237,17 +234,15 @@ public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 	}
 
 	private ItemStack createDefaultFabricItem(FabricPattern pattern) {
-		// Create new fabric that uses the pattern
-		Fabric fabric = new Fabric(pattern);
+		// Construct a new itemstack and start creating fabric
+		ItemStack item = new ItemStack(this);
+		IFabric fabric = getFabric(item);
 		// For every layer in the pattern, make the fabric use a default color
 		// If there are more layers than colors cycle through the colors
 		pattern.getLayerIndexStream().forEach((layerIndex) -> {
 			RYBKColor color = DEFAULT_COLORS.get(layerIndex % DEFAULT_COLORS.size()).copy();
 			fabric.setLayerColor(layerIndex, color);
 		});
-		// Construct a new itemstack and set the fabric
-		ItemStack item = new ItemStack(this);
-		setFabric(item, fabric);
 		return item;
 	}
 	

@@ -17,8 +17,8 @@ import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 public class Clothing implements INBTSerializable<CompoundNBT> {
 
 	private static final String PATTERN_TAG = "Pattern", PART_DATA_TAG = "PartData";
-	private static final ClassIdSpace CLASSES = new ClassIdSpace(Fabric.class);
-	private static final ObjectMapper MAPPER = new ObjectMapper(CLASSES).withSupplier(Fabric.class, Fabric::new);
+	private static final ClassIdSpace CLASSES = new ClassIdSpace(NBTFabric.class);
+	private static final ObjectMapper MAPPER = new ObjectMapper(CLASSES).withSupplier(NBTFabric.class, NBTFabric::new);
 	private static final IForgeRegistry<ClothingPart> PART_REGISTRY = LazyForgeRegistry.of(ClothingPart.class);
 	private static final IForgeRegistry<ClothingPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(ClothingPattern.class);
 

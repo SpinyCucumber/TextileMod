@@ -50,8 +50,8 @@ import net.minecraftforge.resource.VanillaResourceType;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.FabricItem;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
-import spinyq.spinytextiles.utility.textile.Fabric;
 import spinyq.spinytextiles.utility.textile.FabricPattern;
+import spinyq.spinytextiles.utility.textile.IFabric;
 
 /**
  * The model used by FabricItem.
@@ -123,7 +123,7 @@ public final class FabricItemModel implements IModelGeometry<FabricItemModel> {
 				// Check if the item actually has fabric info attached
 				// If it doesn't, return the missing model
 				// If not, look up the corresponding model using the fabric pattern
-				Fabric fabric = item.getFabric(stack);
+				IFabric fabric = item.getFabric(stack);
 				if (fabric != null) {
 					return bakedSubModels.get(fabric.getPattern());
 				}
