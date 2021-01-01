@@ -29,12 +29,12 @@ import spinyq.spinytextiles.utility.color.ColorWord;
 import spinyq.spinytextiles.utility.color.RGBColor;
 import spinyq.spinytextiles.utility.color.RYBKColor;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
-import spinyq.spinytextiles.utility.textile.Fabric;
-import spinyq.spinytextiles.utility.textile.FabricPattern;
 import spinyq.spinytextiles.utility.textile.IBleachProvider;
 import spinyq.spinytextiles.utility.textile.IDyeProvider;
-import spinyq.spinytextiles.utility.textile.IFabric;
-import spinyq.spinytextiles.utility.textile.NBTFabric;
+import spinyq.spinytextiles.utility.textile.fabric.Fabric;
+import spinyq.spinytextiles.utility.textile.fabric.FabricPattern;
+import spinyq.spinytextiles.utility.textile.fabric.IFabric;
+import spinyq.spinytextiles.utility.textile.fabric.NBTFabric;
 
 public class FabricItem extends Item implements IDyeableItem, IBleachableItem {
 

@@ -10,7 +10,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryBuilder;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
-import spinyq.spinytextiles.utility.textile.FabricLayer;
+import spinyq.spinytextiles.utility.textile.fabric.FabricLayer;
 
 @EventBusSubscriber(bus = Bus.MOD)
 public class ModFabricLayers {

@@ -1,4 +1,4 @@
-package spinyq.spinytextiles.utility.textile;
+package spinyq.spinytextiles.utility.textile.fabric;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.util.INBTSerializable;

@@ -50,8 +50,8 @@ import net.minecraftforge.resource.VanillaResourceType;
 import spinyq.spinytextiles.TextileMod;
 import spinyq.spinytextiles.items.FabricItem;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
-import spinyq.spinytextiles.utility.textile.FabricPattern;
-import spinyq.spinytextiles.utility.textile.IFabric;
+import spinyq.spinytextiles.utility.textile.fabric.FabricPattern;
+import spinyq.spinytextiles.utility.textile.fabric.IFabric;
 
 /**
  * The model used by FabricItem.

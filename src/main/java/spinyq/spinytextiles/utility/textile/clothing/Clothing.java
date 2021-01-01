@@ -1,4 +1,4 @@
-package spinyq.spinytextiles.utility.textile;
+package spinyq.spinytextiles.utility.textile.clothing;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +13,7 @@ import spinyq.spinytextiles.utility.NBTHelper;
 import spinyq.spinytextiles.utility.NBTHelper.ClassIdSpace;
 import spinyq.spinytextiles.utility.NBTHelper.ObjectMapper;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
+import spinyq.spinytextiles.utility.textile.fabric.NBTFabric;
 
 public class Clothing implements INBTSerializable<CompoundNBT> {
 

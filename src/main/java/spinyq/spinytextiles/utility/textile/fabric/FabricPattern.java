@@ -1,4 +1,4 @@
-package spinyq.spinytextiles.utility.textile;
+package spinyq.spinytextiles.utility.textile.fabric;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.ImmutableList;
 
 import net.minecraft.util.Util;
+import spinyq.spinytextiles.utility.textile.AbstractPattern;
 
 /**
  * A pattern used to make fabric in the loom.

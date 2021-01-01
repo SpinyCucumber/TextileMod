@@ -1,9 +1,11 @@
-package spinyq.spinytextiles.utility.textile;
+package spinyq.spinytextiles.utility.textile.clothing;
 
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableSet;
+
+import spinyq.spinytextiles.utility.textile.AbstractPattern;
 
 public class ClothingPattern extends AbstractPattern<ClothingPattern> {
 
