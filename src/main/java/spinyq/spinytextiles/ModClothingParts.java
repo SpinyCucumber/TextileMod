@@ -16,10 +16,10 @@ import spinyq.spinytextiles.utility.textile.clothing.FabricClothingPart;
 @EventBusSubscriber(bus = Bus.MOD)
 public class ModClothingParts {
 
-	public static final DeferredRegister<ClothingPart> FABRIC_LAYERS = new DeferredRegister<>(
+	public static final DeferredRegister<ClothingPart> CLOTHING_PARTS = new DeferredRegister<>(
 			LazyForgeRegistry.of(ClothingPart.class), TextileMod.MODID);
 
-	public static final RegistryObject<ClothingPart> TOP_HAT_BASE = FABRIC_LAYERS.register("top_hat_base",
+	public static final RegistryObject<ClothingPart> TOP_HAT_BASE = CLOTHING_PARTS.register("top_hat_base",
 			() -> new FabricClothingPart());
 	
 	@SubscribeEvent
@@ -29,7 +29,7 @@ public class ModClothingParts {
 				.setName(new ResourceLocation(TextileMod.MODID, "clothingpart"))
 				.create();
 		// Hook up deferred register
-		FABRIC_LAYERS.register(FMLJavaModLoadingContext.get().getModEventBus());
+		CLOTHING_PARTS.register(FMLJavaModLoadingContext.get().getModEventBus());
 	}
 	
 }

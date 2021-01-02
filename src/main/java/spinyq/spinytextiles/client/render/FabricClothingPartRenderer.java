@@ -33,7 +33,7 @@ public class FabricClothingPartRenderer implements IClothingPartRenderer<FabricC
 	private Map<FabricClothingPart, IBakedModel> bakedModels = new HashMap<>();
 	private Map<FabricClothingPart, BlockModel> unbakedModels = new HashMap<>();
 	
-	private FabricClothingPartRenderer() {
+	public FabricClothingPartRenderer() {
 		// Hook up event handlers
 		FMLJavaModLoadingContext.get().getModEventBus().register(this);
 	}

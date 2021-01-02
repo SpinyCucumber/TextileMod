@@ -17,6 +17,7 @@ import net.minecraft.resources.IResourceManager;
 import net.minecraftforge.registries.IForgeRegistry;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 import spinyq.spinytextiles.utility.textile.clothing.ClothingPart;
+import spinyq.spinytextiles.utility.textile.clothing.FabricClothingPart;
 import spinyq.spinytextiles.utility.textile.clothing.IClothing;
 
 public class ClothingRenderer implements IFutureReloadListener {
@@ -31,10 +32,15 @@ public class ClothingRenderer implements IFutureReloadListener {
 	private static final IForgeRegistry<ClothingPart> PART_REGISTRY = LazyForgeRegistry.of(ClothingPart.class);
 	public static final ClothingRenderer INSTANCE = new ClothingRenderer();
 	
-	private final Map<Class<?>, IClothingPartRenderer<?>> PART_RENDERERS = new HashMap<>();
+	private final Map<Class<?>, IClothingPartRenderer<?>> partRenderers = new HashMap<>();
+	
+	public ClothingRenderer() {
+		// Register built-in part renderers when we are first constructed
+		registerBuiltinRenderers();
+	}
 	
 	public <T extends ClothingPart> void registerPartRenderer(Class<T> clazz, IClothingPartRenderer<T> renderer) {
-		PART_RENDERERS.put(clazz, renderer);
+		partRenderers.put(clazz, renderer);
 	}
 	
 	public void renderClothing(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, IClothing clothing) {
@@ -47,13 +53,13 @@ public class ClothingRenderer implements IFutureReloadListener {
 	
 	@SuppressWarnings("unchecked")
 	private <T extends ClothingPart> void renderClothingPart(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T part, IClothing clothing) {
-		IClothingPartRenderer<T> renderer = (IClothingPartRenderer<T>) PART_RENDERERS.get(part.getClass());
+		IClothingPartRenderer<T> renderer = (IClothingPartRenderer<T>) partRenderers.get(part.getClass());
 		if (renderer != null) renderer.render(matrixStackIn, bufferIn, packedLightIn, part, clothing);
 	}
 
 	@SuppressWarnings("unchecked")
 	private <T extends ClothingPart> void loadClothingPart(IResourceManager resourceManager, T part) {
-		IClothingPartRenderer<T> renderer = (IClothingPartRenderer<T>) PART_RENDERERS.get(part.getClass());
+		IClothingPartRenderer<T> renderer = (IClothingPartRenderer<T>) partRenderers.get(part.getClass());
 		if (renderer != null) {
 			try {
 				renderer.loadResources(resourceManager, part);
@@ -61,6 +67,10 @@ public class ClothingRenderer implements IFutureReloadListener {
 				throw new RuntimeException("Error while loading clothing part: " + part.getRegistryName(), e);
 			}
 		}
+	}
+	
+	private void registerBuiltinRenderers() {
+		registerPartRenderer(FabricClothingPart.class, new FabricClothingPartRenderer());
 	}
 	
 	@Override
