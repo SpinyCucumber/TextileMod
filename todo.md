@@ -11,10 +11,9 @@
 - [x] Rewrite SpinningWheel using FSM
 - [x] Fiber Items
 - [x] Brush Item
-- [x] Item Color Helper
-- [ ] TemplateItemModel rewrite
 - [ ] Proper versioning
 - [x] Fabric Item
+	- [ ] IMPROVEMENT TemplateItemModel rewrite
 	- [ ] IMPROVEMENT Allow changing RenderType to allow translucent textures in the GUI and using seperate atlas textures
 	- [x] Create FabricLayer object
 	- [x] Ability to dye and bleach
@@ -40,7 +39,7 @@
 	- https://github.com/MinecraftForge/MinecraftForge/src/test/java/net/minecraftforge/debug/client/model/NewModelLoaderTest.java
 - [ ] Clothing
 	- [ ] Structure
-		- Clothing parts describe an individual part of a larger clothing pattern. They are what is actually rendered, and can store/retrieve data on clothing pieces. One type of clothing part might be a fabric part, which renders a blocky model with a fabric texture.
+		- Clothing parts describe an individual part of a larger clothing pattern. They are what is actually rendered, and can store/retrieve data on clothing pieces. One type of clothing part might be a fabric part, which renders a blocky model with a fabric texture. Each type of clothing part can have a "ClothingPartRenderer" which controls how the clothing part is rendered.
 		- Clothing patterns are simply a group of clothing parts.
 		- Pieces of clothing have a single clothing pattern, and they can also store data for each clothing part in the pattern.
 	- [ ] Clothing items
