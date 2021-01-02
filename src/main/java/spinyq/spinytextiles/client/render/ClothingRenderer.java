@@ -14,6 +14,9 @@ import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IFutureReloadListener;
 import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.resources.IResourceManager;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.IForgeRegistry;
 import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
 import spinyq.spinytextiles.utility.textile.clothing.ClothingPart;
@@ -37,6 +40,8 @@ public class ClothingRenderer implements IFutureReloadListener {
 	public ClothingRenderer() {
 		// Register built-in part renderers when we are first constructed
 		registerBuiltinRenderers();
+		// Hook up event handlers
+		FMLJavaModLoadingContext.get().getModEventBus().register(this);
 	}
 	
 	public <T extends ClothingPart> void registerPartRenderer(Class<T> clazz, IClothingPartRenderer<T> renderer) {
@@ -88,8 +93,8 @@ public class ClothingRenderer implements IFutureReloadListener {
 				.thenCompose(stage::markCompleteAwaitingOthers);
 	}
 
-	// Called when the mod is first constructed
-	public void onModConstructed() {
+	@SubscribeEvent
+	public void onCommonSetup(FMLCommonSetupEvent event) {
 		// Let Minecraft know we manage resources
 		((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(this);
 	}
