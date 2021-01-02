@@ -36,16 +36,17 @@ public class NBTClothing implements IClothing, INBTSerializable<CompoundNBT> {
 		NBTHelper.putRegistryEntry(nbt, PATTERN_TAG, pattern);
 	}
 
-	public <T extends INBTSerializable<CompoundNBT>> T getPartData(ClothingPart part) {
+	public <T> T getPartData(ClothingPart part) {
 		// Get key using resource location of clothing part
 		String key = part.getRegistryName().toString();
 		return NBTHelper.getPolymorphic(NBTHelper.getOrCreate(nbt, PART_DATA_TAG), key, MAPPER);
 	}
 
-	public <T extends INBTSerializable<CompoundNBT>> void setPartData(ClothingPart part, T data) {
+	@SuppressWarnings("unchecked")
+	public <T> void setPartData(ClothingPart part, T data) {
 		// Get key using resource location of clothing part
 		String key = part.getRegistryName().toString();
-		NBTHelper.putPolymorphic(NBTHelper.getOrCreate(nbt, PART_DATA_TAG), key, data, MAPPER);
+		NBTHelper.putPolymorphic(NBTHelper.getOrCreate(nbt, PART_DATA_TAG), key, (INBTSerializable<CompoundNBT>) data, MAPPER);
 	}
 
 	@Override

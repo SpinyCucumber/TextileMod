@@ -8,14 +8,11 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraftforge.registries.IForgeRegistry;
 import spinyq.spinytextiles.ModClothingParts;
 import spinyq.spinytextiles.ModClothingPatterns;
 import spinyq.spinytextiles.ModFabricLayers;
 import spinyq.spinytextiles.ModFabricPatterns;
 import spinyq.spinytextiles.utility.color.ColorWord;
-import spinyq.spinytextiles.utility.registry.LazyForgeRegistry;
-import spinyq.spinytextiles.utility.textile.clothing.ClothingPattern;
 import spinyq.spinytextiles.utility.textile.clothing.IClothing;
 import spinyq.spinytextiles.utility.textile.clothing.NBTClothing;
 import spinyq.spinytextiles.utility.textile.fabric.IFabric;
@@ -23,7 +20,7 @@ import spinyq.spinytextiles.utility.textile.fabric.NBTFabric;
 
 public class ClothingItem extends Item {
 
-	private static final IForgeRegistry<ClothingPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(ClothingPattern.class);
+	// private static final IForgeRegistry<ClothingPattern> PATTERN_REGISTRY = LazyForgeRegistry.of(ClothingPattern.class);
 	
 	public ClothingItem(Properties properties) {
 		super(properties);
