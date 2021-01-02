@@ -1,6 +1,7 @@
 package spinyq.spinytextiles.items;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -20,8 +21,10 @@ public class ClothingItem extends Item {
 	
 	@Override
 	public boolean canEquip(ItemStack stack, EquipmentSlotType armorType, Entity entity) {
-		// TODO
-		return super.canEquip(stack, armorType, entity);
+		// Entity must be a player
+		if (!(entity instanceof PlayerEntity)) return false;
+		// Ensure slot matches pattern's slot
+		return (armorType == getClothing(stack).getPattern().getSlot());
 	}
 
 	@Override
