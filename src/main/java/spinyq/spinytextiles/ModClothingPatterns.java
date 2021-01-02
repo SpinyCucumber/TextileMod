@@ -1,5 +1,6 @@
 package spinyq.spinytextiles;
 
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -19,7 +20,7 @@ public class ModClothingPatterns {
 			LazyForgeRegistry.of(ClothingPattern.class), TextileMod.MODID);
 
 	public static final RegistryObject<ClothingPattern> TOP_HAT = CLOTHING_PATTERNS.register("top_hat",
-			() -> new ClothingPattern(ModClothingParts.TOP_HAT_BASE));
+			() -> new ClothingPattern(EquipmentSlotType.HEAD, ModClothingParts.TOP_HAT_BASE));
 	
 	@SubscribeEvent
 	public static void createRegistries(RegistryEvent.NewRegistry event) {
