@@ -37,42 +37,42 @@ public class ClothingRenderer implements IFutureReloadListener {
 
 		HEAD {
 			@Override
-			public ModelRenderer getRenderer(BipedModel<?> model) {
+			public ModelRenderer getBone(BipedModel<?> model) {
 				return model.bipedHead;
 			}
 		},
 		TORSO {
 			@Override
-			public ModelRenderer getRenderer(BipedModel<?> model) {
+			public ModelRenderer getBone(BipedModel<?> model) {
 				return model.bipedBody;
 			}
 		},
 		LEFT_ARM {
 			@Override
-			public ModelRenderer getRenderer(BipedModel<?> model) {
+			public ModelRenderer getBone(BipedModel<?> model) {
 				return model.bipedLeftArm;
 			}
 		},
 		RIGHT_ARM {
 			@Override
-			public ModelRenderer getRenderer(BipedModel<?> model) {
+			public ModelRenderer getBone(BipedModel<?> model) {
 				return model.bipedRightArm;
 			}
 		},
 		LEFT_LEG {
 			@Override
-			public ModelRenderer getRenderer(BipedModel<?> model) {
+			public ModelRenderer getBone(BipedModel<?> model) {
 				return model.bipedLeftLeg;
 			}
 		},
 		RIGHT_LEG {
 			@Override
-			public ModelRenderer getRenderer(BipedModel<?> model) {
+			public ModelRenderer getBone(BipedModel<?> model) {
 				return model.bipedRightLeg;
 			}
 		};
 
-		public abstract ModelRenderer getRenderer(BipedModel<?> model);
+		public abstract ModelRenderer getBone(BipedModel<?> model);
 
 	}
 
@@ -100,12 +100,28 @@ public class ClothingRenderer implements IFutureReloadListener {
 		partRenderers.put(clazz, renderer);
 	}
 	
-	public void renderClothing(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, IClothing clothing) {
-		// For each part in the clothing pattern, look up the part renderer
-		// and let the part renderer handle rendering the clothing part
-		clothing.getPattern().getPartStream().forEach((part) -> {
-			renderClothingPart(matrixStackIn, bufferIn, packedLightIn, part, clothing);
-		});
+	/**
+	 * Renders a piece of clothing.
+	 * Clothing is rendered using a BipedModel, to allow the piece of clothing
+	 * to take different poses.
+	 * @param matrixStackIn
+	 * @param bufferIn
+	 * @param packedLightIn
+	 * @param clothing
+	 * @param skeleton
+	 */
+	public void renderClothing(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, IClothing clothing, BipedModel skeleton) {
+		// For each body part that clothing can be rendered on,
+		// let the clothing part renderers do their thing
+		for (BodyPart bodyPart : BodyPart.values()) {
+			// Get the skeleton bone that the bodyPart corresponds to
+			// and apply transforms
+			ModelRenderer bone = bodyPart.getBone(skeleton);
+			matrixStackIn.push();
+			bone.translateRotate(matrixStackIn);
+			// Render each part of the clothing piece
+			
+		}
 	}
 	
 	@SuppressWarnings("unchecked")

@@ -50,9 +50,7 @@ public class ClothingLayer<T extends LivingEntity, M extends BipedModel<T>> exte
 	public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T entitylivingbaseIn,
 			float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw,
 			float headPitch) {
-		// TODO Check if each of the entity's equipped items is a ClothingItem.
-		// Then, for each clothing item, get the appropriate model using a class such as
-		// ClothingModelManager.
+		// Check if each of the entity's equipped items is a ClothingItem.
 		for (EquipmentSlotType slot : EquipmentSlotType.values()) {
 			// Get itemstack currently in slot
 			ItemStack stack = entitylivingbaseIn.getItemStackFromSlot(slot);
@@ -65,12 +63,8 @@ public class ClothingLayer<T extends LivingEntity, M extends BipedModel<T>> exte
 			// This prevents trying to render the clothing when we are holding it, for example
 			ClothingPattern pattern = clothing.getPattern();
 			if (slot != pattern.getSlot()) continue;
-			// TODO Temporary
-			// Apply transforms
-			matrixStackIn.push();
-			this.getEntityModel().bipedHead.translateRotate(matrixStackIn);
-			ClothingRenderer.INSTANCE.renderClothing(matrixStackIn, bufferIn, packedLightIn, clothing);
-			matrixStackIn.pop();
+			// Pass over control to ClothingRenderer
+			ClothingRenderer.INSTANCE.renderClothing(matrixStackIn, bufferIn, packedLightIn, clothing, this.getEntityModel());
 		}
 	}
 
