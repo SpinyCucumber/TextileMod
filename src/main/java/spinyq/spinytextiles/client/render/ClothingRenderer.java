@@ -29,6 +29,7 @@ import spinyq.spinytextiles.utility.textile.clothing.ClothingPart;
 import spinyq.spinytextiles.utility.textile.clothing.FabricClothingPart;
 import spinyq.spinytextiles.utility.textile.clothing.IClothing;
 
+@OnlyIn(Dist.CLIENT)
 public class ClothingRenderer implements IFutureReloadListener {
 
 	@OnlyIn(Dist.CLIENT)
@@ -74,7 +75,8 @@ public class ClothingRenderer implements IFutureReloadListener {
 		public abstract ModelRenderer getRenderer(BipedModel<?> model);
 
 	}
-	
+
+	@OnlyIn(Dist.CLIENT)
 	public interface IClothingPartRenderer<T extends ClothingPart> {
 		
 		Stream<BakedQuad> getQuads(T clothingPart, IClothing clothing, BodyPart bodyPart);

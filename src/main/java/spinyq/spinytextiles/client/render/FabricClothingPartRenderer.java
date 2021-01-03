@@ -16,18 +16,18 @@ import net.minecraft.client.renderer.model.ModelBakery;
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.model.SimpleModelTransform;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import spinyq.spinytextiles.client.render.ClothingRenderer.BodyPart;
 import spinyq.spinytextiles.client.render.ClothingRenderer.IClothingPartRenderer;
 import spinyq.spinytextiles.utility.textile.clothing.FabricClothingPart;
 import spinyq.spinytextiles.utility.textile.clothing.IClothing;
 
-@EventBusSubscriber(bus = Bus.MOD)
+@OnlyIn(Dist.CLIENT)
 public class FabricClothingPartRenderer implements IClothingPartRenderer<FabricClothingPart> {
 
 	private Map<FabricClothingPart, IBakedModel> bakedModels = new HashMap<>();
