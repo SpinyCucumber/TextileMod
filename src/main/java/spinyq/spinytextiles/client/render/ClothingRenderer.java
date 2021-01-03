@@ -5,15 +5,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.stream.Stream;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.entity.model.BipedModel;
+import net.minecraft.client.renderer.model.BakedQuad;
+import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IFutureReloadListener;
 import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.resources.IResourceManager;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -25,9 +31,53 @@ import spinyq.spinytextiles.utility.textile.clothing.IClothing;
 
 public class ClothingRenderer implements IFutureReloadListener {
 
+	@OnlyIn(Dist.CLIENT)
+	public enum BodyPart {
+
+		HEAD {
+			@Override
+			public ModelRenderer getRenderer(BipedModel<?> model) {
+				return model.bipedHead;
+			}
+		},
+		TORSO {
+			@Override
+			public ModelRenderer getRenderer(BipedModel<?> model) {
+				return model.bipedBody;
+			}
+		},
+		LEFT_ARM {
+			@Override
+			public ModelRenderer getRenderer(BipedModel<?> model) {
+				return model.bipedLeftArm;
+			}
+		},
+		RIGHT_ARM {
+			@Override
+			public ModelRenderer getRenderer(BipedModel<?> model) {
+				return model.bipedRightArm;
+			}
+		},
+		LEFT_LEG {
+			@Override
+			public ModelRenderer getRenderer(BipedModel<?> model) {
+				return model.bipedLeftLeg;
+			}
+		},
+		RIGHT_LEG {
+			@Override
+			public ModelRenderer getRenderer(BipedModel<?> model) {
+				return model.bipedRightLeg;
+			}
+		};
+
+		public abstract ModelRenderer getRenderer(BipedModel<?> model);
+
+	}
+	
 	public interface IClothingPartRenderer<T extends ClothingPart> {
 		
-		void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T part, IClothing clothing);
+		Stream<BakedQuad> getQuads(T clothingPart, IClothing clothing, BodyPart bodyPart);
 		void loadResources(IResourceManager resourceManager, T part) throws IOException;
 		
 	}
@@ -59,7 +109,9 @@ public class ClothingRenderer implements IFutureReloadListener {
 	@SuppressWarnings("unchecked")
 	private <T extends ClothingPart> void renderClothingPart(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T part, IClothing clothing) {
 		IClothingPartRenderer<T> renderer = (IClothingPartRenderer<T>) partRenderers.get(part.getClass());
-		if (renderer != null) renderer.render(matrixStackIn, bufferIn, packedLightIn, part, clothing);
+		if (renderer != null) {
+			// TODO
+		}
 	}
 
 	@SuppressWarnings("unchecked")

@@ -7,10 +7,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.BlockModel;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.ModelBakery;
@@ -23,6 +22,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import spinyq.spinytextiles.client.render.ClothingRenderer.BodyPart;
 import spinyq.spinytextiles.client.render.ClothingRenderer.IClothingPartRenderer;
 import spinyq.spinytextiles.utility.textile.clothing.FabricClothingPart;
 import spinyq.spinytextiles.utility.textile.clothing.IClothing;
@@ -44,10 +44,9 @@ public class FabricClothingPartRenderer implements IClothingPartRenderer<FabricC
 	}
 
 	@Override
-	public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn,
-			FabricClothingPart part, IClothing clothing) {
+	public Stream<BakedQuad> getQuads(FabricClothingPart clothingPart, IClothing clothing, BodyPart bodyPart) {
 		// TODO Auto-generated method stub
-		
+		return null;
 	}
 
 	@Override
