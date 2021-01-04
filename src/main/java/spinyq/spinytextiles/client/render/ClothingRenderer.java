@@ -5,15 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.stream.Stream;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.client.renderer.model.BakedQuad;
-import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IFutureReloadListener;
 import net.minecraft.resources.IReloadableResourceManager;
@@ -33,53 +30,10 @@ import spinyq.spinytextiles.utility.textile.clothing.IClothing;
 public class ClothingRenderer implements IFutureReloadListener {
 
 	@OnlyIn(Dist.CLIENT)
-	public enum BodyPart {
-
-		HEAD {
-			@Override
-			public ModelRenderer getBone(BipedModel<?> model) {
-				return model.bipedHead;
-			}
-		},
-		TORSO {
-			@Override
-			public ModelRenderer getBone(BipedModel<?> model) {
-				return model.bipedBody;
-			}
-		},
-		LEFT_ARM {
-			@Override
-			public ModelRenderer getBone(BipedModel<?> model) {
-				return model.bipedLeftArm;
-			}
-		},
-		RIGHT_ARM {
-			@Override
-			public ModelRenderer getBone(BipedModel<?> model) {
-				return model.bipedRightArm;
-			}
-		},
-		LEFT_LEG {
-			@Override
-			public ModelRenderer getBone(BipedModel<?> model) {
-				return model.bipedLeftLeg;
-			}
-		},
-		RIGHT_LEG {
-			@Override
-			public ModelRenderer getBone(BipedModel<?> model) {
-				return model.bipedRightLeg;
-			}
-		};
-
-		public abstract ModelRenderer getBone(BipedModel<?> model);
-
-	}
-
-	@OnlyIn(Dist.CLIENT)
 	public interface IClothingPartRenderer<T extends ClothingPart> {
 		
-		Stream<BakedQuad> getQuads(T clothingPart, IClothing clothing, BodyPart bodyPart);
+		void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn,
+				T clothingPart, IClothing clothing, BipedModel<?> skeleton);
 		void loadResources(IResourceManager resourceManager, T part) throws IOException;
 		
 	}
@@ -110,44 +64,17 @@ public class ClothingRenderer implements IFutureReloadListener {
 	 * @param clothing
 	 * @param skeleton
 	 */
-	public void renderClothing(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, IClothing clothing, BipedModel skeleton) {
-		// For each body part that clothing can be rendered on,
-		// let the clothing part renderers do their thing
-		for (BodyPart bodyPart : BodyPart.values()) {
-			// Get the skeleton bone that the bodyPart corresponds to
-			// and apply transforms
-			ModelRenderer bone = bodyPart.getBone(skeleton);
-			matrixStackIn.push();
-			bone.translateRotate(matrixStackIn);
-			// Render each part of the clothing piece
-			
-		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	private <T extends ClothingPart> void renderClothingPart(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T part, IClothing clothing) {
-		IClothingPartRenderer<T> renderer = (IClothingPartRenderer<T>) partRenderers.get(part.getClass());
-		if (renderer != null) {
-			// TODO
-		}
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void renderClothing(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, IClothing clothing, BipedModel<?> skeleton) {
+		// Render each clothing part that makes up the clothing piece
+		clothing.getPattern().getPartStream().forEach((clothingPart) -> {
+			// Try to look up a clothing part renderer
+			IClothingPartRenderer renderer = partRenderers.get(clothingPart.getClass());
+			// If it exists, pass the control over to the renderer
+			if (renderer != null) renderer.render(matrixStackIn, bufferIn, packedLightIn, clothingPart, clothing, skeleton); 
+		});
 	}
 
-	@SuppressWarnings("unchecked")
-	private <T extends ClothingPart> void loadClothingPart(IResourceManager resourceManager, T part) {
-		IClothingPartRenderer<T> renderer = (IClothingPartRenderer<T>) partRenderers.get(part.getClass());
-		if (renderer != null) {
-			try {
-				renderer.loadResources(resourceManager, part);
-			} catch (IOException e) {
-				throw new RuntimeException("Error while loading clothing part: " + part.getRegistryName(), e);
-			}
-		}
-	}
-	
-	private void registerBuiltinRenderers() {
-		registerPartRenderer(FabricClothingPart.class, new FabricClothingPartRenderer());
-	}
-	
 	@Override
 	public CompletableFuture<Void> reload(IStage stage, IResourceManager resourceManager,
 			IProfiler preparationsProfiler, IProfiler reloadProfiler, Executor backgroundExecutor,
@@ -167,6 +94,22 @@ public class ClothingRenderer implements IFutureReloadListener {
 	public void onCommonSetup(FMLCommonSetupEvent event) {
 		// Let Minecraft know we manage resources
 		((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(this);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T extends ClothingPart> void loadClothingPart(IResourceManager resourceManager, T part) {
+		IClothingPartRenderer<T> renderer = (IClothingPartRenderer<T>) partRenderers.get(part.getClass());
+		if (renderer != null) {
+			try {
+				renderer.loadResources(resourceManager, part);
+			} catch (IOException e) {
+				throw new RuntimeException("Error while loading clothing part: " + part.getRegistryName(), e);
+			}
+		}
+	}
+
+	private void registerBuiltinRenderers() {
+		registerPartRenderer(FabricClothingPart.class, new FabricClothingPartRenderer());
 	}
 
 }

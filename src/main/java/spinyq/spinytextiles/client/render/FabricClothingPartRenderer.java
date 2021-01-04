@@ -8,10 +8,13 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
-import java.util.stream.Stream;
 
-import net.minecraft.client.renderer.model.BakedQuad;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
+
+import net.minecraft.client.renderer.Atlases;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.renderer.model.BlockModel;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.ModelBakery;
@@ -22,10 +25,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.model.SimpleModelTransform;
-import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import spinyq.spinytextiles.client.render.ClothingRenderer.BodyPart;
 import spinyq.spinytextiles.client.render.ClothingRenderer.IClothingPartRenderer;
 import spinyq.spinytextiles.utility.textile.clothing.FabricClothingPart;
 import spinyq.spinytextiles.utility.textile.clothing.IClothing;
@@ -36,7 +37,6 @@ public class FabricClothingPartRenderer implements IClothingPartRenderer<FabricC
 
 	private Map<FabricClothingPart, EnumMap<BodyPart, IBakedModel>> bakedModels = new HashMap<>();
 	private Map<FabricClothingPart, EnumMap<BodyPart, BlockModel>> unbakedModels = new HashMap<>();
-	private final Random random = new Random();
 	
 	public FabricClothingPartRenderer() {
 		// Hook up event handlers
@@ -49,15 +49,15 @@ public class FabricClothingPartRenderer implements IClothingPartRenderer<FabricC
 	}
 
 	@Override
-	public Stream<BakedQuad> getQuads(FabricClothingPart clothingPart, IClothing clothing, BodyPart bodyPart) {
+	public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn,
+			FabricClothingPart clothingPart, IClothing clothing, BipedModel<?> skeleton) {
 		EnumMap<BodyPart, IBakedModel> bodyPartMap = bakedModels.get(clothingPart);
-		if (bodyPartMap != null) {
-			IBakedModel model = bodyPartMap.get(bodyPart);
-			if (model != null) {
-				return model.getQuads(null, null, random, EmptyModelData.INSTANCE).stream();
-			}
+		// For each bone and model, apply the bone transformations and then
+		// render the model.
+		IVertexBuilder builder = bufferIn.getBuffer(Atlases.getTranslucentBlockType());
+		for (Entry<BodyPart, IBakedModel> entry : bodyPartMap.entrySet()) {
+			
 		}
-		return Stream.empty();
 	}
 
 	@Override
