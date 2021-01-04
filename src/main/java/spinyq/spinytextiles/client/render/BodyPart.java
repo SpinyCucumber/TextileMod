@@ -46,5 +46,5 @@ public enum BodyPart {
 	};
 
 	public abstract ModelRenderer getBone(BipedModel<?> model);
-
+	
 }

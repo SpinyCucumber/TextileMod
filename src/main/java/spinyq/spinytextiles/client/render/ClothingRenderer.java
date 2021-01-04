@@ -109,7 +109,7 @@ public class ClothingRenderer implements IFutureReloadListener {
 	}
 
 	private void registerBuiltinRenderers() {
-		registerPartRenderer(FabricClothingPart.class, new FabricClothingPartRenderer());
+		registerPartRenderer(FabricClothingPart.class, new FabricPartRenderer());
 	}
 
 }
